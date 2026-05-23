@@ -1,0 +1,50 @@
+services:
+  hiai-admin-api:
+    build: ./backend
+    ports: ["50200:3000"]
+    env_file: .env
+    depends_on: [postgres, redis]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+
+  hiai-admin-frontend:
+    build: ./app
+    ports: ["50201:3000"]
+    env_file: .env
+    depends_on: [hiai-admin-api]
+    restart: unless-stopped
+
+  postgres:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_DB: hiai_admin
+      POSTGRES_USER: hiadmin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes: [pg-data:/var/lib/postgresql/data]
+    ports: ["5435:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hiadmin -d hiai_admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.6-alpine
+    command: redis-server --appendonly yes
+    ports: ["6382:6379"]
+    volumes: [redis-data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pg-data:
+  redis-data:
