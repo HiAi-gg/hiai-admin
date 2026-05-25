@@ -20,6 +20,8 @@ import { webhooksStripeRoutes } from './routes/webhooks-stripe.js';
 import { rolesRoutes } from './routes/roles.js';
 import { permissionsRoutes } from './routes/permissions.js';
 import { billingInvoicesRoutes } from './routes/billing-invoices.js';
+import { proxyPostRoutes } from './routes/proxy-post.js';
+import { proxyStoreRoutes } from './routes/proxy-store.js';
 
 const log = logger.child({ module: 'server' });
 
@@ -61,6 +63,8 @@ const app = new Elysia()
   .use(auditRoutes)
   .use(integrationsRoutes)
   .use(webhooksStripeRoutes)
+  .use(proxyPostRoutes)
+  .use(proxyStoreRoutes)
   .listen(env.API_PORT);
 
 log.info({ port: env.API_PORT }, `hiai-admin API running on port ${env.API_PORT}`);
