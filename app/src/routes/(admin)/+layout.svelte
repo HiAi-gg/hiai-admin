@@ -38,10 +38,8 @@
 
 <div class="flex h-screen overflow-hidden bg-background">
   <AdminSidebar
-    groups={allNavGroups}
+    navGroups={allNavGroups}
     collapsed={sidebarStore.collapsed}
-    onToggle={() => sidebarStore.toggle()}
-    appName="hiai-admin"
   />
 
   <div class="flex flex-1 flex-col overflow-hidden">

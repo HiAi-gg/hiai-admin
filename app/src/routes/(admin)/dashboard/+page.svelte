@@ -1,5 +1,5 @@
 <script lang="ts">
-  import StatsCard from '$lib/components/StatsCard.svelte';
+  import { StatsCard } from '@hiai/ui';
   let { data } = $props();
   let events = $state<Array<{ type: string; data: Record<string, unknown>; timestamp: string }>>([]);
 
