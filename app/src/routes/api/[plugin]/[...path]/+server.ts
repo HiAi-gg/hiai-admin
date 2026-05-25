@@ -12,6 +12,8 @@ async function proxyRequest(request: Request, pluginId: string, path: string): P
   if (contentType) headers.set('content-type', contentType);
   const auth = request.headers.get('authorization');
   if (auth) headers.set('authorization', auth);
+  const cookie = request.headers.get('cookie');
+  if (cookie) headers.set('cookie', cookie);
 
   const init: RequestInit = { method: request.method, headers };
   if (request.method !== 'GET' && request.method !== 'HEAD') init.body = await request.text();
