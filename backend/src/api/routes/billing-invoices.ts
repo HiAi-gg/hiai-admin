@@ -22,11 +22,11 @@ export const billingInvoicesRoutes = new Elysia({ prefix: '/api/billing/invoices
     return { data: rows, page, limit };
   }, { requirePermission: 'billing:read' })
 
-  .get('/:id', async ({ params, set }) => {
-    const rows = await db.select().from(invoices).where(eq(invoices.id, params.id)).limit(1);
+  .get('/:customerId', async ({ params, set }) => {
+    const rows = await db.select().from(invoices).where(eq(invoices.id, params.customerId)).limit(1);
     if (!rows[0]) {
       set.status = 404;
       return { error: 'Invoice not found' };
     }
     return { data: rows[0] };
-  }, { requirePermission: 'billing:read', params: t.Object({ id: t.String() }) });
+  }, { requirePermission: 'billing:read', params: t.Object({ customerId: t.String() }) });

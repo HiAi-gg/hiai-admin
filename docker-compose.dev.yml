@@ -1,0 +1,39 @@
+# hiai-admin — Internal Dev Compose
+# No new DB/Redis containers. Routes to core-postgres (5433) and core-redis (6380).
+#
+# Usage:
+#   cd backend && bun run dev   # API on port 50200
+#   cd app && bun run dev       # Frontend on port 50201
+#   open http://hiai-admin.localhost (via shared Caddy)
+
+services:
+  api:
+    image: busybox
+    container_name: hiai-admin-api
+    entrypoint: ["echo", "Run 'cd backend && bun run dev' on host"]
+    environment:
+      DATABASE_URL: "postgresql://aiuser:aipassword@host.docker.internal:5433/hiai_admin"
+      REDIS_URL: "redis://host.docker.internal:6380"
+      BETTER_AUTH_URL: "http://localhost:50200"
+      API_PORT: "50200"
+    labels:
+      - "com.hiai.project=hiai-admin"
+      - "com.hiai.port=50200"
+    networks:
+      - ai-internal
+
+  frontend:
+    image: busybox
+    container_name: hiai-admin-frontend
+    entrypoint: ["echo", "Run 'cd app && bun run dev' on host"]
+    environment:
+      API_PORT: "50201"
+    labels:
+      - "com.hiai.project=hiai-admin"
+      - "com.hiai.port=50201"
+    networks:
+      - ai-internal
+
+networks:
+  ai-internal:
+    external: true

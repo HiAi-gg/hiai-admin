@@ -4,7 +4,8 @@ import { logger } from '../../lib/logger.js';
 
 const log = logger.child({ module: 'stripe' });
 
-const stripe = new Stripe(env.STRIPE_SECRET_KEY || 'sk_placeholder', { apiVersion: '2024-12-18.acacia' as any });
+if (!env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is required');
+const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
 
 export const stripeService = {
   async createCustomer(email: string, name: string) {

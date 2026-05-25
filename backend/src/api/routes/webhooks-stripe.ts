@@ -1,8 +1,11 @@
 import { Elysia } from 'elysia';
 import { stripeService } from '../../modules/billing/stripe.service.js';
-import { createChildLogger } from '../../lib/logger.js';
+import { db } from '../../lib/db.js';
+import { invoices, subscriptions, tenants } from '../../db/schema/index.js';
+import { eq } from 'drizzle-orm';
+import { logger } from '../../lib/logger.js';
 
-const log = createChildLogger('webhooks-stripe');
+const log = logger.child({ module: 'webhooks-stripe' });
 
 export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
   .post('/stripe', async ({ request, set }) => {
@@ -14,18 +17,52 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
       const event = await stripeService.constructWebhookEvent(body, signature);
 
       switch (event.type) {
-        case 'invoice.paid':
-          log.info({ invoiceId: event.data.object.id }, 'Invoice paid');
+        case 'invoice.paid': {
+          const invoice = event.data.object;
+          await db.update(invoices)
+            .set({ status: 'paid' })
+            .where(eq(invoices.stripeInvoiceId, invoice.id));
+          log.info({ invoiceId: invoice.id }, 'Invoice paid — status updated');
           break;
-        case 'invoice.payment_failed':
-          log.warn({ invoiceId: event.data.object.id }, 'Invoice payment failed');
+        }
+        case 'invoice.payment_failed': {
+          const invoice = event.data.object;
+          await db.update(invoices)
+            .set({ status: 'past_due' })
+            .where(eq(invoices.stripeInvoiceId, invoice.id));
+          log.warn({ invoiceId: invoice.id }, 'Invoice payment failed — grace period started');
           break;
-        case 'customer.subscription.updated':
-          log.info({ subscriptionId: event.data.object.id }, 'Subscription updated');
+        }
+        case 'customer.subscription.updated': {
+          const sub = event.data.object;
+          await db.update(subscriptions)
+            .set({
+              status: sub.status,
+              plan: sub.metadata?.plan || undefined,
+              cancelAtPeriodEnd: sub.cancel_at_period_end,
+              currentPeriodStart: sub.current_period_start ? new Date(sub.current_period_start * 1000) : undefined,
+              currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : undefined,
+              updatedAt: new Date(),
+            })
+            .where(eq(subscriptions.stripeSubscriptionId, sub.id));
+          log.info({ subscriptionId: sub.id, status: sub.status }, 'Subscription updated');
           break;
-        case 'customer.subscription.deleted':
-          log.info({ subscriptionId: event.data.object.id }, 'Subscription deleted');
+        }
+        case 'customer.subscription.deleted': {
+          const sub = event.data.object;
+          await db.update(subscriptions)
+            .set({ status: 'canceled', updatedAt: new Date() })
+            .where(eq(subscriptions.stripeSubscriptionId, sub.id));
+          // Suspend tenant if subscription is canceled
+          const [dbSub] = await db.select().from(subscriptions).where(eq(subscriptions.stripeSubscriptionId, sub.id));
+          if (dbSub) {
+            await db.update(tenants)
+              .set({ status: 'suspended', updatedAt: new Date() })
+              .where(eq(tenants.id, dbSub.tenantId));
+          }
+          log.info({ subscriptionId: sub.id }, 'Subscription deleted — tenant suspended');
           break;
+        }
         default:
           log.debug({ type: event.type }, 'Unhandled Stripe event');
       }

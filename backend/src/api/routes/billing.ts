@@ -21,8 +21,4 @@ export const billingRoutes = new Elysia({ prefix: '/api/billing' })
       set.status = 400;
       return { error: err.message };
     }
-  }, { requireSuperAdmin: true })
-  .get('/invoices/:customerId', async ({ params }) => {
-    const invoices = await stripeService.listInvoices(params.customerId);
-    return { invoices: invoices.data };
   }, { requireSuperAdmin: true });

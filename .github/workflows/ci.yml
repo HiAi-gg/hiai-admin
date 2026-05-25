@@ -1,0 +1,102 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend — Typecheck & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: backend
+        run: bun install
+
+      - name: TypeScript check
+        working-directory: backend
+        run: bunx tsc --noEmit
+
+      - name: Run tests
+        working-directory: backend
+        run: bun test
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hiai_admin_test
+          REDIS_URL: redis://localhost:6379
+          BETTER_AUTH_SECRET: test-secret-min-32-characters-long
+
+      - name: Build
+        working-directory: backend
+        run: bun build src/api/index.ts --outdir dist
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_DB: hiai_admin_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:8.6-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+  frontend:
+    name: Frontend — Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        working-directory: app
+        run: bun install
+
+      - name: Build
+        working-directory: app
+        run: bun run build
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install backend deps
+        working-directory: backend
+        run: bun install
+
+      - name: Install frontend deps
+        working-directory: app
+        run: bun install
+
+      - name: Check for TypeScript errors
+        working-directory: backend
+        run: bunx tsc --noEmit

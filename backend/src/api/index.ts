@@ -17,6 +17,9 @@ import { settingsRoutes } from './routes/settings.js';
 import { auditRoutes } from './routes/audit.js';
 import { integrationsRoutes } from './routes/integrations.js';
 import { webhooksStripeRoutes } from './routes/webhooks-stripe.js';
+import { rolesRoutes } from './routes/roles.js';
+import { permissionsRoutes } from './routes/permissions.js';
+import { billingInvoicesRoutes } from './routes/billing-invoices.js';
 
 const log = logger.child({ module: 'server' });
 
@@ -49,7 +52,10 @@ const app = new Elysia()
   .use(healthRoutes)
   .use(tenantRoutes)
   .use(userRoutes)
+  .use(rolesRoutes)
+  .use(permissionsRoutes)
   .use(billingRoutes)
+  .use(billingInvoicesRoutes)
   .use(analyticsRoutes)
   .use(settingsRoutes)
   .use(auditRoutes)
