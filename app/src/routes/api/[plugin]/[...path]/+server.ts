@@ -25,8 +25,8 @@ async function proxyRequest(request: Request, pluginId: string, path: string): P
   }
 }
 
-export const GET: RequestHandler = async ({ params, request }) => proxyRequest(request, params.plugin, params.path);
-export const POST: RequestHandler = async ({ params, request }) => proxyRequest(request, params.plugin, params.path);
-export const PUT: RequestHandler = async ({ params, request }) => proxyRequest(request, params.plugin, params.path);
-export const DELETE: RequestHandler = async ({ params, request }) => proxyRequest(request, params.plugin, params.path);
-export const PATCH: RequestHandler = async ({ params, request }) => proxyRequest(request, params.plugin, params.path);
+export const GET: RequestHandler = async ({ params, request }: { params: { plugin: string; path: string }; request: Request }) => proxyRequest(request, params.plugin, params.path);
+export const POST: RequestHandler = async ({ params, request }: { params: { plugin: string; path: string }; request: Request }) => proxyRequest(request, params.plugin, params.path);
+export const PUT: RequestHandler = async ({ params, request }: { params: { plugin: string; path: string }; request: Request }) => proxyRequest(request, params.plugin, params.path);
+export const DELETE: RequestHandler = async ({ params, request }: { params: { plugin: string; path: string }; request: Request }) => proxyRequest(request, params.plugin, params.path);
+export const PATCH: RequestHandler = async ({ params, request }: { params: { plugin: string; path: string }; request: Request }) => proxyRequest(request, params.plugin, params.path);
