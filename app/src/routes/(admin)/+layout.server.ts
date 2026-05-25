@@ -1,5 +1,16 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
+import { registerPlugin, getNavGroups } from '$lib/plugins/registry.js';
+import { hiaiPostPlugin } from '$lib/plugins/hiai-post.js';
+import { hiaiStorePlugin } from '$lib/plugins/hiai-store.js';
+import { kofiPlugin } from '$lib/plugins/kofi.js';
+import { umamiPlugin } from '$lib/plugins/umami.js';
+
+// Register all plugins
+registerPlugin(hiaiPostPlugin);
+registerPlugin(hiaiStorePlugin);
+registerPlugin(kofiPlugin);
+registerPlugin(umamiPlugin);
 
 export const load: LayoutServerLoad = async ({ locals, fetch }) => {
   if (!locals.user) {
@@ -15,5 +26,6 @@ export const load: LayoutServerLoad = async ({ locals, fetch }) => {
     }
   }
 
-  return { user: locals.user };
+  const navGroups = getNavGroups();
+  return { user: locals.user, navGroups };
 };
