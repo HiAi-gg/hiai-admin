@@ -291,3 +291,104 @@
 | 9 | Settings & Integrations UI | ~8h | Pending |
 | 10 | Polish & Production | ~16h | Pending |
 | **Total** | | **~106h** | |
+
+---
+
+## Phase 11: Critic Audit Fixes (2026-05-25)
+
+> **Source:** 8 parallel critics audited plugin system, @hiai/ui migration, and webs/admin feature migration.
+> **Result:** 5 PASS, 5 WARNING, 1 FAIL (7/14 webs/admin features not migrated)
+
+### 11.1 Plugin System — ✅ PASS (no action needed)
+- [x] Plugin types (HiAiPlugin, NavGroup, NavItem, ProxyConfig) — correct
+- [x] Plugin registry (registerPlugin, getNavGroups, findPage, getProxyConfig) — correct
+- [x] 4 manifests (hiai-post, hiai-store, kofi, umami) — valid
+- [x] Sidebar reads from plugin registry — dynamic nav works
+- [x] API proxy catch-all — 5 HTTP methods, error handling
+- [x] Backend proxy routes (post:50300, store:50400) — working
+
+### 11.2 @hiai/ui Migration — ✅ PASS (no action needed)
+- [x] api.ts → createApi from @hiai/ui
+- [x] auth.svelte.ts → re-export from @hiai/ui
+- [x] notifications.svelte.ts → re-export from @hiai/ui
+- [x] sidebar.svelte.ts → re-export from @hiai/ui
+
+### 11.3 WARNING: Dead local AdminSidebar.svelte
+- [ ] **Delete** `app/src/lib/components/AdminSidebar.svelte` (54 lines) — layout uses @hiai/ui, this is dead code
+- **File:** `app/src/lib/components/AdminSidebar.svelte`
+- **Effort:** 5min
+
+### 11.4 WARNING: Umami page missing server load
+- [ ] **Create** `app/src/routes/(admin)/analytics/umami/+page.server.ts`
+- Should load `UMAMI_URL` from env and pass to page
+- **File:** `app/src/routes/(admin)/analytics/umami/+page.server.ts`
+- **Effort:** 15min
+
+### 11.5 WARNING: Ko-fi page save not wired
+- [ ] **Add onclick handler** to Save button in `app/src/routes/(admin)/integrations/kofi/+page.svelte`
+- Should POST to `/api/integrations/kofi/config` with webhookUrl + verificationToken
+- **File:** `app/src/routes/(admin)/integrations/kofi/+page.svelte`
+- **Effort:** 30min
+
+### 11.6 WARNING: Plugin pages are JSON dumps
+- [ ] **Build proper UI** for `app/src/routes/(admin)/social/[...path]/+page.svelte` — replace `<pre>JSON.stringify</pre>` with real components
+- [ ] **Build proper UI** for `app/src/routes/(admin)/shop/[...path]/+page.svelte` — same
+- **Files:** `app/src/routes/(admin)/social/`, `app/src/routes/(admin)/shop/`
+- **Effort:** ~4h (2h per section)
+
+### 11.7 WARNING: Cookies not proxied
+- [ ] **Add cookie forwarding** to `app/src/routes/api/[plugin]/[...path]/+server.ts`
+- Forward `cookie` header alongside `content-type` and `authorization`
+- **File:** `app/src/routes/api/[plugin]/[...path]/+server.ts`
+- **Effort:** 15min
+
+### 11.8 FAIL: 7 webs/admin features not migrated
+These are the unique features from webs/admin that must be ported to hiai-admin:
+
+#### HIGH Priority
+- [ ] **Custom domain management** — DNS verification, CNAME, SSL status pages
+  - **Source:** `webs/admin/src/app/sites/[slug]/domain/page.tsx`
+  - **Effort:** ~4h
+- [ ] **Image upload in editors** — MinIO/S3 upload in TipexEditor
+  - **Source:** `webs/admin/src/components/NovelEditor.tsx` (image upload via `/api/admin-proxy/images`)
+  - **Effort:** ~3h
+- [ ] **Homepage blocks editor** — 6 block types (hero, featured, text, image, cta, newsletter)
+  - **Source:** `webs/admin/src/app/sites/[slug]/homepage/page.tsx`, `BlockEditor.tsx`, `BlocksManager.tsx`
+  - **Effort:** ~6h
+- [ ] **Full analytics dashboard** — 5 tabs (overview, pages, sources/UTM, geo countries/cities, devices/browsers/OS)
+  - **Source:** `webs/admin/src/app/analytics/[siteId]/page.tsx` (400 lines)
+  - **Effort:** ~6h
+
+#### MEDIUM Priority
+- [ ] **NOWPayments crypto** — editor block (product name, price, currency, wallet) + site settings
+  - **Source:** `webs/admin/src/components/NovelEditor.tsx` (CryptoBlock), `sites/[slug]/settings/page.tsx`
+  - **Effort:** ~4h
+- [ ] **Newsletter management (Novu)** — subscribers, CSV export, campaigns, config
+  - **Source:** `webs/admin/src/app/sites/[slug]/newsletter/page.tsx`
+  - **Effort:** ~4h
+- [ ] **AI generation config per site** — frequency, topics, sources, writing style, image generation
+  - **Source:** `webs/admin/src/app/generation/page.tsx`
+  - **Effort:** ~4h
+
+#### LOW Priority
+- [ ] **AI design generation** — ai, hue_shift, complementary, triadic methods with version history
+  - **Source:** `webs/admin/src/lib/themes.ts` (461 lines)
+  - **Effort:** ~4h
+- [ ] **Theme presets** — 4 themes (minimal-dynamic, futuristic-glow, organic-vibes, playful-rococo) with WCAG contrast
+  - **Source:** `webs/admin/src/lib/themes.ts`
+  - **Effort:** ~3h
+
+### 11.9 Pre-existing TS Errors (not from our work)
+- 6 errors in `Locals` type — `Property 'user'/'session' does not exist on type 'Locals'`
+- **Files:** `app/src/routes/(admin)/+layout.server.ts`, `app/src/routes/+layout.server.ts`
+- These existed before our changes — needs `app.d.ts` declaration
+
+---
+
+## Summary (Updated)
+
+| Phase | Description | Effort | Status |
+|-------|-------------|--------|--------|
+| 0-10 | Original phases | ~106h | See above |
+| 11 | Critic audit fixes | ~35h | **NEW** |
+| **Total** | | **~141h** | |
