@@ -32,6 +32,9 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 
+# Backups
+*.bak
+
 # IDE
 .vscode/
 .idea/
