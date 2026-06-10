@@ -2,12 +2,23 @@ import { api } from '$lib/api.js';
 
 export async function load() {
   try {
-    const [overview, tenants] = await Promise.all([
-      api.get<{ totalTenants: number; activeTenants: number; newTenants: number; mrr: number }>('/api/analytics/overview'),
+    const [overview, tenants, mrr] = await Promise.all([
+      api.get<{ totalTenants: number; activeTenants: number; newTenants: number; mrr: number }>(
+        '/api/analytics/overview',
+      ),
       api.get<{ distribution: { plan: string; count: number }[] }>('/api/analytics/tenants'),
+      api.get<{ history: { month: string; mrr: number }[] }>('/api/analytics/mrr'),
     ]);
-    return { overview, tenantsDistribution: tenants.distribution };
+    return {
+      overview,
+      tenantsDistribution: tenants.distribution ?? [],
+      mrrHistory: mrr.history ?? [],
+    };
   } catch {
-    return { overview: { totalTenants: 0, activeTenants: 0, newTenants: 0, mrr: 0 }, tenantsDistribution: [] };
+    return {
+      overview: { totalTenants: 0, activeTenants: 0, newTenants: 0, mrr: 0 },
+      tenantsDistribution: [],
+      mrrHistory: [],
+    };
   }
 }

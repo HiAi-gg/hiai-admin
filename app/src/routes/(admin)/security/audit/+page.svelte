@@ -1,30 +1,30 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { page } from '$app/state';
+import { goto } from '$app/navigation';
+import { page } from '$app/state';
 
-  let { data } = $props();
-  let actionFilter = $state($page.url.searchParams.get('action') || '');
-  let resourceFilter = $state($page.url.searchParams.get('resource') || '');
-  let dateFrom = $state($page.url.searchParams.get('from') || '');
-  let dateTo = $state($page.url.searchParams.get('to') || '');
+let { data } = $props();
+let actionFilter = $state(page.url.searchParams.get('action') || '');
+let resourceFilter = $state(page.url.searchParams.get('resource') || '');
+let dateFrom = $state(page.url.searchParams.get('from') || '');
+let dateTo = $state(page.url.searchParams.get('to') || '');
 
-  function applyFilters() {
-    const params = new URLSearchParams();
-    if (actionFilter) params.set('action', actionFilter);
-    if (resourceFilter) params.set('resource', resourceFilter);
-    if (dateFrom) params.set('from', dateFrom);
-    if (dateTo) params.set('to', dateTo);
-    goto(`?${params.toString()}`);
-  }
+function applyFilters() {
+  const params = new URLSearchParams();
+  if (actionFilter) params.set('action', actionFilter);
+  if (resourceFilter) params.set('resource', resourceFilter);
+  if (dateFrom) params.set('from', dateFrom);
+  if (dateTo) params.set('to', dateTo);
+  goto(`?${params.toString()}`);
+}
 
-  function exportCSV() {
-    const params = new URLSearchParams({ format: 'csv' });
-    if (actionFilter) params.set('action', actionFilter);
-    if (resourceFilter) params.set('resource', resourceFilter);
-    if (dateFrom) params.set('from', dateFrom);
-    if (dateTo) params.set('to', dateTo);
-    window.open(`/api/audit/export?${params.toString()}`, '_blank');
-  }
+function exportCSV() {
+  const params = new URLSearchParams({ format: 'csv' });
+  if (actionFilter) params.set('action', actionFilter);
+  if (resourceFilter) params.set('resource', resourceFilter);
+  if (dateFrom) params.set('from', dateFrom);
+  if (dateTo) params.set('to', dateTo);
+  window.open(`/api/audit/export?${params.toString()}`, '_blank');
+}
 </script>
 
 <svelte:head><title>Audit Logs — hiai-admin</title></svelte:head>

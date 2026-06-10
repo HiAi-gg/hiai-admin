@@ -5,16 +5,24 @@ import { encrypt, decrypt } from '../../lib/encryption.js';
 import { randomUUID } from 'node:crypto';
 
 export const integrationService = {
-  async create(name: string, type: string, credentials: Record<string, string>, config?: Record<string, any>) {
+  async create(
+    name: string,
+    type: string,
+    credentials: Record<string, string>,
+    config?: Record<string, any>,
+  ) {
     const credentialsEncrypted = await encrypt(JSON.stringify(credentials));
-    const [integration] = await db.insert(integrations).values({
-      id: randomUUID(),
-      name,
-      type,
-      credentialsEncrypted,
-      config: config || {},
-      status: 'disconnected'
-    }).returning();
+    const [integration] = await db
+      .insert(integrations)
+      .values({
+        id: randomUUID(),
+        name,
+        type,
+        credentialsEncrypted,
+        config: config || {},
+        status: 'disconnected',
+      })
+      .returning();
     return { ...integration, credentialsEncrypted: undefined };
   },
 
@@ -23,7 +31,8 @@ export const integrationService = {
     if (credentials) updates.credentialsEncrypted = await encrypt(JSON.stringify(credentials));
     if (config) updates.config = config;
 
-    const [updated] = await db.update(integrations)
+    const [updated] = await db
+      .update(integrations)
       .set(updates)
       .where(eq(integrations.id, id))
       .returning();
@@ -36,7 +45,7 @@ export const integrationService = {
 
   async list() {
     const all = await db.select().from(integrations);
-    return all.map(i => ({ ...i, credentialsEncrypted: undefined }));
+    return all.map((i) => ({ ...i, credentialsEncrypted: undefined }));
   },
 
   async testConnection(id: string) {
@@ -56,12 +65,15 @@ export const integrationService = {
       }
       case 'shippo': {
         const response = await fetch('https://api.goshippo.com/addresses/', {
-          headers: { Authorization: `ShippoToken ${credentials.apiKey}` }
+          headers: { Authorization: `ShippoToken ${credentials.apiKey}` },
         });
-        return { success: response.ok, message: response.ok ? 'Shippo connection successful' : 'Shippo connection failed' };
+        return {
+          success: response.ok,
+          message: response.ok ? 'Shippo connection successful' : 'Shippo connection failed',
+        };
       }
       default:
         return { success: false, message: `Unknown integration type: ${integration.type}` };
     }
-  }
+  },
 };

@@ -1,37 +1,37 @@
 <script lang="ts">
-  let {
-    open = false,
-    title = 'Confirm Action',
-    message = 'Are you sure?',
-    confirmLabel = 'Confirm',
-    cancelLabel = 'Cancel',
-    variant = 'default',
-    requireReason = false,
-    onConfirm,
-    onCancel
-  }: {
-    open?: boolean;
-    title?: string;
-    message?: string;
-    confirmLabel?: string;
-    cancelLabel?: string;
-    variant?: 'default' | 'destructive';
-    requireReason?: boolean;
-    onConfirm: (reason?: string) => void;
-    onCancel: () => void;
-  } = $props();
+let {
+  open = false,
+  title = 'Confirm Action',
+  message = 'Are you sure?',
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  variant = 'default',
+  requireReason = false,
+  onConfirm,
+  onCancel,
+}: {
+  open?: boolean;
+  title?: string;
+  message?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  variant?: 'default' | 'destructive';
+  requireReason?: boolean;
+  onConfirm: (reason?: string) => void;
+  onCancel: () => void;
+} = $props();
 
-  let reason = $state('');
+let reason = $state('');
 
-  function handleConfirm() {
-    onConfirm(requireReason ? reason : undefined);
-    reason = '';
-  }
+function handleConfirm() {
+  onConfirm(requireReason ? reason : undefined);
+  reason = '';
+}
 
-  function handleCancel() {
-    onCancel();
-    reason = '';
-  }
+function handleCancel() {
+  onCancel();
+  reason = '';
+}
 </script>
 
 {#if open}

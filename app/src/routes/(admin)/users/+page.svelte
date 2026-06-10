@@ -1,31 +1,38 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import DataTable from '$lib/components/DataTable.svelte';
-  import StatusBadge from '$lib/components/StatusBadge.svelte';
+import { goto } from '$app/navigation';
+import DataTable from '$lib/components/DataTable.svelte';
 
-  let { data } = $props();
+let { data } = $props();
 
-  function handleSearch(query: string) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('search', query);
-    url.searchParams.set('page', '1');
-    goto(url.toString());
-  }
+function handleSearch(query: string) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('search', query);
+  url.searchParams.set('page', '1');
+  goto(url.toString());
+}
 
-  function handlePageChange(page: number) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('page', String(page));
-    goto(url.toString());
-  }
+function handlePageChange(page: number) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('page', String(page));
+  goto(url.toString());
+}
 
-  const columns = [
-    { key: 'name', label: 'Name', sortable: true },
-    { key: 'email', label: 'Email', sortable: true },
-    { key: 'role', label: 'Role' },
-    { key: 'two_factor_enabled', label: '2FA', render: (val: boolean) => val ? '✅' : '❌' },
-    { key: 'last_login_at', label: 'Last Login', render: (val: string) => val ? new Date(val).toLocaleString() : 'Never' },
-    { key: 'created_at', label: 'Created', render: (val: string) => new Date(val).toLocaleDateString() }
-  ];
+const columns = [
+  { key: 'name', label: 'Name', sortable: true },
+  { key: 'email', label: 'Email', sortable: true },
+  { key: 'role', label: 'Role' },
+  { key: 'two_factor_enabled', label: '2FA', render: (val: boolean) => (val ? '✅' : '❌') },
+  {
+    key: 'last_login_at',
+    label: 'Last Login',
+    render: (val: string) => (val ? new Date(val).toLocaleString() : 'Never'),
+  },
+  {
+    key: 'created_at',
+    label: 'Created',
+    render: (val: string) => new Date(val).toLocaleDateString(),
+  },
+];
 </script>
 
 <svelte:head>
@@ -44,7 +51,7 @@
     data={data.users.items || []}
     {columns}
     searchPlaceholder="Search users..."
-    {handleSearch}
+    onSearch={handleSearch}
     onPageChange={handlePageChange}
     page={data.page}
     totalPages={data.users.totalPages || 1}

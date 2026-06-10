@@ -1,23 +1,24 @@
 <script lang="ts">
-  import { StatsCard } from '@hiai/ui';
-  let { data } = $props();
-  let events = $state<Array<{ type: string; data: Record<string, unknown>; timestamp: string }>>([]);
+import StatsCard from '$lib/components/StatsCard.svelte';
 
-  $effect(() => {
-    const es = new EventSource('/api/events');
-    es.onmessage = (e) => {
-      try {
-        const parsed = JSON.parse(e.data);
-        if (parsed.type !== 'connected') {
-          events = [parsed, ...events].slice(0, 20);
-        }
-      } catch {}
-    };
-    return () => es.close();
-  });
+let { data } = $props();
+let events = $state<Array<{ type: string; data: Record<string, unknown>; timestamp: string }>>([]);
 
-  const mrrHistory = data.mrrHistory || [];
-  const maxMrr = Math.max(...mrrHistory.map((m: { mrr: number }) => m.mrr), 1);
+$effect(() => {
+  const es = new EventSource('/api/events');
+  es.onmessage = (e) => {
+    try {
+      const parsed = JSON.parse(e.data);
+      if (parsed.type !== 'connected') {
+        events = [parsed, ...events].slice(0, 20);
+      }
+    } catch {}
+  };
+  return () => es.close();
+});
+
+const mrrHistory = data.mrrHistory || [];
+const maxMrr = Math.max(...mrrHistory.map((m: { mrr: number }) => m.mrr), 1);
 </script>
 
 <svelte:head>

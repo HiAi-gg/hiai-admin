@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'bun:test';
-import { PLAN_FEATURES, getPlanFeatures, getPlanPrice, getAllPlans, type PlanId } from '../modules/billing/plan.service.js';
+import {
+  PLAN_FEATURES,
+  getPlanFeatures,
+  getPlanPrice,
+  getAllPlans,
+} from '../modules/billing/plan.service.js';
 
 describe('Billing Plan Service', () => {
   describe('Plan Definitions', () => {
@@ -64,14 +69,14 @@ describe('Billing Plan Service', () => {
     it('should return all 3 plans', () => {
       const plans = getAllPlans();
       expect(plans.length).toBe(3);
-      expect(plans.map(p => p.id).sort()).toEqual(['enterprise', 'free', 'pro']);
+      expect(plans.map((p) => p.id).sort()).toEqual(['enterprise', 'free', 'pro']);
     });
 
     it('should have increasing feature limits across plans', () => {
       const plans = getAllPlans();
-      const free = plans.find(p => p.id === 'free')!;
-      const pro = plans.find(p => p.id === 'pro')!;
-      const enterprise = plans.find(p => p.id === 'enterprise')!;
+      const free = plans.find((p) => p.id === 'free')!;
+      const pro = plans.find((p) => p.id === 'pro')!;
+      const enterprise = plans.find((p) => p.id === 'enterprise')!;
 
       // Free < Pro < Enterprise (where -1 means unlimited)
       expect(free.maxUsers).toBeLessThan(pro.maxUsers);

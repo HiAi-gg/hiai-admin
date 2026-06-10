@@ -1,13 +1,13 @@
 <script lang="ts">
-  import StatusBadge from '$lib/components/StatusBadge.svelte';
+import StatusBadge from '$lib/components/StatusBadge.svelte';
 
-  let { data } = $props();
+let { data } = $props();
 
-  async function handlePortal() {
-    const res = await fetch('/api/billing/portal', { method: 'POST' });
-    const { url } = await res.json();
-    window.location.href = url;
-  }
+async function handlePortal() {
+  const res = await fetch('/api/billing/portal', { method: 'POST' });
+  const { url } = await res.json();
+  window.location.href = url;
+}
 </script>
 
 <svelte:head>

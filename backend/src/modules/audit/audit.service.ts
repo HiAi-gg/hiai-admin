@@ -1,6 +1,6 @@
 import { db } from '../../lib/db.js';
 import { auditLogs } from '../../db/schema/index.js';
-import { eq, and, gte, lte, like, count } from 'drizzle-orm';
+import { eq, and, gte, lte, count } from 'drizzle-orm';
 
 export const auditService = {
   async record(data: {
@@ -14,29 +14,34 @@ export const auditService = {
     ipAddress?: string;
     userAgent?: string;
   }) {
-    const [log] = await db.insert(auditLogs).values({
-      actorId: data.actorId,
-      actorEmail: data.actorEmail,
-      action: data.action,
-      resource: data.resource,
-      resourceId: data.resourceId,
-      oldValue: data.oldValue,
-      newValue: data.newValue,
-      ipAddress: data.ipAddress,
-      userAgent: data.userAgent
-    }).returning();
+    const [log] = await db
+      .insert(auditLogs)
+      .values({
+        actorId: data.actorId,
+        actorEmail: data.actorEmail,
+        action: data.action,
+        resource: data.resource,
+        resourceId: data.resourceId,
+        oldValue: data.oldValue,
+        newValue: data.newValue,
+        ipAddress: data.ipAddress,
+        userAgent: data.userAgent,
+      })
+      .returning();
     return log;
   },
 
-  async list(options: {
-    page?: number;
-    limit?: number;
-    actorId?: string;
-    action?: string;
-    resource?: string;
-    startDate?: Date;
-    endDate?: Date;
-  } = {}) {
+  async list(
+    options: {
+      page?: number;
+      limit?: number;
+      actorId?: string;
+      action?: string;
+      resource?: string;
+      startDate?: Date;
+      endDate?: Date;
+    } = {},
+  ) {
     const { page = 1, limit = 50, actorId, action, resource, startDate, endDate } = options;
     const offset = (page - 1) * limit;
 
@@ -56,14 +61,17 @@ export const auditService = {
       countQuery = countQuery.where(and(...conditions)) as any;
     }
 
-    const [items, total] = await Promise.all([
-      query.limit(limit).offset(offset),
-      countQuery
-    ]);
+    const [items, total] = await Promise.all([query.limit(limit).offset(offset), countQuery]);
 
     return {
       items,
-      pagination: { page, limit, total: total[0]?.count || 0, totalPages: Math.ceil((total[0]?.count || 0) / limit) }
+      pagination: {
+        page,
+        limit,
+        total: total[0]?.count || 0,
+        totalPages: Math.ceil((total[0]?.count || 0) / limit),
+        hasMore: page * limit < (total[0]?.count || 0),
+      },
     };
   },
 
@@ -71,15 +79,15 @@ export const auditService = {
     const data = await this.list({ ...filters, limit: 10000 });
     // Convert to CSV format
     const headers = ['ID', 'Actor', 'Action', 'Resource', 'Resource ID', 'IP', 'Timestamp'];
-    const rows = data.items.map(log => [
+    const rows = data.items.map((log) => [
       log.id,
       log.actorEmail,
       log.action,
       log.resource,
       log.resourceId || '',
       log.ipAddress || '',
-      log.createdAt
+      log.createdAt,
     ]);
-    return [headers, ...rows].map(row => row.join(',')).join('\n');
-  }
+    return [headers, ...rows].map((row) => row.join(',')).join('\n');
+  },
 };

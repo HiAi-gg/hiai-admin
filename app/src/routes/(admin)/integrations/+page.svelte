@@ -1,36 +1,76 @@
 <script lang="ts">
-  let { data } = $props();
-  let integrations = $state(data.integrations || [
-    { id: 'stripe', name: 'Stripe', type: 'stripe', icon: '💳', desc: 'Payments and billing', status: 'disconnected', lastSync: null },
-    { id: 'shippo', name: 'Shippo', type: 'shippo', icon: '📦', desc: 'Shipping and label generation', status: 'disconnected', lastSync: null },
-    { id: 'observe', name: 'HiAi Observe', type: 'observe', icon: '📊', desc: 'Error tracking and monitoring', status: 'disconnected', lastSync: null },
-    { id: 'novu', name: 'Novu', type: 'novu', icon: '🔔', desc: 'Notification delivery', status: 'disconnected', lastSync: null },
-  ]);
-  let testing = $state<string | null>(null);
-  let testResult = $state<{ id: string; success: boolean; message: string } | null>(null);
+let { data } = $props();
+let integrations = $state(
+  data.integrations || [
+    {
+      id: 'stripe',
+      name: 'Stripe',
+      type: 'stripe',
+      icon: '💳',
+      desc: 'Payments and billing',
+      status: 'disconnected',
+      lastSync: null,
+    },
+    {
+      id: 'shippo',
+      name: 'Shippo',
+      type: 'shippo',
+      icon: '📦',
+      desc: 'Shipping and label generation',
+      status: 'disconnected',
+      lastSync: null,
+    },
+    {
+      id: 'observe',
+      name: 'HiAi Observe',
+      type: 'observe',
+      icon: '📊',
+      desc: 'Error tracking and monitoring',
+      status: 'disconnected',
+      lastSync: null,
+    },
+    {
+      id: 'novu',
+      name: 'Novu',
+      type: 'novu',
+      icon: '🔔',
+      desc: 'Notification delivery',
+      status: 'disconnected',
+      lastSync: null,
+    },
+  ],
+);
+let testing = $state<string | null>(null);
+let testResult = $state<{ id: string; success: boolean; message: string } | null>(null);
 
-  async function testConnection(id: string) {
-    testing = id;
-    testResult = null;
-    try {
-      const res = await fetch(`/api/integrations/${id}/test`, { method: 'POST' });
-      const result = await res.json();
-      testResult = { id, success: result.success, message: result.message };
-    } catch (e: any) {
-      testResult = { id, success: false, message: e.message };
-    } finally {
-      testing = null;
-    }
+async function testConnection(id: string) {
+  testing = id;
+  testResult = null;
+  try {
+    const res = await fetch(`/api/integrations/${id}/test`, { method: 'POST' });
+    const result = await res.json();
+    testResult = { id, success: result.success, message: result.message };
+  } catch (e: any) {
+    testResult = { id, success: false, message: e.message };
+  } finally {
+    testing = null;
   }
+}
 
-  async function disconnect(id: string) {
-    await fetch(`/api/integrations/${id}`, { method: 'DELETE' });
-    integrations = integrations.map(i => i.id === id ? { ...i, status: 'disconnected' } : i);
-  }
+async function disconnect(id: string) {
+  await fetch(`/api/integrations/${id}`, { method: 'DELETE' });
+  integrations = integrations.map((i: { id: string; status: string }) =>
+    i.id === id ? { ...i, status: 'disconnected' } : i,
+  );
+}
 
-  function statusColor(status: string) {
-    return status === 'connected' ? 'bg-success/10 text-success' : status === 'error' ? 'bg-destructive/10 text-destructive' : 'bg-muted text-muted-foreground';
-  }
+function statusColor(status: string) {
+  return status === 'connected'
+    ? 'bg-success/10 text-success'
+    : status === 'error'
+      ? 'bg-destructive/10 text-destructive'
+      : 'bg-muted text-muted-foreground';
+}
 </script>
 
 <svelte:head><title>Integrations — hiai-admin</title></svelte:head>

@@ -26,7 +26,7 @@ export async function dbHealthCheck(): Promise<boolean> {
 }
 
 export async function withTransaction<T>(
-  fn: (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => Promise<T>
+  fn: (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => Promise<T>,
 ): Promise<T> {
   return db.transaction(fn);
 }

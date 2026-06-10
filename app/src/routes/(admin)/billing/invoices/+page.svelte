@@ -1,7 +1,7 @@
 <script lang="ts">
-  import StatusBadge from '$lib/components/StatusBadge.svelte';
+import StatusBadge from '$lib/components/StatusBadge.svelte';
 
-  let { data } = $props();
+let { data } = $props();
 </script>
 
 <svelte:head>

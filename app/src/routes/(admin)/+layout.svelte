@@ -1,44 +1,44 @@
 <script lang="ts">
-  import type { LayoutData } from './$types';
-  import { AdminSidebar, AdminHeader, ThemeToggle, sidebarStore } from '@hiai/ui';
-  import { getNavGroups } from '$lib/plugins/registry.js';
-  import { registerPlugin } from '$lib/plugins/registry.js';
-  import { hiaiPostPlugin } from '$lib/plugins/hiai-post.js';
-  import { hiaiStorePlugin } from '$lib/plugins/hiai-store.js';
-  import { kofiPlugin } from '$lib/plugins/kofi.js';
-  import { umamiPlugin } from '$lib/plugins/umami.js';
+import type { Snippet } from 'svelte';
+import type { LayoutData } from './$types';
+import { AdminSidebar, AdminHeader, ThemeToggle } from '@hiai/ui';
+import { sidebarStore } from '$lib/stores/sidebar.svelte.js';
+import { registerPlugin, getNavGroups } from '$lib/plugins/registry.js';
+import { hiaiPostPlugin } from '$lib/plugins/hiai-post.js';
+import { hiaiStorePlugin } from '$lib/plugins/hiai-store.js';
+import { kofiPlugin } from '$lib/plugins/kofi.js';
+import { umamiPlugin } from '$lib/plugins/umami.js';
 
-  let { data, children } = $props<{ data: LayoutData; children: Snippet }>();
+let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
-  // Register all plugins on first load
-  registerPlugin(hiaiPostPlugin);
-  registerPlugin(hiaiStorePlugin);
-  registerPlugin(kofiPlugin);
-  registerPlugin(umamiPlugin);
+registerPlugin(hiaiPostPlugin);
+registerPlugin(hiaiStorePlugin);
+registerPlugin(kofiPlugin);
+registerPlugin(umamiPlugin);
 
-  // Core admin nav + plugin nav groups
-  const coreNavGroups = [
-    {
-      label: 'Platform',
-      items: [
-        { label: 'Dashboard', href: '/dashboard', icon: '📊' },
-        { label: 'Tenants', href: '/tenants', icon: '🏪' },
-        { label: 'Users', href: '/users', icon: '👥' },
-        { label: 'Billing', href: '/billing', icon: '💳' },
-        { label: 'Analytics', href: '/analytics', icon: '📈' },
-        { label: 'Settings', href: '/settings', icon: '⚙️' },
-        { label: 'Security', href: '/security/audit', icon: '🔒' },
-        { label: 'Integrations', href: '/integrations', icon: '🔗' },
-      ],
-    },
-  ];
+const coreNavGroups = [
+  {
+    label: 'Platform',
+    items: [
+      { label: 'Dashboard', href: '/dashboard', icon: '📊' },
+      { label: 'Tenants', href: '/tenants', icon: '🏪' },
+      { label: 'Users', href: '/users', icon: '👥' },
+      { label: 'RBAC', href: '/rbac', icon: '🛡️' },
+      { label: 'Billing', href: '/billing', icon: '💳' },
+      { label: 'Analytics', href: '/analytics', icon: '📈' },
+      { label: 'Settings', href: '/settings', icon: '⚙️' },
+      { label: 'Security', href: '/security/audit', icon: '🔒' },
+      { label: 'Integrations', href: '/integrations', icon: '🔗' },
+    ],
+  },
+];
 
-  const allNavGroups = $derived([...coreNavGroups, ...getNavGroups()]);
+const allNavGroups = $derived([...coreNavGroups, ...getNavGroups()]);
 </script>
 
 <div class="flex h-screen overflow-hidden bg-background">
   <AdminSidebar
-    navGroups={allNavGroups}
+    groups={allNavGroups}
     collapsed={sidebarStore.collapsed}
   />
 

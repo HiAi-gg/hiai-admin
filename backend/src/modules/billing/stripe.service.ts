@@ -2,7 +2,7 @@ import Stripe from 'stripe';
 import { env } from '../../lib/config.js';
 import { logger } from '../../lib/logger.js';
 
-const log = logger.child({ module: 'stripe' });
+const _log = logger.child({ module: 'stripe' });
 
 if (!env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is required');
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });

@@ -1,33 +1,32 @@
 <script lang="ts">
-  import StatusBadge from '$lib/components/StatusBadge.svelte';
-  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
-  let { data } = $props();
-  let activeTab = $state('profile');
-  let showRoleModal = $state(false);
-  let selectedRole = $state(data.user?.role || 'viewer');
+let { data } = $props();
+let activeTab = $state('profile');
+let showRoleModal = $state(false);
+let selectedRole = $state(data.user?.role || 'viewer');
 
-  const roles = [
-    { value: 'super_admin', label: 'Super Admin', description: 'Full platform access' },
-    { value: 'tenant_admin', label: 'Tenant Admin', description: 'Manage assigned tenants' },
-    { value: 'editor', label: 'Editor', description: 'Edit content within tenants' },
-    { value: 'viewer', label: 'Viewer', description: 'Read-only access' },
-  ];
+const roles = [
+  { value: 'super_admin', label: 'Super Admin', description: 'Full platform access' },
+  { value: 'tenant_admin', label: 'Tenant Admin', description: 'Manage assigned tenants' },
+  { value: 'editor', label: 'Editor', description: 'Edit content within tenants' },
+  { value: 'viewer', label: 'Viewer', description: 'Read-only access' },
+];
 
-  async function updateRole() {
-    await fetch(`/api/users/${data.user.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role: selectedRole })
-    });
-    showRoleModal = false;
-    window.location.reload();
-  }
+async function updateRole() {
+  await fetch(`/api/users/${data.user.id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ role: selectedRole }),
+  });
+  showRoleModal = false;
+  window.location.reload();
+}
 
-  async function revokeSession(sessionId: string) {
-    await fetch(`/api/users/${data.user.id}/sessions/${sessionId}`, { method: 'DELETE' });
-    window.location.reload();
-  }
+async function revokeSession(sessionId: string) {
+  await fetch(`/api/users/${data.user.id}/sessions/${sessionId}`, { method: 'DELETE' });
+  window.location.reload();
+}
 </script>
 
 <svelte:head><title>{data.user?.name || 'User'} — hiai-admin</title></svelte:head>
@@ -89,9 +88,7 @@
       <h3 class="font-semibold mb-4">Role & Permissions</h3>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {#each roles as role}
-          <div class="p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md"
-            class:border-primary={data.user?.role === role.value}
-            class:bg-primary/5={data.user?.role === role.value}
+          <div class="p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md {data.user?.role === role.value ? 'border-primary bg-primary/5' : ''}"
             onclick={() => { selectedRole = role.value; showRoleModal = true; }}
           >
             <div class="flex items-center justify-between">

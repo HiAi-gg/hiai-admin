@@ -2,7 +2,8 @@ export const openApiSpec = {
   openapi: '3.0.3',
   info: {
     title: 'hiai-admin API',
-    description: 'Central admin panel for the HiAi SaaS platform — tenant management, user administration, billing, analytics, and platform settings.',
+    description:
+      'Central admin panel for the HiAi SaaS platform — tenant management, user administration, billing, analytics, and platform settings.',
     version: '1.0.0',
     contact: { name: 'HiAi Team' },
     license: { name: 'MIT', url: 'https://opensource.org/licenses/MIT' },
@@ -27,7 +28,17 @@ export const openApiSpec = {
         tags: ['Health'],
         summary: 'Health check',
         responses: {
-          '200': { description: 'Service is healthy', content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string' }, services: { type: 'object' } } } } } },
+          '200': {
+            description: 'Service is healthy',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: { status: { type: 'string' }, services: { type: 'object' } },
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -39,7 +50,11 @@ export const openApiSpec = {
         parameters: [
           { name: 'page', in: 'query', schema: { type: 'integer', default: 1 } },
           { name: 'limit', in: 'query', schema: { type: 'integer', default: 20 } },
-          { name: 'status', in: 'query', schema: { type: 'string', enum: ['pending', 'active', 'suspended', 'trial'] } },
+          {
+            name: 'status',
+            in: 'query',
+            schema: { type: 'string', enum: ['pending', 'active', 'suspended', 'trial'] },
+          },
           { name: 'search', in: 'query', schema: { type: 'string' } },
         ],
         responses: {
@@ -54,7 +69,20 @@ export const openApiSpec = {
         security: [{ bearerAuth: [] }],
         requestBody: {
           required: true,
-          content: { 'application/json': { schema: { type: 'object', required: ['name', 'slug'], properties: { name: { type: 'string' }, slug: { type: 'string', pattern: '^[a-z0-9-]+$' }, email: { type: 'string', format: 'email' }, plan: { type: 'string', enum: ['free', 'pro', 'enterprise'] } } } } },
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'slug'],
+                properties: {
+                  name: { type: 'string' },
+                  slug: { type: 'string', pattern: '^[a-z0-9-]+$' },
+                  email: { type: 'string', format: 'email' },
+                  plan: { type: 'string', enum: ['free', 'pro', 'enterprise'] },
+                },
+              },
+            },
+          },
         },
         responses: {
           '201': { description: 'Tenant created' },
@@ -68,22 +96,37 @@ export const openApiSpec = {
         tags: ['Tenants'],
         summary: 'Get tenant detail',
         security: [{ bearerAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { '200': { description: 'Tenant detail with users and subscription' }, '404': { description: 'Tenant not found' } },
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Tenant detail with users and subscription' },
+          '404': { description: 'Tenant not found' },
+        },
       },
       put: {
         tags: ['Tenants'],
         summary: 'Update tenant',
         security: [{ bearerAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { '200': { description: 'Tenant updated' }, '403': { description: 'Forbidden' } },
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Tenant updated' },
+          '403': { description: 'Forbidden' },
+        },
       },
       delete: {
         tags: ['Tenants'],
         summary: 'Soft-delete tenant',
         security: [{ bearerAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        responses: { '200': { description: 'Tenant deleted' }, '403': { description: 'Forbidden — requires tenants:delete' } },
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': { description: 'Tenant deleted' },
+          '403': { description: 'Forbidden — requires tenants:delete' },
+        },
       },
     },
     '/api/tenants/{id}/suspend': {
@@ -91,7 +134,9 @@ export const openApiSpec = {
         tags: ['Tenants'],
         summary: 'Suspend tenant',
         security: [{ bearerAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
         responses: { '200': { description: 'Tenant suspended' } },
       },
     },
@@ -100,7 +145,9 @@ export const openApiSpec = {
         tags: ['Tenants'],
         summary: 'Reactivate suspended tenant',
         security: [{ bearerAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
         responses: { '200': { description: 'Tenant reactivated' } },
       },
     },
@@ -109,8 +156,19 @@ export const openApiSpec = {
         tags: ['Tenants'],
         summary: 'Change tenant plan',
         security: [{ bearerAuth: [] }],
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
-        requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { plan: { type: 'string', enum: ['free', 'pro', 'enterprise'] } } } } } },
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: { plan: { type: 'string', enum: ['free', 'pro', 'enterprise'] } },
+              },
+            },
+          },
+        },
         responses: { '200': { description: 'Plan changed' } },
       },
     },
@@ -125,66 +183,243 @@ export const openApiSpec = {
           { name: 'search', in: 'query', schema: { type: 'string' } },
           { name: 'role', in: 'query', schema: { type: 'string' } },
         ],
-        responses: { '200': { description: 'Paginated user list' }, '403': { description: 'Forbidden — requires users:read' } },
+        responses: {
+          '200': { description: 'Paginated user list' },
+          '403': { description: 'Forbidden — requires users:read' },
+        },
       },
       post: {
         tags: ['Users'],
         summary: 'Create user',
         security: [{ bearerAuth: [] }],
-        responses: { '201': { description: 'User created' }, '403': { description: 'Forbidden — requires users:write' } },
+        responses: {
+          '201': { description: 'User created' },
+          '403': { description: 'Forbidden — requires users:write' },
+        },
       },
     },
     '/api/users/{id}': {
-      get: { tags: ['Users'], summary: 'Get user detail', security: [{ bearerAuth: [] }], parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'User detail' } } },
-      put: { tags: ['Users'], summary: 'Update user', security: [{ bearerAuth: [] }], responses: { '200': { description: 'User updated' } } },
-      delete: { tags: ['Users'], summary: 'Delete user', security: [{ bearerAuth: [] }], responses: { '200': { description: 'User deleted' } } },
+      get: {
+        tags: ['Users'],
+        summary: 'Get user detail',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { '200': { description: 'User detail' } },
+      },
+      put: {
+        tags: ['Users'],
+        summary: 'Update user',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'User updated' } },
+      },
+      delete: {
+        tags: ['Users'],
+        summary: 'Delete user',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'User deleted' } },
+      },
     },
     '/api/users/{id}/assign-role': {
-      post: { tags: ['Users'], summary: 'Assign role to user', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Role assigned' } } },
+      post: {
+        tags: ['Users'],
+        summary: 'Assign role to user',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Role assigned' } },
+      },
     },
     '/api/users/{id}/revoke-role': {
-      post: { tags: ['Users'], summary: 'Revoke role from user', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Role revoked' } } },
+      post: {
+        tags: ['Users'],
+        summary: 'Revoke role from user',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Role revoked' } },
+      },
     },
-    '/api/roles': {
-      get: { tags: ['Roles'], summary: 'List all roles with permissions', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Role list' } } },
-      post: { tags: ['Roles'], summary: 'Create role', security: [{ bearerAuth: [] }], responses: { '201': { description: 'Role created' } } },
+    '/api/rbac/roles': {
+      get: {
+        tags: ['RBAC'],
+        summary: 'List roles with permissions',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Role list' } },
+      },
+      post: {
+        tags: ['RBAC'],
+        summary: 'Create role',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Role created' } },
+      },
     },
-    '/api/roles/{id}': {
-      put: { tags: ['Roles'], summary: 'Update role', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Role updated' } } },
-      delete: { tags: ['Roles'], summary: 'Delete role (non-system only)', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Role deleted' } } },
+    '/api/rbac/roles/{id}': {
+      get: {
+        tags: ['RBAC'],
+        summary: 'Get role with permissions',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Role detail' } },
+      },
+      put: {
+        tags: ['RBAC'],
+        summary: 'Update role',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Role updated' } },
+      },
+      delete: {
+        tags: ['RBAC'],
+        summary: 'Delete role (non-system only)',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Role deleted' } },
+      },
     },
-    '/api/permissions': {
-      get: { tags: ['Permissions'], summary: 'List all permissions', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Permission list' } } },
+    '/api/rbac/roles/{id}/permissions': {
+      put: {
+        tags: ['RBAC'],
+        summary: 'Replace role permission set',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Permissions updated' } },
+      },
+      post: {
+        tags: ['RBAC'],
+        summary: 'Assign single permission to role',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Permission assigned' } },
+      },
     },
-    '/api/roles/{id}/permissions': {
-      post: { tags: ['Permissions'], summary: 'Assign permission to role', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Permission assigned' } } },
+    '/api/rbac/roles/{id}/permissions/{pid}': {
+      delete: {
+        tags: ['RBAC'],
+        summary: 'Revoke permission from role',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Permission revoked' } },
+      },
     },
-    '/api/roles/{id}/permissions/{pid}': {
-      delete: { tags: ['Permissions'], summary: 'Revoke permission from role', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Permission revoked' } } },
+    '/api/rbac/permissions': {
+      get: {
+        tags: ['RBAC'],
+        summary: 'List all permissions',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Permission list' } },
+      },
+      post: {
+        tags: ['RBAC'],
+        summary: 'Create permission',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Permission created' } },
+      },
+    },
+    '/api/rbac/permissions/{id}': {
+      put: {
+        tags: ['RBAC'],
+        summary: 'Update permission',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Permission updated' } },
+      },
+      delete: {
+        tags: ['RBAC'],
+        summary: 'Delete permission',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Permission deleted' } },
+      },
+    },
+    '/api/rbac/users': {
+      get: {
+        tags: ['RBAC'],
+        summary: 'List users with assigned role IDs',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'User list' } },
+      },
+    },
+    '/api/rbac/users/{userId}/roles': {
+      get: {
+        tags: ['RBAC'],
+        summary: 'List roles assigned to user',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Role list' } },
+      },
+      post: {
+        tags: ['RBAC'],
+        summary: 'Assign role to user',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Role assigned' } },
+      },
+    },
+    '/api/rbac/users/{userId}/roles/{roleId}': {
+      delete: {
+        tags: ['RBAC'],
+        summary: 'Revoke role from user',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Role revoked' } },
+      },
+    },
+    '/api/rbac/matrix': {
+      get: {
+        tags: ['RBAC'],
+        summary: 'Permission matrix (roles x permissions)',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Permission matrix' } },
+      },
     },
     '/api/billing/plans': {
-      get: { tags: ['Billing'], summary: 'List available plans with features', responses: { '200': { description: 'Plan list' } } },
+      get: {
+        tags: ['Billing'],
+        summary: 'List available plans with features',
+        responses: { '200': { description: 'Plan list' } },
+      },
     },
     '/api/billing/subscription': {
-      get: { tags: ['Billing'], summary: 'Get current subscription', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Current subscription' } } },
+      get: {
+        tags: ['Billing'],
+        summary: 'Get current subscription',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Current subscription' } },
+      },
     },
     '/api/billing/subscribe': {
-      post: { tags: ['Billing'], summary: 'Subscribe to a plan', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Subscription created' } } },
+      post: {
+        tags: ['Billing'],
+        summary: 'Subscribe to a plan',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Subscription created' } },
+      },
     },
     '/api/billing/upgrade': {
-      post: { tags: ['Billing'], summary: 'Upgrade plan', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Plan upgraded' } } },
+      post: {
+        tags: ['Billing'],
+        summary: 'Upgrade plan',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Plan upgraded' } },
+      },
     },
     '/api/billing/downgrade': {
-      post: { tags: ['Billing'], summary: 'Downgrade plan', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Plan downgraded' } } },
+      post: {
+        tags: ['Billing'],
+        summary: 'Downgrade plan',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Plan downgraded' } },
+      },
     },
     '/api/billing/cancel': {
-      post: { tags: ['Billing'], summary: 'Cancel subscription at period end', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Subscription cancelled' } } },
+      post: {
+        tags: ['Billing'],
+        summary: 'Cancel subscription at period end',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Subscription cancelled' } },
+      },
     },
     '/api/billing/portal': {
-      post: { tags: ['Billing'], summary: 'Create Stripe Customer Portal session', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Portal URL' } } },
+      post: {
+        tags: ['Billing'],
+        summary: 'Create Stripe Customer Portal session',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Portal URL' } },
+      },
     },
     '/api/billing/invoices': {
-      get: { tags: ['Billing'], summary: 'List invoices', security: [{ bearerAuth: [] }], parameters: [{ name: 'page', in: 'query', schema: { type: 'integer' } }], responses: { '200': { description: 'Invoice list' } } },
+      get: {
+        tags: ['Billing'],
+        summary: 'List invoices',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'page', in: 'query', schema: { type: 'integer' } }],
+        responses: { '200': { description: 'Invoice list' } },
+      },
     },
     '/api/audit': {
       get: {
@@ -200,52 +435,144 @@ export const openApiSpec = {
           { name: 'startDate', in: 'query', schema: { type: 'string', format: 'date-time' } },
           { name: 'endDate', in: 'query', schema: { type: 'string', format: 'date-time' } },
         ],
-        responses: { '200': { description: 'Paginated audit log list' }, '403': { description: 'Forbidden — requires audit:read' } },
+        responses: {
+          '200': { description: 'Paginated audit log list' },
+          '403': { description: 'Forbidden — requires audit:read' },
+        },
       },
     },
     '/api/audit/export': {
-      get: { tags: ['Audit'], summary: 'Export audit logs as CSV', security: [{ bearerAuth: [] }], responses: { '200': { description: 'CSV file download', content: { 'text/csv': { schema: { type: 'string' } } } } } },
+      get: {
+        tags: ['Audit'],
+        summary: 'Export audit logs as CSV',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': {
+            description: 'CSV file download',
+            content: { 'text/csv': { schema: { type: 'string' } } },
+          },
+        },
+      },
     },
     '/api/settings': {
-      get: { tags: ['Settings'], summary: 'List all settings grouped by category', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Settings grouped by category' } } },
+      get: {
+        tags: ['Settings'],
+        summary: 'List all settings grouped by category',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Settings grouped by category' } },
+      },
     },
     '/api/settings/{key}': {
-      get: { tags: ['Settings'], summary: 'Get single setting', security: [{ bearerAuth: [] }], parameters: [{ name: 'key', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Setting value' }, '404': { description: 'Setting not found' } } },
-      put: { tags: ['Settings'], summary: 'Update setting', security: [{ bearerAuth: [] }], parameters: [{ name: 'key', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Setting updated' } } },
+      get: {
+        tags: ['Settings'],
+        summary: 'Get single setting',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'key', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'Setting value' },
+          '404': { description: 'Setting not found' },
+        },
+      },
+      put: {
+        tags: ['Settings'],
+        summary: 'Update setting',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'key', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { '200': { description: 'Setting updated' } },
+      },
     },
     '/api/integrations': {
-      get: { tags: ['Integrations'], summary: 'List integrations with status', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Integration list' } } },
-      post: { tags: ['Integrations'], summary: 'Create integration', security: [{ bearerAuth: [] }], responses: { '201': { description: 'Integration created' } } },
+      get: {
+        tags: ['Integrations'],
+        summary: 'List integrations with status',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Integration list' } },
+      },
+      post: {
+        tags: ['Integrations'],
+        summary: 'Create integration',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Integration created' } },
+      },
     },
     '/api/integrations/{id}': {
-      put: { tags: ['Integrations'], summary: 'Update integration', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Integration updated' } } },
-      delete: { tags: ['Integrations'], summary: 'Delete integration', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Integration deleted' } } },
+      put: {
+        tags: ['Integrations'],
+        summary: 'Update integration',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Integration updated' } },
+      },
+      delete: {
+        tags: ['Integrations'],
+        summary: 'Delete integration',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Integration deleted' } },
+      },
     },
     '/api/integrations/{id}/test': {
-      post: { tags: ['Integrations'], summary: 'Test integration connection', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Connection test result' } } },
+      post: {
+        tags: ['Integrations'],
+        summary: 'Test integration connection',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Connection test result' } },
+      },
     },
     '/api/analytics/overview': {
-      get: { tags: ['Analytics'], summary: 'Platform analytics overview (MRR, churn, LTV, CAC, active tenants)', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Analytics overview' } } },
+      get: {
+        tags: ['Analytics'],
+        summary: 'Platform analytics overview (MRR, churn, LTV, CAC, active tenants)',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Analytics overview' } },
+      },
     },
     '/api/analytics/mrr': {
-      get: { tags: ['Analytics'], summary: 'MRR trend (12 months)', security: [{ bearerAuth: [] }], responses: { '200': { description: 'MRR data' } } },
+      get: {
+        tags: ['Analytics'],
+        summary: 'MRR trend (12 months)',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'MRR data' } },
+      },
     },
     '/api/analytics/tenants': {
-      get: { tags: ['Analytics'], summary: 'Tenant distribution by plan and status', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Tenant analytics' } } },
+      get: {
+        tags: ['Analytics'],
+        summary: 'Tenant distribution by plan and status',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Tenant analytics' } },
+      },
     },
     '/api/analytics/churn': {
-      get: { tags: ['Analytics'], summary: 'Churn analysis', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Churn data' } } },
+      get: {
+        tags: ['Analytics'],
+        summary: 'Churn analysis',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Churn data' } },
+      },
     },
     '/api/events': {
-      get: { tags: ['Events'], summary: 'Server-Sent Events stream for real-time updates', security: [{ bearerAuth: [] }], responses: { '200': { description: 'SSE stream', content: { 'text/event-stream': { schema: { type: 'string' } } } } } },
+      get: {
+        tags: ['Events'],
+        summary: 'Server-Sent Events stream for real-time updates',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': {
+            description: 'SSE stream',
+            content: { 'text/event-stream': { schema: { type: 'string' } } },
+          },
+        },
+      },
     },
     '/api/webhooks/stripe': {
       post: {
         tags: ['Billing'],
         summary: 'Stripe webhook handler',
-        description: 'Handles invoice.paid, invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted',
+        description:
+          'Handles invoice.paid, invoice.payment_failed, customer.subscription.updated, customer.subscription.deleted',
         requestBody: { content: { 'application/json': { schema: { type: 'object' } } } },
-        responses: { '200': { description: 'Webhook processed' }, '400': { description: 'Invalid signature' } },
+        responses: {
+          '200': { description: 'Webhook processed' },
+          '400': { description: 'Invalid signature' },
+        },
       },
     },
   },

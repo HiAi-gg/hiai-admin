@@ -6,7 +6,7 @@ Thank you for your interest in contributing to hiai-admin!
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_ORG/hiai-admin.git
+git clone https://github.com/hiailabs/hiai-admin.git
 cd hiai-admin
 
 # Install dependencies

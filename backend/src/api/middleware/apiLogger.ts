@@ -10,5 +10,13 @@ export const apiLogger = new Elysia({ name: 'api-logger' })
   })
   .onAfterHandle(({ request, set }) => {
     const duration = Math.round(performance.now() - ((request as any)._startTime || 0));
-    log.info({ method: request.method, url: new URL(request.url).pathname, status: typeof set.status === 'number' ? set.status : 200, duration }, '← response');
+    log.info(
+      {
+        method: request.method,
+        url: new URL(request.url).pathname,
+        status: typeof set.status === 'number' ? set.status : 200,
+        duration,
+      },
+      '← response',
+    );
   });

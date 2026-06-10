@@ -19,8 +19,14 @@ export const authMiddleware = new Elysia({ name: 'auth' })
     },
     requireSuperAdmin: {
       resolve: async ({ user, session, set }) => {
-        if (!user || !session) { set.status = 401; throw new Error('Unauthorized'); }
-        if ((user as any).role !== 'super_admin') { set.status = 403; throw new Error('Forbidden — super admin required'); }
+        if (!user || !session) {
+          set.status = 401;
+          throw new Error('Unauthorized');
+        }
+        if ((user as any).role !== 'super_admin') {
+          set.status = 403;
+          throw new Error('Forbidden — super admin required');
+        }
         return { user, session };
       },
     },

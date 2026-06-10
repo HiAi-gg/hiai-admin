@@ -3,7 +3,9 @@ import { tenants } from './tenant.js';
 
 export const invoices = pgTable('invoices', {
   id: uuid('id').primaryKey().defaultRandom(),
-  tenantId: uuid('tenant_id').notNull().references(() => tenants.id, { onDelete: 'cascade' }),
+  tenantId: uuid('tenant_id')
+    .notNull()
+    .references(() => tenants.id, { onDelete: 'cascade' }),
   stripeInvoiceId: text('stripe_invoice_id'),
   amount: integer('amount').notNull(), // cents
   currency: text('currency').default('USD').notNull(),

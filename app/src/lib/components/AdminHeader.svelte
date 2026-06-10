@@ -1,17 +1,21 @@
 <script lang="ts">
-  import { page } from '$app/state';
-  import type { Snippet } from 'svelte';
+import { page } from '$app/state';
+import type { Snippet } from 'svelte';
 
-  let { user, onToggleSidebar, actions }: { user: any; onToggleSidebar: () => void; actions?: Snippet } = $props();
+let {
+  user,
+  onToggleSidebar,
+  actions,
+}: { user: any; onToggleSidebar: () => void; actions?: Snippet } = $props();
 
-  let breadcrumbs = $derived(() => {
-    const segments = page.url.pathname.split('/').filter(Boolean);
-    return segments.map((seg, i) => ({
-      label: seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' '),
-      href: '/' + segments.slice(0, i + 1).join('/'),
-      current: i === segments.length - 1
-    }));
-  });
+let breadcrumbs = $derived(() => {
+  const segments = page.url.pathname.split('/').filter(Boolean);
+  return segments.map((seg, i) => ({
+    label: seg.charAt(0).toUpperCase() + seg.slice(1).replace(/-/g, ' '),
+    href: `/${segments.slice(0, i + 1).join('/')}`,
+    current: i === segments.length - 1,
+  }));
+});
 </script>
 
 <header class="flex h-14 items-center justify-between border-b border-border bg-card px-4">

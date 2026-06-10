@@ -7,10 +7,14 @@ import { logger } from '../../lib/logger.js';
 
 const log = logger.child({ module: 'webhooks-stripe' });
 
-export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
-  .post('/stripe', async ({ request, set }) => {
+export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' }).post(
+  '/stripe',
+  async ({ request, set }) => {
     const signature = request.headers.get('stripe-signature');
-    if (!signature) { set.status = 400; return { error: 'Missing stripe-signature header' }; }
+    if (!signature) {
+      set.status = 400;
+      return { error: 'Missing stripe-signature header' };
+    }
 
     try {
       const body = await request.text();
@@ -19,7 +23,8 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
       switch (event.type) {
         case 'invoice.paid': {
           const invoice = event.data.object;
-          await db.update(invoices)
+          await db
+            .update(invoices)
             .set({ status: 'paid' })
             .where(eq(invoices.stripeInvoiceId, invoice.id));
           log.info({ invoiceId: invoice.id }, 'Invoice paid — status updated');
@@ -27,7 +32,8 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
         }
         case 'invoice.payment_failed': {
           const invoice = event.data.object;
-          await db.update(invoices)
+          await db
+            .update(invoices)
             .set({ status: 'past_due' })
             .where(eq(invoices.stripeInvoiceId, invoice.id));
           log.warn({ invoiceId: invoice.id }, 'Invoice payment failed — grace period started');
@@ -35,13 +41,18 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
         }
         case 'customer.subscription.updated': {
           const sub = event.data.object;
-          await db.update(subscriptions)
+          await db
+            .update(subscriptions)
             .set({
               status: sub.status,
               plan: sub.metadata?.plan || undefined,
               cancelAtPeriodEnd: sub.cancel_at_period_end,
-              currentPeriodStart: sub.current_period_start ? new Date(sub.current_period_start * 1000) : undefined,
-              currentPeriodEnd: sub.current_period_end ? new Date(sub.current_period_end * 1000) : undefined,
+              currentPeriodStart: sub.current_period_start
+                ? new Date(sub.current_period_start * 1000)
+                : undefined,
+              currentPeriodEnd: sub.current_period_end
+                ? new Date(sub.current_period_end * 1000)
+                : undefined,
               updatedAt: new Date(),
             })
             .where(eq(subscriptions.stripeSubscriptionId, sub.id));
@@ -50,13 +61,18 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
         }
         case 'customer.subscription.deleted': {
           const sub = event.data.object;
-          await db.update(subscriptions)
+          await db
+            .update(subscriptions)
             .set({ status: 'canceled', updatedAt: new Date() })
             .where(eq(subscriptions.stripeSubscriptionId, sub.id));
           // Suspend tenant if subscription is canceled
-          const [dbSub] = await db.select().from(subscriptions).where(eq(subscriptions.stripeSubscriptionId, sub.id));
+          const [dbSub] = await db
+            .select()
+            .from(subscriptions)
+            .where(eq(subscriptions.stripeSubscriptionId, sub.id));
           if (dbSub) {
-            await db.update(tenants)
+            await db
+              .update(tenants)
               .set({ status: 'suspended', updatedAt: new Date() })
               .where(eq(tenants.id, dbSub.tenantId));
           }
@@ -73,4 +89,5 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
       set.status = 400;
       return { error: err.message };
     }
-  });
+  },
+);

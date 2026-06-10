@@ -34,7 +34,7 @@ export function getNavGroups(): NavGroup[] {
 export function findPage(pathname: string): { plugin: HiAiPlugin; page: PluginPage } | undefined {
   for (const plugin of plugins.values()) {
     if (!plugin.pages) continue;
-    const page = plugin.pages.find(p => pathname === p.path || pathname.startsWith(p.path + '/'));
+    const page = plugin.pages.find((p) => pathname === p.path || pathname.startsWith(`${p.path}/`));
     if (page) return { plugin, page };
   }
   return undefined;

@@ -1,44 +1,56 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+import { onMount } from 'svelte';
 
-  let spec: any = $state(null);
-  let activeTag = $state('Health');
-  let expandedPath = $state('');
+let spec: any = $state(null);
+let activeTag = $state('Health');
+let expandedPath = $state('');
 
-  onMount(async () => {
-    try {
-      const res = await fetch('/api/openapi');
-      spec = await res.json();
-    } catch {
-      // Fallback: load inline spec
-      spec = null;
-    }
-  });
-
-  const tags = ['Health', 'Tenants', 'Users', 'Roles', 'Permissions', 'Billing', 'Audit', 'Settings', 'Integrations', 'Analytics', 'Events'];
-
-  function getPathsForTag(tag: string) {
-    if (!spec?.paths) return [];
-    return Object.entries(spec.paths)
-      .filter(([_, methods]: [string, any]) =>
-        Object.values(methods).some((m: any) => m.tags?.includes(tag))
-      )
-      .map(([path, methods]: [string, any]) => ({ path, methods }));
+onMount(async () => {
+  try {
+    const res = await fetch('/api/openapi');
+    spec = await res.json();
+  } catch {
+    // Fallback: load inline spec
+    spec = null;
   }
+});
 
-  function getMethodColor(method: string) {
-    const colors: Record<string, string> = {
-      get: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-      post: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      put: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-      delete: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-    };
-    return colors[method] || 'bg-gray-100 text-gray-800';
-  }
+const tags = [
+  'Health',
+  'Tenants',
+  'Users',
+  'Roles',
+  'Permissions',
+  'Billing',
+  'Audit',
+  'Settings',
+  'Integrations',
+  'Analytics',
+  'Events',
+];
 
-  function togglePath(path: string) {
-    expandedPath = expandedPath === path ? '' : path;
-  }
+function getPathsForTag(tag: string) {
+  if (!spec?.paths) return [];
+  return Object.entries(spec.paths)
+    .filter(([_, methods]: [string, any]) =>
+      Object.values(methods).some((m: any) => m.tags?.includes(tag)),
+    )
+    .map(([path, methods]: [string, any]) => ({ path, methods }));
+}
+
+function getMethodColor(method: string) {
+  const colors: Record<string, string> = {
+    get: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    post: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    put: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    delete: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+  };
+  return colors[method] || 'bg-gray-100 text-gray-800';
+}
+
+function togglePath(path: string) {
+  expandedPath = expandedPath === path ? '' : path;
+}
 </script>
 
 <svelte:head>

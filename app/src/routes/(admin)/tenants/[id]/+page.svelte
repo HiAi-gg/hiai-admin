@@ -1,26 +1,26 @@
 <script lang="ts">
-  import StatusBadge from '$lib/components/StatusBadge.svelte';
-  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+import StatusBadge from '$lib/components/StatusBadge.svelte';
+import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
-  let { data } = $props();
-  let activeTab = $state('info');
-  let showSuspendModal = $state(false);
-  let suspendReason = $state('');
+let { data } = $props();
+let activeTab = $state('info');
+let showSuspendModal = $state(false);
+let suspendReason = $state('');
 
-  async function suspendTenant() {
-    await fetch(`/api/tenants/${data.tenant.id}/suspend`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reason: suspendReason })
-    });
-    showSuspendModal = false;
-    window.location.reload();
-  }
+async function suspendTenant() {
+  await fetch(`/api/tenants/${data.tenant.id}/suspend`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason: suspendReason }),
+  });
+  showSuspendModal = false;
+  window.location.reload();
+}
 
-  async function reactivateTenant() {
-    await fetch(`/api/tenants/${data.tenant.id}/reactivate`, { method: 'POST' });
-    window.location.reload();
-  }
+async function reactivateTenant() {
+  await fetch(`/api/tenants/${data.tenant.id}/reactivate`, { method: 'POST' });
+  window.location.reload();
+}
 </script>
 
 <svelte:head><title>{data.tenant?.name || 'Tenant'} — hiai-admin</title></svelte:head>

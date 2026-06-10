@@ -1,12 +1,18 @@
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 
 function getKey(): Buffer {
-  const key = process.env.TOKEN_ENCRYPTION_KEY || process.env.BETTER_AUTH_SECRET!;
-  return Buffer.from(key.slice(0, 64), 'hex');
+  const secret = process.env.TOKEN_ENCRYPTION_KEY || process.env.BETTER_AUTH_SECRET;
+  if (!secret) {
+    throw new Error('TOKEN_ENCRYPTION_KEY or BETTER_AUTH_SECRET must be set');
+  }
+  // SHA-256 always yields a 32-byte key suitable for AES-256-GCM, regardless of the
+  // secret's format (ASCII, hex, base64). Do not replace with Buffer.from(secret) —
+  // an arbitrary-length or non-hex secret will produce a wrong-length key.
+  return createHash('sha256').update(secret, 'utf8').digest();
 }
 
 export function encrypt(plaintext: string): string {

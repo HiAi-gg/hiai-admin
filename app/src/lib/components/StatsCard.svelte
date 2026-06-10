@@ -1,10 +1,15 @@
 <script lang="ts">
-  let { label, value, trend, icon }: {
-    label: string;
-    value: string | number;
-    trend?: { value: number; direction: 'up' | 'down' };
-    icon?: string;
-  } = $props();
+let {
+  label,
+  value,
+  trend,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  trend?: { value: number; direction: 'up' | 'down' };
+  icon?: string;
+} = $props();
 </script>
 
 <div class="rounded-lg border bg-card p-6 shadow-sm">

@@ -1,26 +1,26 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte';
+import type { Snippet } from 'svelte';
 
-  let {
-    title,
-    description,
-    timeRange = '30d',
-    onTimeRangeChange,
-    children
-  }: {
-    title: string;
-    description?: string;
-    timeRange?: string;
-    onTimeRangeChange?: (range: string) => void;
-    children: Snippet;
-  } = $props();
+let {
+  title,
+  description,
+  timeRange = '30d',
+  onTimeRangeChange,
+  children,
+}: {
+  title: string;
+  description?: string;
+  timeRange?: string;
+  onTimeRangeChange?: (range: string) => void;
+  children: Snippet;
+} = $props();
 
-  const timeRanges = [
-    { value: '7d', label: '7D' },
-    { value: '30d', label: '30D' },
-    { value: '90d', label: '90D' },
-    { value: '1y', label: '1Y' }
-  ];
+const timeRanges = [
+  { value: '7d', label: '7D' },
+  { value: '30d', label: '30D' },
+  { value: '90d', label: '90D' },
+  { value: '1y', label: '1Y' },
+];
 </script>
 
 <div class="rounded-lg border border-border bg-card p-6">

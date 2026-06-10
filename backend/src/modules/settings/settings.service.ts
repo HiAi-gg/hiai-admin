@@ -12,17 +12,21 @@ export const settingsService = {
     const existing = await this.get(key);
 
     if (existing) {
-      const [updated] = await db.update(settings)
+      const [updated] = await db
+        .update(settings)
         .set({ value, updatedAt: new Date(), updatedBy })
         .where(eq(settings.id, key))
         .returning();
       return updated;
     } else {
-      const [created] = await db.insert(settings).values({
-        id: key,
-        value,
-        updatedBy
-      }).returning();
+      const [created] = await db
+        .insert(settings)
+        .values({
+          id: key,
+          value,
+          updatedBy,
+        })
+        .returning();
       return created;
     }
   },
@@ -41,6 +45,6 @@ export const settingsService = {
 
   async getGroup(category: string) {
     const allSettings = await db.select().from(settings);
-    return allSettings.filter(s => s.id.startsWith(category));
-  }
+    return allSettings.filter((s) => s.id.startsWith(category));
+  },
 };

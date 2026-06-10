@@ -12,10 +12,17 @@ export async function subscribe(tenantId: string, plan: PlanId) {
   if (plan === 'free') {
     const subId = randomUUID();
     await db.insert(subscriptions).values({
-      id: subId, tenantId, plan, status: 'active',
-      currentPeriodStart: new Date(), currentPeriodEnd: new Date(Date.now() + 365 * 86400000),
+      id: subId,
+      tenantId,
+      plan,
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 365 * 86400000),
     });
-    await db.update(tenants).set({ plan, status: 'active', updatedAt: new Date() }).where(eq(tenants.id, tenantId));
+    await db
+      .update(tenants)
+      .set({ plan, status: 'active', updatedAt: new Date() })
+      .where(eq(tenants.id, tenantId));
     return { subscriptionId: subId };
   }
 
@@ -26,21 +33,34 @@ export async function subscribe(tenantId: string, plan: PlanId) {
   if (!customerId) {
     const customer = await stripeService.createCustomer(tenant[0].email ?? '', tenant[0].name);
     customerId = customer.id;
-    await db.update(tenants).set({ stripeCustomerId: customerId, updatedAt: new Date() }).where(eq(tenants.id, tenantId));
+    await db
+      .update(tenants)
+      .set({ stripeCustomerId: customerId, updatedAt: new Date() })
+      .where(eq(tenants.id, tenantId));
   }
 
   const stripeSub = await stripeService.createSubscription(customerId, priceId);
   const subId = randomUUID();
   await db.insert(subscriptions).values({
-    id: subId, tenantId, plan, status: 'active',
+    id: subId,
+    tenantId,
+    plan,
+    status: 'active',
     stripeSubscriptionId: stripeSub.id,
     currentPeriodStart: new Date(stripeSub.current_period_start * 1000),
     currentPeriodEnd: new Date(stripeSub.current_period_end * 1000),
   });
-  await db.update(tenants).set({ plan, status: 'active', updatedAt: new Date() }).where(eq(tenants.id, tenantId));
+  await db
+    .update(tenants)
+    .set({ plan, status: 'active', updatedAt: new Date() })
+    .where(eq(tenants.id, tenantId));
 
   const invoice = stripeSub.latest_invoice as Stripe.Invoice | null;
-  return { subscriptionId: subId, stripeSubscriptionId: stripeSub.id, clientSecret: (invoice?.payment_intent as Stripe.PaymentIntent)?.client_secret };
+  return {
+    subscriptionId: subId,
+    stripeSubscriptionId: stripeSub.id,
+    clientSecret: (invoice?.payment_intent as Stripe.PaymentIntent)?.client_secret,
+  };
 }
 
 export async function upgrade(tenantId: string, newPlan: PlanId) {
@@ -49,8 +69,14 @@ export async function upgrade(tenantId: string, newPlan: PlanId) {
   const priceId = PLAN_FEATURES[newPlan].stripePriceId;
   if (!priceId) throw new Error('No Stripe price for plan');
   await stripeService.updateSubscription(current.stripeSubscriptionId, [{ price: priceId }]);
-  await db.update(subscriptions).set({ plan: newPlan, updatedAt: new Date() }).where(eq(subscriptions.id, current.id));
-  await db.update(tenants).set({ plan: newPlan, updatedAt: new Date() }).where(eq(tenants.id, tenantId));
+  await db
+    .update(subscriptions)
+    .set({ plan: newPlan, updatedAt: new Date() })
+    .where(eq(subscriptions.id, current.id));
+  await db
+    .update(tenants)
+    .set({ plan: newPlan, updatedAt: new Date() })
+    .where(eq(tenants.id, tenantId));
 }
 
 export async function downgrade(tenantId: string, newPlan: PlanId) {
@@ -61,18 +87,26 @@ export async function cancel(tenantId: string) {
   const current = await getCurrent(tenantId);
   if (!current?.stripeSubscriptionId) throw new Error('No active subscription');
   await stripeService.cancelSubscription(current.stripeSubscriptionId, true);
-  await db.update(subscriptions).set({ cancelAtPeriodEnd: true, updatedAt: new Date() }).where(eq(subscriptions.id, current.id));
+  await db
+    .update(subscriptions)
+    .set({ cancelAtPeriodEnd: true, updatedAt: new Date() })
+    .where(eq(subscriptions.id, current.id));
 }
 
 export async function reactivate(tenantId: string) {
   const current = await getCurrent(tenantId);
   if (!current?.stripeSubscriptionId) throw new Error('No subscription');
   await stripeService.reactivateSubscription(current.stripeSubscriptionId);
-  await db.update(subscriptions).set({ cancelAtPeriodEnd: false, updatedAt: new Date() }).where(eq(subscriptions.id, current.id));
+  await db
+    .update(subscriptions)
+    .set({ cancelAtPeriodEnd: false, updatedAt: new Date() })
+    .where(eq(subscriptions.id, current.id));
 }
 
 export async function getCurrent(tenantId: string) {
-  const rows = await db.select().from(subscriptions)
+  const rows = await db
+    .select()
+    .from(subscriptions)
     .where(eq(subscriptions.tenantId, tenantId))
     .limit(1);
   return rows[0] ?? null;

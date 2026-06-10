@@ -1,18 +1,18 @@
 <script lang="ts">
-  let dark = $state(false);
+let dark = $state(false);
 
-  function toggle() {
-    dark = !dark;
-    document.documentElement.classList.toggle('dark', dark);
-    localStorage.setItem('hiai-admin-theme', dark ? 'dark' : 'light');
-  }
+function toggle() {
+  dark = !dark;
+  document.documentElement.classList.toggle('dark', dark);
+  localStorage.setItem('hiai-admin-theme', dark ? 'dark' : 'light');
+}
 
-  $effect(() => {
-    const saved = localStorage.getItem('hiai-admin-theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    dark = saved === 'dark' || (!saved && prefersDark);
-    document.documentElement.classList.toggle('dark', dark);
-  });
+$effect(() => {
+  const saved = localStorage.getItem('hiai-admin-theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  dark = saved === 'dark' || (!saved && prefersDark);
+  document.documentElement.classList.toggle('dark', dark);
+});
 </script>
 
 <button

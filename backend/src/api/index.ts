@@ -2,12 +2,12 @@ import { Elysia } from 'elysia';
 import { cors } from '@elysiajs/cors';
 import { env } from '../lib/config.js';
 import { logger } from '../lib/logger.js';
-import { redis } from '../lib/redis.js';
+import { auth } from '../auth/index.js';
 import { authMiddleware } from './middleware/auth.js';
 import { rbacMiddleware } from './middleware/rbac.js';
 import { auditMiddleware } from './middleware/audit.js';
 import { apiLogger } from './middleware/apiLogger.js';
-import { createRateLimiter } from './middleware/rateLimiter.js';
+import { cspMiddleware } from './middleware/csp.js';
 import { healthRoutes } from './routes/health.js';
 import { tenantRoutes } from './routes/tenants.js';
 import { userRoutes } from './routes/users.js';
@@ -17,8 +17,7 @@ import { settingsRoutes } from './routes/settings.js';
 import { auditRoutes } from './routes/audit.js';
 import { integrationsRoutes } from './routes/integrations.js';
 import { webhooksStripeRoutes } from './routes/webhooks-stripe.js';
-import { rolesRoutes } from './routes/roles.js';
-import { permissionsRoutes } from './routes/permissions.js';
+import { rbacRoutes } from './routes/rbac.js';
 import { billingInvoicesRoutes } from './routes/billing-invoices.js';
 import { proxyPostRoutes } from './routes/proxy-post.js';
 import { proxyStoreRoutes } from './routes/proxy-store.js';
@@ -34,6 +33,8 @@ const app = new Elysia()
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     }),
   )
+  .use(cspMiddleware)
+  .mount(auth.handler)
   .use(apiLogger)
   .use(authMiddleware)
   .use(rbacMiddleware)
@@ -54,8 +55,7 @@ const app = new Elysia()
   .use(healthRoutes)
   .use(tenantRoutes)
   .use(userRoutes)
-  .use(rolesRoutes)
-  .use(permissionsRoutes)
+  .use(rbacRoutes)
   .use(billingRoutes)
   .use(billingInvoicesRoutes)
   .use(analyticsRoutes)

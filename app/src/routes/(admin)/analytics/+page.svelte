@@ -1,15 +1,19 @@
 <script lang="ts">
-  import StatsCard from '$lib/components/StatsCard.svelte';
-  import StatusBadge from '$lib/components/StatusBadge.svelte';
+import StatsCard from '$lib/components/StatsCard.svelte';
+import StatusBadge from '$lib/components/StatusBadge.svelte';
 
-  let { data } = $props();
-  let timeRange = $state('30d');
+let { data } = $props();
+let timeRange = $state('30d');
 
-  const mrrTrend = data.mrr?.trend || [];
-  const maxMrr = Math.max(...mrrTrend.map((m: { mrr: number }) => m.mrr), 1);
+const mrrTrend = data.mrr?.trend || [];
+const maxMrr = Math.max(...mrrTrend.map((m: { mrr: number }) => m.mrr), 1);
 
-  const planDist = data.tenantDistribution?.byPlan || [];
-  const planColors: Record<string, string> = { free: '#94a3b8', pro: '#3b82f6', enterprise: '#8b5cf6' };
+const planDist = data.tenantDistribution?.byPlan || [];
+const planColors: Record<string, string> = {
+  free: '#94a3b8',
+  pro: '#3b82f6',
+  enterprise: '#8b5cf6',
+};
 </script>
 
 <svelte:head>

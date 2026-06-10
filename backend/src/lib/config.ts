@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const envSchema = z.object({
+export const envSchema = z.object({
   DATABASE_URL: z.string().url().or(z.string().startsWith('postgresql://')),
   REDIS_URL: z.string().url().or(z.string().startsWith('redis://')),
   BETTER_AUTH_SECRET: z.string().min(32),

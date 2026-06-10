@@ -1,8 +1,8 @@
 <script lang="ts">
-  import StatusBadge from '$lib/components/StatusBadge.svelte';
+import StatusBadge from '$lib/components/StatusBadge.svelte';
 
-  let { data } = $props();
-  let sessions = data.sessions || [];
+let { data } = $props();
+let sessions = data.sessions || [];
 </script>
 
 <svelte:head>

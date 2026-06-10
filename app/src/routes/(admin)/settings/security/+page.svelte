@@ -1,44 +1,44 @@
 <script lang="ts">
-  import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
-  let { data } = $props();
-  let twoFactorEnabled = $state(data.user?.twoFactorEnabled ?? false);
-  let showDisableModal = $state(false);
-  let showSetupModal = $state(false);
-  let qrCode = $state('');
-  let verificationCode = $state('');
-  let sessions = $state(data.sessions || []);
+let { data } = $props();
+let twoFactorEnabled = $state(data.user?.twoFactorEnabled ?? false);
+let showDisableModal = $state(false);
+let showSetupModal = $state(false);
+let qrCode = $state('');
+let verificationCode = $state('');
+let sessions = $state(data.sessions || []);
 
-  async function enable2FA() {
-    const res = await fetch('/api/users/me/2fa/enable', { method: 'POST' });
-    const result = await res.json();
-    qrCode = result.qrCode;
-    showSetupModal = true;
+async function enable2FA() {
+  const res = await fetch('/api/users/me/2fa/enable', { method: 'POST' });
+  const result = await res.json();
+  qrCode = result.qrCode;
+  showSetupModal = true;
+}
+
+async function verify2FA() {
+  const res = await fetch('/api/users/me/2fa/verify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code: verificationCode }),
+  });
+  if (res.ok) {
+    twoFactorEnabled = true;
+    showSetupModal = false;
+    verificationCode = '';
   }
+}
 
-  async function verify2FA() {
-    const res = await fetch('/api/users/me/2fa/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: verificationCode })
-    });
-    if (res.ok) {
-      twoFactorEnabled = true;
-      showSetupModal = false;
-      verificationCode = '';
-    }
-  }
+async function disable2FA() {
+  await fetch('/api/users/me/2fa/disable', { method: 'POST' });
+  twoFactorEnabled = false;
+  showDisableModal = false;
+}
 
-  async function disable2FA() {
-    await fetch('/api/users/me/2fa/disable', { method: 'POST' });
-    twoFactorEnabled = false;
-    showDisableModal = false;
-  }
-
-  async function revokeSession(sessionId: string) {
-    await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
-    sessions = sessions.filter((s: { id: string }) => s.id !== sessionId);
-  }
+async function revokeSession(sessionId: string) {
+  await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
+  sessions = sessions.filter((s: { id: string }) => s.id !== sessionId);
+}
 </script>
 
 <svelte:head><title>Security — hiai-admin</title></svelte:head>
