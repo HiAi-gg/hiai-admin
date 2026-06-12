@@ -1,6 +1,9 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import { invalidateAll } from '$app/navigation';
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import DataTable from '$lib/components/DataTable.svelte';
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
 type Role = {
@@ -31,9 +34,11 @@ type UserRow = {
 let { data } = $props();
 
 type Tab = 'roles' | 'matrix' | 'users' | 'permissions';
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let activeTab = $state<Tab>('roles');
 
 let apiError = $state<string | null>(null);
+// biome-ignore lint/correctness/noUnusedVariables: passed to handlers
 let busy = $state(false);
 
 async function apiCall(method: string, url: string, body?: any) {
@@ -59,10 +64,14 @@ async function apiCall(method: string, url: string, body?: any) {
   }
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 let roles: Role[] = $derived(data.roles);
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 let permissions: Permission[] = $derived(data.permissions);
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 let users: UserRow[] = $derived(data.users);
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let rolePermissionsByResource = $derived(() => {
   const groups: Record<string, Permission[]> = {};
   for (const p of permissions) {
@@ -72,11 +81,17 @@ let rolePermissionsByResource = $derived(() => {
   return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
 });
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let showCreateRole = $state(false);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let editingRole = $state<Role | null>(null);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let matrixEditingRole = $state<Role | null>(null);
+// biome-ignore lint/correctness/noUnusedVariables: used in ConfirmModal
 let showDeleteRole = $state<Role | null>(null);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let showCreatePermission = $state(false);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let showAssignUser = $state<UserRow | null>(null);
 
 let newRoleName = $state('');
@@ -92,6 +107,7 @@ let assignUserRole = $state('');
 let matrixSelectedPerms = $state<Set<string>>(new Set());
 let matrixSaving = $state(false);
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function openCreateRole() {
   newRoleName = '';
   newRoleDescription = '';
@@ -99,22 +115,26 @@ function openCreateRole() {
   showCreateRole = true;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function openEditRole(role: Role) {
   editingRole = role;
   newRoleName = role.name;
   newRoleDescription = role.description || '';
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function openEditPerms(role: Role) {
   matrixEditingRole = role;
   matrixSelectedPerms = new Set(role.permissions);
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function openAssignUser(user: UserRow) {
   showAssignUser = user;
   assignUserRole = '';
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: form submit
 async function submitCreateRole() {
   if (!newRoleName.trim()) return;
   try {
@@ -127,6 +147,7 @@ async function submitCreateRole() {
   } catch {}
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: form submit
 async function submitEditRole() {
   if (!editingRole) return;
   try {
@@ -138,6 +159,7 @@ async function submitEditRole() {
   } catch {}
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to ConfirmModal
 async function submitDeleteRole() {
   if (!showDeleteRole) return;
   try {
@@ -146,6 +168,7 @@ async function submitDeleteRole() {
   } catch {}
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: form submit
 async function submitCreatePermission() {
   if (!newPermName.trim() || !newPermResource.trim() || !newPermAction.trim()) return;
   try {
@@ -160,6 +183,7 @@ async function submitCreatePermission() {
   } catch {}
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: checkbox onchange
 function toggleMatrixPerm(permId: string) {
   if (!matrixEditingRole) return;
   const next = new Set(matrixSelectedPerms);
@@ -168,6 +192,7 @@ function toggleMatrixPerm(permId: string) {
   matrixSelectedPerms = next;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: button onclick
 async function saveMatrix() {
   if (!matrixEditingRole) return;
   matrixSaving = true;
@@ -182,6 +207,7 @@ async function saveMatrix() {
   }
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: form submit
 async function submitAssignUser() {
   if (!showAssignUser || !assignUserRole) return;
   try {
@@ -192,12 +218,14 @@ async function submitAssignUser() {
   } catch {}
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: button onclick
 async function revokeRole(user: UserRow, roleId: string) {
   try {
     await apiCall('DELETE', `/api/rbac/users/${user.id}/roles/${roleId}`);
   } catch {}
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function permName(perm: Permission): string {
   return perm.name;
 }
@@ -206,6 +234,7 @@ function roleName(roleId: string): string {
   return roles.find((r) => r.id === roleId)?.name || roleId;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 const roleColumns = [
   { key: 'name', label: 'Role', sortable: true },
   { key: 'description', label: 'Description' },
@@ -218,6 +247,7 @@ const roleColumns = [
   },
 ];
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 const userColumns = [
   { key: 'name', label: 'Name', sortable: true },
   { key: 'email', label: 'Email', sortable: true },
@@ -229,6 +259,7 @@ const userColumns = [
   },
 ];
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 const permissionColumns = [
   { key: 'name', label: 'Permission', sortable: true },
   { key: 'resource', label: 'Resource', sortable: true },
@@ -236,6 +267,7 @@ const permissionColumns = [
   { key: 'description', label: 'Description' },
 ];
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const tabs: { id: Tab; label: string; icon: string }[] = [
   { id: 'roles', label: 'Roles', icon: '👑' },
   { id: 'matrix', label: 'Permission Matrix', icon: '🔲' },

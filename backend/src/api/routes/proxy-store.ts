@@ -1,12 +1,17 @@
 import { Elysia } from 'elysia';
+import { authMiddleware } from '../middleware/auth.js';
+import { rbacMiddleware } from '../middleware/rbac.js';
 import { logger } from '../../lib/logger.js';
 
 const STORE_API = process.env.HIAI_STORE_API_URL || 'http://localhost:50400';
 const log = logger.child({ module: 'proxy-store' });
 
-export const proxyStoreRoutes = new Elysia({ prefix: '/api/shop' }).all(
-  '/*',
-  async ({ request, set }) => {
+export const proxyStoreRoutes = new Elysia({ prefix: '/api/shop' })
+  .use(authMiddleware)
+  .use(rbacMiddleware)
+  .all(
+    '/*',
+    async ({ request, set }) => {
     const url = new URL(request.url);
     const targetPath = url.pathname.replace('/api/shop', '');
     const targetUrl = `${STORE_API}/api/v1${targetPath}${url.search}`;
@@ -37,4 +42,5 @@ export const proxyStoreRoutes = new Elysia({ prefix: '/api/shop' }).all(
       return { error: 'hiai-store backend unavailable' };
     }
   },
+  { requirePermission: 'tenants:read' },
 );

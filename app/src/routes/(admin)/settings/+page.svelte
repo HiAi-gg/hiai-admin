@@ -1,8 +1,10 @@
 <script lang="ts">
 let { data } = $props();
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let saving = $state(false);
 let saveMessage = $state('');
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const sections = [
   {
     title: 'General',
@@ -145,11 +147,13 @@ async function saveSetting(key: string, value: any) {
   }
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function handleInput(key: string, event: Event) {
   const target = event.target as HTMLInputElement;
   saveSetting(key, target.type === 'number' ? Number(target.value) : target.value);
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function handleToggle(key: string, current: boolean) {
   saveSetting(key, !current);
 }

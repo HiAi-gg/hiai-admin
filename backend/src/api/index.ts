@@ -3,7 +3,7 @@ import { cors } from '@elysiajs/cors';
 import { env } from '../lib/config.js';
 import { logger } from '../lib/logger.js';
 import { auth } from '../auth/index.js';
-import { authMiddleware } from './middleware/auth.js';
+import { authMiddleware, loadSession } from './middleware/auth.js';
 import { rbacMiddleware } from './middleware/rbac.js';
 import { auditMiddleware } from './middleware/audit.js';
 import { apiLogger } from './middleware/apiLogger.js';
@@ -21,6 +21,7 @@ import { rbacRoutes } from './routes/rbac.js';
 import { billingInvoicesRoutes } from './routes/billing-invoices.js';
 import { proxyPostRoutes } from './routes/proxy-post.js';
 import { proxyStoreRoutes } from './routes/proxy-store.js';
+import { eventsRoutes } from './routes/events.js';
 
 const log = logger.child({ module: 'server' });
 
@@ -35,10 +36,12 @@ const app = new Elysia()
   )
   .use(cspMiddleware)
   .mount(auth.handler)
+  // Auth derive MUST be at the global app level so `user`/`session` is
+  // available to every route — including sub-app plugins that don't
+  // `.use(authMiddleware)` themselves.
+  .derive(async ({ request }) => loadSession(request.headers))
   .use(apiLogger)
-  .use(authMiddleware)
-  .use(rbacMiddleware)
-  .use(auditMiddleware)
+  .use(eventsRoutes)
   .onError(({ code, error, set }) => {
     log.error({ code, error: String(error) }, 'Unhandled error');
     if (code === 'VALIDATION') {
@@ -52,6 +55,9 @@ const app = new Elysia()
     set.status = 500;
     return { error: 'Internal server error' };
   })
+  .use(authMiddleware)
+  .use(rbacMiddleware)
+  .use(auditMiddleware)
   .use(healthRoutes)
   .use(tenantRoutes)
   .use(userRoutes)

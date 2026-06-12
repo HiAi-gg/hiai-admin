@@ -3,20 +3,19 @@ import { checkPermission as _checkPermission } from '../../modules/rbac/rbac.ser
 
 export const rbacMiddleware = new Elysia({ name: 'rbac' }).macro({
   requirePermission: (permission: string) => ({
-    resolve: async (ctx: any) => {
+    beforeHandle: async (ctx: any) => {
       const { set } = ctx;
-      const user = (ctx as any).user;
+      const user = ctx.user;
       if (!user) {
         set.status = 401;
-        throw new Error('Unauthorized');
+        return { error: 'Unauthorized' };
       }
-      if (user.role === 'super_admin') return { user };
+      if (user.role === 'super_admin') return;
       const has = await _checkPermission(user.id, permission);
       if (!has) {
         set.status = 403;
-        throw new Error(`Forbidden — requires: ${permission}`);
+        return { error: `Forbidden — requires: ${permission}` };
       }
-      return { user };
     },
   }),
 });

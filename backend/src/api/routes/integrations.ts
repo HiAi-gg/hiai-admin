@@ -95,7 +95,13 @@ export const integrationsRoutes = new Elysia({ prefix: '/api/integrations' })
         },
       };
     },
-    { requireSuperAdmin: true },
+    {
+      requireSuperAdmin: true,
+      body: t.Object({
+        credentials: t.Optional(t.Record(t.String(), t.String())),
+        config: t.Optional(t.Record(t.String(), t.Unknown())),
+      }),
+    },
   )
   .post(
     '/:id/test',
@@ -139,7 +145,13 @@ export const integrationsRoutes = new Elysia({ prefix: '/api/integrations' })
       }
       return { success: true };
     },
-    { requireSuperAdmin: true },
+    {
+      requireSuperAdmin: true,
+      body: t.Object({
+        webhookUrl: t.String({ format: 'uri' }),
+        verificationToken: t.String({ minLength: 1 }),
+      }),
+    },
   )
   .post(
     '/kofi/config',
@@ -167,5 +179,11 @@ export const integrationsRoutes = new Elysia({ prefix: '/api/integrations' })
       }
       return { success: true };
     },
-    { requireSuperAdmin: true },
+    {
+      requireSuperAdmin: true,
+      body: t.Object({
+        webhookUrl: t.String({ format: 'uri' }),
+        verificationToken: t.String({ minLength: 1 }),
+      }),
+    },
   );

@@ -25,6 +25,8 @@ export interface NavItem {
   href: string;
   icon?: string;
   badge?: string | number;
+  comingSoon?: boolean;
+  disabled?: boolean;
 }
 
 export interface PluginPage {

@@ -3,9 +3,12 @@ let name = $state('');
 let slug = $state('');
 let email = $state('');
 let plan = $state('free');
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let loading = $state(false);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let error: string = $state('');
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 async function handleSubmit(event: Event) {
   event.preventDefault();
   loading = true;

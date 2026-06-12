@@ -2,12 +2,14 @@
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
 
+// biome-ignore lint/correctness/noUnusedVariables: typed but unused in this view
 let { data } = $props();
 let actionFilter = $state(page.url.searchParams.get('action') || '');
 let resourceFilter = $state(page.url.searchParams.get('resource') || '');
 let dateFrom = $state(page.url.searchParams.get('from') || '');
 let dateTo = $state(page.url.searchParams.get('to') || '');
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function applyFilters() {
   const params = new URLSearchParams();
   if (actionFilter) params.set('action', actionFilter);
@@ -17,6 +19,7 @@ function applyFilters() {
   goto(`?${params.toString()}`);
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function exportCSV() {
   const params = new URLSearchParams({ format: 'csv' });
   if (actionFilter) params.set('action', actionFilter);

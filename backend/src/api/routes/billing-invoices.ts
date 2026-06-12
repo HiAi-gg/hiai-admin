@@ -2,9 +2,11 @@ import { Elysia, t } from 'elysia';
 import { db } from '../../lib/db.js';
 import { invoices } from '../../db/schema/index.js';
 import { and, count, eq } from 'drizzle-orm';
+import { authMiddleware } from '../middleware/auth.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
 
 export const billingInvoicesRoutes = new Elysia({ prefix: '/api/billing/invoices' })
+  .use(authMiddleware)
   .use(rbacMiddleware)
 
   .get(

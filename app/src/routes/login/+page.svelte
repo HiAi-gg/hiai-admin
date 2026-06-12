@@ -5,6 +5,7 @@ import { authStore } from '$lib/stores/auth.svelte.js';
 let email = $state('');
 let password = $state('');
 let submitting = $state(false);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let errorMessage = $state<string | null>(null);
 
 let emailField = $state<HTMLInputElement | null>(null);
@@ -13,6 +14,7 @@ $effect(() => {
   emailField?.focus();
 });
 
+// biome-ignore lint/correctness/noUnusedVariables: form submit handler
 async function handleSubmit(event: SubmitEvent) {
   event.preventDefault();
   if (submitting) return;
@@ -70,19 +72,22 @@ async function handleSubmit(event: SubmitEvent) {
   <title>Sign in — hiai-admin</title>
 </svelte:head>
 
-<main class="flex min-h-screen items-center justify-center bg-muted px-4 py-12">
+<main class="flex min-h-screen items-center justify-center bg-background px-4 py-12">
   <div class="w-full max-w-sm">
     <div class="mb-8 text-center">
+      <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground text-lg font-bold shadow-sm">
+        H
+      </div>
       <h1 class="text-2xl font-bold tracking-tight">hiai-admin</h1>
       <p class="mt-1 text-sm text-muted-foreground">Sign in to the platform control center</p>
     </div>
 
     <form
-      class="space-y-5 rounded-lg border bg-card p-6 shadow-sm"
+      class="space-y-5 rounded-xl border border-border bg-card p-6 shadow-sm"
       onsubmit={handleSubmit}
       novalidate
     >
-      <div class="space-y-2">
+      <div class="space-y-1.5">
         <label for="email" class="text-sm font-medium leading-none">Email</label>
         <input
           id="email"
@@ -93,12 +98,12 @@ async function handleSubmit(event: SubmitEvent) {
           bind:value={email}
           bind:this={emailField}
           disabled={submitting}
-          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           placeholder="admin@example.com"
         />
       </div>
 
-      <div class="space-y-2">
+      <div class="space-y-1.5">
         <label for="password" class="text-sm font-medium leading-none">Password</label>
         <input
           id="password"
@@ -108,7 +113,7 @@ async function handleSubmit(event: SubmitEvent) {
           required
           bind:value={password}
           disabled={submitting}
-          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
 
@@ -125,7 +130,7 @@ async function handleSubmit(event: SubmitEvent) {
       <button
         type="submit"
         disabled={submitting}
-        class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+        class="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60"
       >
         {#if submitting}
           <svg

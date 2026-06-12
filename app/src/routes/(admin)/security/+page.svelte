@@ -1,7 +1,9 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import StatusBadge from '$lib/components/StatusBadge.svelte';
 
 let { data } = $props();
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let sessions = data.sessions || [];
 </script>
 

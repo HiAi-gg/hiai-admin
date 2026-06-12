@@ -35,7 +35,7 @@ export const userService = {
       tenantId?: string;
     } = {},
   ) {
-    const { page = 1, limit = 20, search, role } = options;
+    const { page = 1, limit = 20, search } = options;
     const offset = (page - 1) * limit;
 
     let query = db.select().from(users);
@@ -62,6 +62,11 @@ export const userService = {
 
   async getById(id: string) {
     const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  },
+
+  async getByEmail(email: string) {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   },
 

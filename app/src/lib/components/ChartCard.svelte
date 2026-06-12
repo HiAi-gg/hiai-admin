@@ -2,10 +2,15 @@
 import type { Snippet } from 'svelte';
 
 let {
+  // biome-ignore lint/correctness/noUnusedVariables: used in template
   title,
+  // biome-ignore lint/correctness/noUnusedVariables: used in template
   description,
+  // biome-ignore lint/correctness/noUnusedVariables: used in template
   timeRange = '30d',
+  // biome-ignore lint/correctness/noUnusedVariables: used in template
   onTimeRangeChange,
+  // biome-ignore lint/correctness/noUnusedVariables: used in template
   children,
 }: {
   title: string;
@@ -15,6 +20,7 @@ let {
   children: Snippet;
 } = $props();
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const timeRanges = [
   { value: '7d', label: '7D' },
   { value: '30d', label: '30D' },

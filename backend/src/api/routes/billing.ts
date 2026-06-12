@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia';
+import { Elysia, t } from 'elysia';
 import { stripeService } from '../../modules/billing/stripe.service.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { env } from '../../lib/config.js';
@@ -37,5 +37,11 @@ export const billingRoutes = new Elysia({ prefix: '/api/billing' })
         return { error: err.message };
       }
     },
-    { requireSuperAdmin: true },
+    {
+      requireSuperAdmin: true,
+      body: t.Object({
+        customerId: t.String(),
+        returnUrl: t.Optional(t.String({ format: 'uri' })),
+      }),
+    },
   );

@@ -1,4 +1,5 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import StatusBadge from '$lib/components/StatusBadge.svelte';
 
 let { data } = $props();

@@ -1,9 +1,13 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template handler
 import { goto } from '$app/navigation';
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import DataTable from '$lib/components/DataTable.svelte';
 
 let { data } = $props();
+void data;
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 function handleSearch(query: string) {
   const url = new URL(window.location.href);
   url.searchParams.set('search', query);
@@ -11,12 +15,14 @@ function handleSearch(query: string) {
   goto(url.toString());
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 function handlePageChange(page: number) {
   const url = new URL(window.location.href);
   url.searchParams.set('page', String(page));
   goto(url.toString());
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to DataTable
 const columns = [
   { key: 'name', label: 'Name', sortable: true },
   { key: 'email', label: 'Email', sortable: true },

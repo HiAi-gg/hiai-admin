@@ -1,7 +1,9 @@
 <script lang="ts">
 import type { Snippet } from 'svelte';
 import type { LayoutData } from './$types';
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import { AdminSidebar, AdminHeader, ThemeToggle } from '@hiai/ui';
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import { sidebarStore } from '$lib/stores/sidebar.svelte.js';
 import { registerPlugin, getNavGroups } from '$lib/plugins/registry.js';
 import { hiaiPostPlugin } from '$lib/plugins/hiai-post.js';
@@ -9,6 +11,7 @@ import { hiaiStorePlugin } from '$lib/plugins/hiai-store.js';
 import { kofiPlugin } from '$lib/plugins/kofi.js';
 import { umamiPlugin } from '$lib/plugins/umami.js';
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 registerPlugin(hiaiPostPlugin);
@@ -33,6 +36,7 @@ const coreNavGroups = [
   },
 ];
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const allNavGroups = $derived([...coreNavGroups, ...getNavGroups()]);
 </script>
 

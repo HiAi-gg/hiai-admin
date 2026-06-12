@@ -1,6 +1,7 @@
 <script lang="ts">
 let dark = $state(false);
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function toggle() {
   dark = !dark;
   document.documentElement.classList.toggle('dark', dark);

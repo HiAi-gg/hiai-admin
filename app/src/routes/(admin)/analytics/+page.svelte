@@ -1,14 +1,19 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import StatsCard from '$lib/components/StatsCard.svelte';
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import StatusBadge from '$lib/components/StatusBadge.svelte';
 
 let { data } = $props();
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let timeRange = $state('30d');
 
 const mrrTrend = data.mrr?.trend || [];
 const maxMrr = Math.max(...mrrTrend.map((m: { mrr: number }) => m.mrr), 1);
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const planDist = data.tenantDistribution?.byPlan || [];
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const planColors: Record<string, string> = {
   free: '#94a3b8',
   pro: '#3b82f6',

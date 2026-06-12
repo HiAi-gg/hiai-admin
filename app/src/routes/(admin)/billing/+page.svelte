@@ -1,8 +1,10 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import StatusBadge from '$lib/components/StatusBadge.svelte';
 
 let { data } = $props();
 
+// biome-ignore lint/correctness/noUnusedVariables: button onclick
 async function handlePortal() {
   const res = await fetch('/api/billing/portal', { method: 'POST' });
   const { url } = await res.json();

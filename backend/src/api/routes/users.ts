@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia';
+import { auth } from '../../auth/index.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
 import { auditMiddleware } from '../middleware/audit.js';
@@ -8,6 +9,26 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
   .use(authMiddleware)
   .use(rbacMiddleware)
   .use(auditMiddleware)
+
+  .get(
+    '/me',
+    async (ctx: any) => {
+      const session = await auth.api.getSession({ headers: ctx.request.headers });
+      if (!session) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+      }
+      const u = session.user;
+      const profile = await userService.getByEmail((u as any).email);
+      return {
+        id: (u as any).id,
+        email: (u as any).email,
+        name: (u as any).name,
+        role: profile?.role ?? 'viewer',
+        image: (u as any).image,
+        emailVerified: (u as any).emailVerified,
+      };
+    },
+  )
 
   .get(
     '/',
@@ -69,7 +90,22 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'users:write' },
+    {
+      requirePermission: 'users:write',
+      body: t.Object({
+        email: t.String({ format: 'email' }),
+        name: t.String({ minLength: 1, maxLength: 200 }),
+        role: t.Optional(
+          t.Union([
+            t.Literal('super_admin'),
+            t.Literal('tenant_admin'),
+            t.Literal('editor'),
+            t.Literal('viewer'),
+          ]),
+        ),
+        tenantId: t.Optional(t.String({ format: 'uuid' })),
+      }),
+    },
   )
 
   .put(
@@ -82,7 +118,21 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'users:write' },
+    {
+      requirePermission: 'users:write',
+      body: t.Object({
+        email: t.Optional(t.String({ format: 'email' })),
+        name: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
+        role: t.Optional(
+          t.Union([
+            t.Literal('super_admin'),
+            t.Literal('tenant_admin'),
+            t.Literal('editor'),
+            t.Literal('viewer'),
+          ]),
+        ),
+      }),
+    },
   )
 
   .delete(
@@ -109,7 +159,13 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'users:write' },
+    {
+      requirePermission: 'users:write',
+      body: t.Object({
+        roleId: t.String(),
+        tenantId: t.Optional(t.String({ format: 'uuid' })),
+      }),
+    },
   )
 
   .post(
@@ -124,5 +180,11 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'users:write' },
+    {
+      requirePermission: 'users:write',
+      body: t.Object({
+        roleId: t.String(),
+        tenantId: t.Optional(t.String({ format: 'uuid' })),
+      }),
+    },
   );

@@ -1,12 +1,17 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import StatusBadge from '$lib/components/StatusBadge.svelte';
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
 let { data } = $props();
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let activeTab = $state('info');
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let showSuspendModal = $state(false);
 let suspendReason = $state('');
 
+// biome-ignore lint/correctness/noUnusedVariables: passed to ConfirmModal
 async function suspendTenant() {
   await fetch(`/api/tenants/${data.tenant.id}/suspend`, {
     method: 'POST',
@@ -17,6 +22,7 @@ async function suspendTenant() {
   window.location.reload();
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: button handler
 async function reactivateTenant() {
   await fetch(`/api/tenants/${data.tenant.id}/reactivate`, { method: 'POST' });
   window.location.reload();

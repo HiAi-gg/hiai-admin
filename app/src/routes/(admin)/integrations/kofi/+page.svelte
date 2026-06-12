@@ -1,9 +1,12 @@
 <script lang="ts">
 let webhookUrl = $state('');
 let verificationToken = $state('');
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let saving = $state(false);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let saveResult = $state<{ kind: 'success' | 'error'; message: string } | null>(null);
 
+// biome-ignore lint/correctness/noUnusedVariables: button onclick
 async function handleSave() {
   saving = true;
   saveResult = null;

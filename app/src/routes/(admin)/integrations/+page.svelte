@@ -40,9 +40,12 @@ let integrations = $state(
     },
   ],
 );
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let testing = $state<string | null>(null);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let testResult = $state<{ id: string; success: boolean; message: string } | null>(null);
 
+// biome-ignore lint/correctness/noUnusedVariables: button onclick
 async function testConnection(id: string) {
   testing = id;
   testResult = null;
@@ -57,6 +60,7 @@ async function testConnection(id: string) {
   }
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: button onclick
 async function disconnect(id: string) {
   await fetch(`/api/integrations/${id}`, { method: 'DELETE' });
   integrations = integrations.map((i: { id: string; status: string }) =>
@@ -64,6 +68,7 @@ async function disconnect(id: string) {
   );
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function statusColor(status: string) {
   return status === 'connected'
     ? 'bg-success/10 text-success'

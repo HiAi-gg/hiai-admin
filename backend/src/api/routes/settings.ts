@@ -1,4 +1,4 @@
-import { Elysia } from 'elysia';
+import { Elysia, t } from 'elysia';
 import { db } from '../../lib/db.js';
 import { settings } from '../../db/schema/index.js';
 import { eq } from 'drizzle-orm';
@@ -34,8 +34,10 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
   )
   .put(
     '/:key',
-    async ({ params, body, user, set }) => {
-      const { value, description } = body as { value: unknown; description?: string };
+    async (ctx) => {
+      const { params, body } = ctx as { params: { key: string }; body: { value: unknown; description?: string } };
+      const user = (ctx as { user?: { id: string } }).user;
+      const { value, description } = body;
       const [setting] = await db
         .insert(settings)
         .values({
@@ -55,5 +57,11 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
         .returning();
       return { setting };
     },
-    { requireSuperAdmin: true },
+    {
+      requireSuperAdmin: true,
+      body: t.Object({
+        value: t.Any(),
+        description: t.Optional(t.String({ maxLength: 500 })),
+      }),
+    },
   );

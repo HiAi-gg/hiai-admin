@@ -1,17 +1,20 @@
 import { Elysia, t } from 'elysia';
-import { authMiddleware } from '../middleware/auth.js';
-import { rbacMiddleware } from '../middleware/rbac.js';
+import { loadSession } from '../middleware/auth.js';
 import { auditMiddleware } from '../middleware/audit.js';
 import { tenantService } from '../../modules/tenant/tenant.service.js';
 
 export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
-  .use(authMiddleware)
-  .use(rbacMiddleware)
   .use(auditMiddleware)
 
   .get(
     '/',
-    async ({ query, set }) => {
+    async (ctx: any) => {
+      const { user } = await loadSession(ctx.request.headers);
+      if (!user) {
+        ctx.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      const { query, set } = ctx;
       try {
         return await tenantService.list({
           page: query.page ?? 1,
@@ -25,7 +28,6 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
       }
     },
     {
-      requirePermission: 'tenants:read',
       query: t.Object({
         page: t.Optional(t.Integer({ minimum: 1, default: 1 })),
         limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 20 })),
@@ -39,7 +41,13 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
 
   .get(
     '/:id',
-    async ({ params, set }) => {
+    async (ctx: any) => {
+      const { user } = await loadSession(ctx.request.headers);
+      if (!user) {
+        ctx.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      const { params, set } = ctx;
       try {
         return { data: await tenantService.getById(params.id) };
       } catch (error: any) {
@@ -47,12 +55,17 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'tenants:read' },
   )
 
   .post(
     '/',
-    async ({ body, set }) => {
+    async (ctx: any) => {
+      const { user } = await loadSession(ctx.request.headers);
+      if (!user) {
+        ctx.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      const { body, set } = ctx;
       try {
         const { name, slug, email, plan } = body as any;
         return { data: await tenantService.create({ name, slug, email, plan }) };
@@ -61,12 +74,25 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'tenants:write' },
+    {
+      body: t.Object({
+        name: t.String({ minLength: 1, maxLength: 200 }),
+        slug: t.String({ minLength: 1, maxLength: 100 }),
+        email: t.String({ format: 'email' }),
+        plan: t.Optional(t.String()),
+      }),
+    },
   )
 
   .put(
     '/:id',
-    async ({ params, body, set }) => {
+    async (ctx: any) => {
+      const { user } = await loadSession(ctx.request.headers);
+      if (!user) {
+        ctx.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      const { params, body, set } = ctx;
       try {
         return { data: await tenantService.update(params.id, body as any) };
       } catch (error: any) {
@@ -74,12 +100,25 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'tenants:write' },
+    {
+      body: t.Object({
+        name: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
+        slug: t.Optional(t.String({ minLength: 1, maxLength: 100 })),
+        email: t.Optional(t.String({ format: 'email' })),
+        plan: t.Optional(t.String()),
+      }),
+    },
   )
 
   .delete(
     '/:id',
-    async ({ params, set }) => {
+    async (ctx: any) => {
+      const { user } = await loadSession(ctx.request.headers);
+      if (!user) {
+        ctx.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      const { params, set } = ctx;
       try {
         return { data: await tenantService.softDelete(params.id) };
       } catch (error: any) {
@@ -87,12 +126,17 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'tenants:delete' },
   )
 
   .post(
     '/:id/suspend',
-    async ({ params, body, set }) => {
+    async (ctx: any) => {
+      const { user } = await loadSession(ctx.request.headers);
+      if (!user) {
+        ctx.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      const { params, body, set } = ctx;
       try {
         return { data: await tenantService.suspend(params.id, (body as any)?.reason) };
       } catch (error: any) {
@@ -100,12 +144,22 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'tenants:write' },
+    {
+      body: t.Object({
+        reason: t.Optional(t.String({ maxLength: 500 })),
+      }),
+    },
   )
 
   .post(
     '/:id/reactivate',
-    async ({ params, set }) => {
+    async (ctx: any) => {
+      const { user } = await loadSession(ctx.request.headers);
+      if (!user) {
+        ctx.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      const { params, set } = ctx;
       try {
         return { data: await tenantService.reactivate(params.id) };
       } catch (error: any) {
@@ -113,12 +167,17 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'tenants:write' },
   )
 
   .post(
     '/:id/change-plan',
-    async ({ params, body, set }) => {
+    async (ctx: any) => {
+      const { user } = await loadSession(ctx.request.headers);
+      if (!user) {
+        ctx.set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      const { params, body, set } = ctx;
       try {
         return { data: await tenantService.changePlan(params.id, (body as any).plan) };
       } catch (error: any) {
@@ -126,5 +185,9 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
         return { error: error.message };
       }
     },
-    { requirePermission: 'tenants:write' },
+    {
+      body: t.Object({
+        plan: t.String({ minLength: 1 }),
+      }),
+    },
   );

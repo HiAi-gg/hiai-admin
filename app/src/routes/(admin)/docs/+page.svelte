@@ -10,11 +10,11 @@ onMount(async () => {
     const res = await fetch('/api/openapi');
     spec = await res.json();
   } catch {
-    // Fallback: load inline spec
     spec = null;
   }
 });
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 const tags = [
   'Health',
   'Tenants',
@@ -29,6 +29,7 @@ const tags = [
   'Events',
 ];
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function getPathsForTag(tag: string) {
   if (!spec?.paths) return [];
   return Object.entries(spec.paths)
@@ -38,6 +39,7 @@ function getPathsForTag(tag: string) {
     .map(([path, methods]: [string, any]) => ({ path, methods }));
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function getMethodColor(method: string) {
   const colors: Record<string, string> = {
     get: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
@@ -48,6 +50,7 @@ function getMethodColor(method: string) {
   return colors[method] || 'bg-gray-100 text-gray-800';
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: button onclick
 function togglePath(path: string) {
   expandedPath = expandedPath === path ? '' : path;
 }

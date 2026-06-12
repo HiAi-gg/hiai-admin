@@ -1,11 +1,15 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
 let { data } = $props();
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let activeTab = $state('profile');
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let showRoleModal = $state(false);
 let selectedRole = $state(data.user?.role || 'viewer');
 
+// biome-ignore lint/correctness/noUnusedVariables: used in select
 const roles = [
   { value: 'super_admin', label: 'Super Admin', description: 'Full platform access' },
   { value: 'tenant_admin', label: 'Tenant Admin', description: 'Manage assigned tenants' },
@@ -13,6 +17,7 @@ const roles = [
   { value: 'viewer', label: 'Viewer', description: 'Read-only access' },
 ];
 
+// biome-ignore lint/correctness/noUnusedVariables: form submit
 async function updateRole() {
   await fetch(`/api/users/${data.user.id}`, {
     method: 'PUT',
@@ -23,6 +28,7 @@ async function updateRole() {
   window.location.reload();
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: button handler
 async function revokeSession(sessionId: string) {
   await fetch(`/api/users/${data.user.id}/sessions/${sessionId}`, { method: 'DELETE' });
   window.location.reload();

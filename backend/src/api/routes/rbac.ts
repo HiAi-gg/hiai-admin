@@ -1,9 +1,11 @@
 import { Elysia, t } from 'elysia';
+import { authMiddleware } from '../middleware/auth.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
 import { auditMiddleware } from '../middleware/audit.js';
 import * as rbac from '../../modules/rbac/rbac.service.js';
 
 export const rbacRoutes = new Elysia({ prefix: '/api/rbac' })
+  .use(authMiddleware)
   .use(rbacMiddleware)
   .use(auditMiddleware)
 
@@ -40,11 +42,13 @@ export const rbacRoutes = new Elysia({ prefix: '/api/rbac' })
 
   .post(
     '/roles',
-    async ({ body, set, user }) => {
+    async (ctx) => {
+      const { body, set } = ctx as { body: { name: string; description?: string; permissionIds?: string[] }; set: { status: number } };
+      const user = (ctx as { user?: { id: string } }).user;
       try {
         const id = await rbac.createRole(body);
         set.status = 201;
-        return { id, grantedBy: (user as any)?.id };
+        return { id, grantedBy: user?.id };
       } catch (e: any) {
         set.status = 400;
         return { error: e.message };
@@ -118,10 +122,10 @@ export const rbacRoutes = new Elysia({ prefix: '/api/rbac' })
   )
 
   .post(
-    '/roles/:roleId/permissions',
+    '/roles/:id/permissions',
     async ({ params, body, set }) => {
       try {
-        await rbac.assignPermission(params.roleId, body.permissionId);
+        await rbac.assignPermission(params.id, body.permissionId);
         set.status = 201;
         return { success: true };
       } catch (e: any) {
@@ -131,16 +135,16 @@ export const rbacRoutes = new Elysia({ prefix: '/api/rbac' })
     },
     {
       requirePermission: 'roles:write',
-      params: t.Object({ roleId: t.String() }),
+      params: t.Object({ id: t.String() }),
       body: t.Object({ permissionId: t.String() }),
     },
   )
 
   .delete(
-    '/roles/:roleId/permissions/:permissionId',
+    '/roles/:id/permissions/:permissionId',
     async ({ params, set }) => {
       try {
-        await rbac.revokePermission(params.roleId, params.permissionId);
+        await rbac.revokePermission(params.id, params.permissionId);
         return { success: true };
       } catch (e: any) {
         set.status = 400;
@@ -149,7 +153,7 @@ export const rbacRoutes = new Elysia({ prefix: '/api/rbac' })
     },
     {
       requirePermission: 'roles:write',
-      params: t.Object({ roleId: t.String(), permissionId: t.String() }),
+      params: t.Object({ id: t.String(), permissionId: t.String() }),
     },
   )
 
@@ -271,9 +275,11 @@ export const rbacRoutes = new Elysia({ prefix: '/api/rbac' })
 
   .post(
     '/users/:userId/roles',
-    async ({ params, body, set, user }) => {
+    async (ctx) => {
+      const { params, body, set } = ctx as { params: { userId: string }; body: { roleId: string; tenantId?: string | null }; set: { status: number } };
+      const user = (ctx as { user?: { id: string } }).user;
       try {
-        await rbac.assignRoleToUser(params.userId, body.roleId, body.tenantId, (user as any)?.id);
+        await rbac.assignRoleToUser(params.userId, body.roleId, body.tenantId, user?.id);
         set.status = 201;
         return { success: true };
       } catch (e: any) {

@@ -23,11 +23,13 @@ let {
 
 let reason = $state('');
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function handleConfirm() {
   onConfirm(requireReason ? reason : undefined);
   reason = '';
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 function handleCancel() {
   onCancel();
   reason = '';

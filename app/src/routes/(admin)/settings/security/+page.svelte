@@ -1,14 +1,21 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import ConfirmModal from '$lib/components/ConfirmModal.svelte';
 
 let { data } = $props();
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let twoFactorEnabled = $state(data.user?.twoFactorEnabled ?? false);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let showDisableModal = $state(false);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let showSetupModal = $state(false);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let qrCode = $state('');
 let verificationCode = $state('');
+// biome-ignore lint/correctness/noUnusedVariables: used in template
 let sessions = $state(data.sessions || []);
 
+// biome-ignore lint/correctness/noUnusedVariables: button handler
 async function enable2FA() {
   const res = await fetch('/api/users/me/2fa/enable', { method: 'POST' });
   const result = await res.json();
@@ -16,6 +23,7 @@ async function enable2FA() {
   showSetupModal = true;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: form submit
 async function verify2FA() {
   const res = await fetch('/api/users/me/2fa/verify', {
     method: 'POST',
@@ -29,12 +37,14 @@ async function verify2FA() {
   }
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: button handler
 async function disable2FA() {
   await fetch('/api/users/me/2fa/disable', { method: 'POST' });
   twoFactorEnabled = false;
   showDisableModal = false;
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: button handler
 async function revokeSession(sessionId: string) {
   await fetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
   sessions = sessions.filter((s: { id: string }) => s.id !== sessionId);

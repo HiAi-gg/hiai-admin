@@ -1,9 +1,12 @@
+// @vitest-environment node
 import { spawn, type ChildProcess } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 const API_BASE = process.env.HIAI_ADMIN_API ?? 'http://localhost:50200';
 const WEB_BASE = process.env.HIAI_ADMIN_WEB ?? 'http://localhost:50201';
 const ACTION_TIMEOUT_MS = Number.parseInt(process.env.HIAI_E2E_TIMEOUT ?? '15000', 10);
+const FORCE_SKIP = process.env.HIAI_E2E_SKIP === '1';
 
 interface AbResult {
   stdout: string;
@@ -132,21 +135,53 @@ async function apiDelete<T = unknown>(path: string, token?: string): Promise<T> 
   return res.json() as Promise<T>;
 }
 
+function probeBackendSync(): { reachable: boolean; reason?: string } {
+  if (FORCE_SKIP) {
+    return { reachable: false, reason: 'HIAI_E2E_SKIP=1 set in environment' };
+  }
+  let url: URL;
+  try {
+    url = new URL(API_BASE);
+  } catch {
+    return { reachable: false, reason: `Invalid API_BASE ${API_BASE}` };
+  }
+  const port = url.port ? Number.parseInt(url.port, 10) : url.protocol === 'https:' ? 443 : 80;
+  const host = url.hostname;
+  const script = `
+    const net = require('net');
+    const sock = net.createConnection({ host: ${JSON.stringify(host)}, port: ${port}, timeout: 1500 });
+    let done = false;
+    const finish = (ok) => { if (!done) { done = true; try { sock.destroy(); } catch (_) {} process.exit(ok ? 0 : 1); } };
+    sock.once('connect', () => finish(true));
+    sock.once('error', () => finish(false));
+    sock.once('timeout', () => finish(false));
+  `;
+  try {
+    execFileSync(process.execPath, ['-e', script], { timeout: 3000, stdio: 'ignore' });
+    return { reachable: true };
+  } catch {
+    return {
+      reachable: false,
+      reason: `Backend at ${API_BASE} is not reachable on ${host}:${port}`,
+    };
+  }
+}
+
+const probe = probeBackendSync();
+const BACKEND_REACHABLE = probe.reachable;
+const SKIP_REASON = probe.reason ?? '';
+
+const itBackend = BACKEND_REACHABLE ? test : test.skip;
+const itReason = BACKEND_REACHABLE ? '' : ` [skipped: ${SKIP_REASON}]`;
+
 describe('hiai-admin E2E', () => {
-  let browser: AgentBrowser;
-  let adminUser: SessionUser;
-  let _tenantId = '';
+  let browser: AgentBrowser | undefined;
+  let adminUser: SessionUser | undefined;
 
   beforeAll(async () => {
-    browser = new AgentBrowser(`e2e-admin-${Date.now()}`);
-    const healthOk = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(5000) })
-      .then((r) => r.ok)
-      .catch(() => false);
-    if (!healthOk) {
-      console.log('Backend unavailable, tests will be skipped');
-      return;
-    }
+    if (!BACKEND_REACHABLE) return;
 
+    browser = new AgentBrowser(`e2e-admin-${Date.now()}`);
     const signupRes = await apiPost<{ user: { id: string }; token: string }>(
       '/api/v1/auth/register',
       {
@@ -171,8 +206,8 @@ describe('hiai-admin E2E', () => {
       } catch {}
   });
 
-  test('super admin login: login and view dashboard', async () => {
-    if (!adminUser) return;
+  itBackend(`super admin login: login and view dashboard${itReason}`, async () => {
+    if (!adminUser || !browser) throw new Error('adminUser not initialized');
     await browser.clearCookies();
     await browser.open(`${WEB_BASE}/login`);
     await browser.waitMs(2000);
@@ -184,8 +219,8 @@ describe('hiai-admin E2E', () => {
     expect(url).toContain('/dashboard');
   });
 
-  test('tenant management: create, edit, view', async () => {
-    if (!adminUser) return;
+  itBackend(`tenant management: create, edit, view${itReason}`, async () => {
+    if (!adminUser) throw new Error('adminUser not initialized');
     const created = await apiPost<{ id: string; name: string }>(
       '/api/v1/admin/tenants',
       {
@@ -195,7 +230,6 @@ describe('hiai-admin E2E', () => {
       adminUser.sessionToken,
     );
     expect(created.id).toBeTruthy();
-    _tenantId = created.id;
 
     const fetched = await apiGet<{ id: string }>(
       `/api/v1/admin/tenants/${created.id}`,
@@ -204,8 +238,8 @@ describe('hiai-admin E2E', () => {
     expect(fetched.id).toBe(created.id);
   });
 
-  test('user management: create user, assign role, delete', async () => {
-    if (!adminUser) return;
+  itBackend(`user management: create user, assign role, delete${itReason}`, async () => {
+    if (!adminUser) throw new Error('adminUser not initialized');
     const created = await apiPost<{ id: string; email: string }>(
       '/api/v1/admin/users',
       {
@@ -232,8 +266,8 @@ describe('hiai-admin E2E', () => {
     await apiDelete(`/api/v1/admin/users/${created.id}`, adminUser.sessionToken);
   });
 
-  test('billing: view invoices', async () => {
-    if (!adminUser) return;
+  itBackend(`billing: view invoices${itReason}`, async () => {
+    if (!adminUser) throw new Error('adminUser not initialized');
     const invoices = await apiGet<unknown[]>(
       '/api/v1/admin/billing/invoices',
       adminUser.sessionToken,
@@ -241,8 +275,8 @@ describe('hiai-admin E2E', () => {
     expect(Array.isArray(invoices)).toBe(true);
   });
 
-  test('settings: update platform settings', async () => {
-    if (!adminUser) return;
+  itBackend(`settings: update platform settings${itReason}`, async () => {
+    if (!adminUser) throw new Error('adminUser not initialized');
     const updated = await apiPost<{ id: string }>(
       '/api/v1/admin/settings',
       {
@@ -260,8 +294,8 @@ describe('hiai-admin E2E', () => {
     expect(fetched.value).toBe('E2E Test Platform');
   });
 
-  test('audit log: perform action and verify entry', async () => {
-    if (!adminUser) return;
+  itBackend(`audit log: perform action and verify entry${itReason}`, async () => {
+    if (!adminUser) throw new Error('adminUser not initialized');
     await apiPost(
       '/api/v1/admin/settings',
       { key: 'audit_test', value: 'trigger' },
@@ -274,8 +308,8 @@ describe('hiai-admin E2E', () => {
     expect(logs.entries.length).toBeGreaterThanOrEqual(1);
   });
 
-  test('integration config: list integrations', async () => {
-    if (!adminUser) return;
+  itBackend(`integration config: list integrations${itReason}`, async () => {
+    if (!adminUser) throw new Error('adminUser not initialized');
     const integrations = await apiGet<unknown[]>(
       '/api/v1/admin/integrations',
       adminUser.sessionToken,
