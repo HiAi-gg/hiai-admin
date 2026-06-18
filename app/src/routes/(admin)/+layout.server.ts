@@ -1,10 +1,12 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutServerLoad } from './$types';
 import { registerPlugin, getNavGroups, resetRegistry } from '$lib/plugins/registry.js';
+import { hiaiDocsPlugin } from '$lib/plugins/hiai-docs.js';
 import { hiaiPostPlugin } from '$lib/plugins/hiai-post.js';
 import { hiaiStorePlugin } from '$lib/plugins/hiai-store.js';
 import { kofiPlugin } from '$lib/plugins/kofi.js';
 import { umamiPlugin } from '$lib/plugins/umami.js';
+import { hiaiObservePlugin } from '$lib/plugins/hiai-observe.js';
 import { buildSiteAdapterPlugins, type SiteAdapterRow } from '$lib/plugins/site-adapter.js';
 import { siteAdapterService } from '../../../../backend/src/modules/site-adapter/site-adapter.service.js';
 import { userService } from '../../../../backend/src/modules/user/user.service.js';
@@ -35,10 +37,12 @@ export const load: LayoutServerLoad = async ({ locals }) => {
   resetRegistry();
 
   // Static vertical plugins
+  registerPlugin(hiaiDocsPlugin);
   registerPlugin(hiaiPostPlugin);
   registerPlugin(hiaiStorePlugin);
   registerPlugin(kofiPlugin);
   registerPlugin(umamiPlugin);
+  registerPlugin(hiaiObservePlugin);
 
   // Dynamic Site adapters: registered from per-tenant DB config (HIAI_ADMIN_DIFFS §3.3).
   // Fetched in-process from the backend service. super_admin sees all sites; a site
