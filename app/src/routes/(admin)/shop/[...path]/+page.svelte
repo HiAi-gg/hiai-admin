@@ -1,6 +1,7 @@
 <script lang="ts">
 // biome-ignore lint/correctness/noUnusedImports: used in template
 import DataTable from '$lib/components/DataTable.svelte';
+import ModuleLayout from '$lib/components/ModuleLayout.svelte';
 
 let { data } = $props();
 
@@ -119,31 +120,29 @@ const tableColumns =
 
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 const emptyMessage = `No ${sectionLabel(section).toLowerCase()} found`;
+
+const shopTabs = [
+  { value: 'dashboard', label: 'Dashboard', href: '/shop/dashboard' },
+  { value: 'products', label: 'Products', href: '/shop/products' },
+  { value: 'orders', label: 'Orders', href: '/shop/orders' },
+  { value: 'payments', label: 'Payments', href: '/shop/payments' },
+  { value: 'promotions', label: 'Promotions', href: '/shop/promotions' },
+  { value: 'shipments', label: 'Shipments', href: '/shop/shipments' },
+];
 </script>
 
-<svelte:head>
-  <title>{sectionLabel(section)} — Shop — hiai-admin</title>
-</svelte:head>
-
-<div class="space-y-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold capitalize">{sectionLabel(section)}</h1>
-      <p class="text-sm text-muted-foreground">E-Commerce · hiai-store backend</p>
-    </div>
-    <span class="text-xs text-muted-foreground font-mono">/shop/{rawPath}</span>
-  </div>
-
-  {#if data.error}
-    <div class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
-      {data.error}
-    </div>
-  {:else}
-    <DataTable
-      data={records}
-      columns={tableColumns}
-      searchPlaceholder={`Search ${section}...`}
-      {emptyMessage}
-    />
-  {/if}
-</div>
+<ModuleLayout
+  title={sectionLabel(section)}
+  description="E-Commerce · hiai-store backend"
+  path="/shop/{rawPath}"
+  tabs={shopTabs}
+  activeTab={section}
+  error={data.error}
+>
+  <DataTable
+    data={records}
+    columns={tableColumns}
+    searchPlaceholder={`Search ${section}...`}
+    {emptyMessage}
+  />
+</ModuleLayout>

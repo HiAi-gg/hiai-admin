@@ -76,8 +76,8 @@
 | E7 | Request body size limits | 1h | ⬜ PENDING |
 | E8 | Proxy route path allowlisting | 2h | ✅ DONE (W2 §2) — `app/src/lib/server/proxy-target.ts` `resolveTarget` (same-origin + http(s) + anti-traversal), подключён в `+server.ts`, 13 тестов |
 | E9 | CSRF protection | 2h | ⬜ PENDING |
-| E10 | Delete dead `AdminSidebar.svelte` (P11.3) | 5min | ⬜ PENDING |
-| E11 | Umami page server load + Ko-fi save (P11.4, P11.5) | 45min | ⬜ PENDING |
+| E10 | Delete dead `AdminSidebar.svelte` (P11.3) | 5min | ✅ DONE (A4.2) |
+| E11 | Umami page server load + Ko-fi save (P11.4, P11.5) | 45min | ✅ DONE (A4.5) — Umami tracking script via root `+layout` (`PUBLIC_UMAMI_URL`+`PUBLIC_UMAMI_WEBSITE_ID`); Ko-fi save wired `PUT /api/integrations/kofi/config` + widget preview |
 | E12 | Build proper UI for plugin proxy pages (P11.6) | 4h | ✅ DONE (verify-only) — social/shop уже на DataTable (W3 §4) |
 | E13 | Forward cookies in API proxy (P11.7) | 15min | ⬜ PENDING |
 | E14 | Migrate 7 webs/admin features (P11.8) | 31h | ⬜ PENDING |
@@ -614,7 +614,7 @@ These are the unique features from webs/admin that must be ported to hiai-admin:
   - ✅ **Общие контейнеры** (решение пользователя): hiai-admin-данные в **webs-postgres** (БД `hiai_admin`, отдельная от `webs`) + **webs-redis** (пароль). Стенд: dev-процессы на хосте (backend :50200, app vite :50250) подключены к общим контейнерам через socat-форвардеры `hiai-admin-pgfwd`/`redisfwd` (host 55432/56379). Прод-образ на сети `webs_webs` — TODO.
   - ✅ **Site-edit** (паритет со старой админкой): `(admin)/sites/[slug]/edit/+page.{server,svelte}` — name/description/status/theme через `GET/PUT /sites/:slug` (slug immutable; plan — tenant-уровень, тут не редактируется). Кнопка «Edit site» на детальной. Проверено live (PUT 200).
   - ✅ **RBAC 2 уровня (частично):** guard `(admin)/+layout.server.ts` пускает `super_admin` (глобал) + `admin`/`editor` (сайт-админ); `/sites` скоупит адаптеры по `user_tenant_access` (новый `userService.getAccessibleTenantIds`). Проверено: site-admin видит только `test`, global — все 11.
-    - 🔴 **НЕ enforced полностью (TODO, важно):** (1) реестр плагинов — глобальный singleton → **нав-сайдбар** копит все адаптеры между запросами (site-admin в нав-боковушке всё ещё видит чужие сайты); (2) **proxy `/api/[plugin]` не проверяет tenant-доступ** юзера → site-admin может дёрнуть чужой сайт по прямому URL. Нужен per-request scoping навигации + авторизация в proxy по `user_tenant_access`. Платформенные пункты (tenants/billing/rbac) site-админу скрыть в `+layout.svelte`.
+    - [FIXED 2026-06] RBAC enforced: proxy +server.ts checks tenant per-request (403 if unauthorized), registry resets via resetRegistry() between requests, sidebar scopes per-tenant. Code verified.
 - **⬜ Недостающие per-site разделы (паритет со старой `webs/admin-rewrite`) — описать/сделать:**
   - **newsletter** (`sites/[slug]/newsletter`): источник `admin-rewrite/.../newsletter`, webs proxy `newsletter/[slug]` (Novu): подписчики, CSV-экспорт, кампании, конфиг. Было E14f/B4.2. Эффорт ~L.
   - **schedules** (`sites/[slug]/schedules` + глоб. `/schedules`): расписания публикаций; webs `schedules`, `schedules/trigger`, `schedules/[id]`. Было B4.3. ~M.
