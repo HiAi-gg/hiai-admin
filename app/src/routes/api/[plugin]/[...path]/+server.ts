@@ -18,14 +18,35 @@ async function proxyRequest(
   // super_admin → all. Non-super-admin → site adapters whose tenantId is in user.tenantIds;
   // platform/static plugins (social/shop/kofi/umami) are super_admin-only.
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
+  const plugin = getPlugin(pluginId) as { kind?: string; tenantId?: string } | undefined;
   if (user.role !== 'super_admin') {
-    const plugin = getPlugin(pluginId) as { kind?: string; tenantId?: string } | undefined;
     const allowed =
       plugin?.kind === 'site' &&
       !!plugin.tenantId &&
       (user.tenantIds ?? []).includes(plugin.tenantId);
     if (!allowed) return json({ error: 'Forbidden' }, { status: 403 });
   }
+
+  // Resolve tenant for X-Tenant-Id forwarding. Many backend APIs (e.g. hiai-post
+  // tenantMiddleware) reject requests without a UUID tenant id. For SiteAdapter
+  // plugins the tenantId is the plugin's own. For non-site plugins (platform /
+  // static), prefer an explicit caller header or `?tenantId=` query, then fall
+  // back to the user's first accessible tenant.
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const inboundTenant = request.headers.get('x-tenant-id');
+  const queryTenant = new URL(request.url).searchParams.get('tenantId');
+  const explicitTenant =
+    inboundTenant && uuidRegex.test(inboundTenant)
+      ? inboundTenant
+      : queryTenant && uuidRegex.test(queryTenant)
+        ? queryTenant
+        : undefined;
+  const pluginTenantId = plugin?.kind === 'site' && plugin.tenantId ? plugin.tenantId : undefined;
+  const userTenants = (user.tenantIds ?? []).filter((t) => uuidRegex.test(t));
+  const tenantHeader =
+    pluginTenantId ??
+    explicitTenant ??
+    (userTenants.length === 1 ? userTenants[0] : userTenants[0]);
 
   // Anti-SSRF: constrain the attacker-controlled `path` to the configured backend origin.
   const target = resolveTarget(config.target, path);
@@ -39,6 +60,7 @@ async function proxyRequest(
   const headers = new Headers();
   const contentType = request.headers.get('content-type');
   if (contentType) headers.set('content-type', contentType);
+  if (tenantHeader) headers.set('x-tenant-id', tenantHeader);
 
   const secret = config.auth === 'jwt' ? await resolveAdapterSecret(pluginId) : undefined;
   if (config.auth === 'jwt' && user && secret) {

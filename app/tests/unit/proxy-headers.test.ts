@@ -34,7 +34,7 @@ describe('proxy headers (whitelist regression)', () => {
     const matches = [...source.matchAll(headerSetPattern)];
     const headerNames = matches.map((m) => m[1].toLowerCase());
 
-    const whitelisted = ['content-type', 'authorization', 'cookie'];
+    const whitelisted = ['content-type', 'authorization', 'cookie', 'x-tenant-id'];
     for (const header of headerNames) {
       expect(whitelisted).toContain(header);
       if (!whitelisted.includes(header)) {
@@ -127,8 +127,11 @@ describe('proxy headers (whitelist regression)', () => {
     const matches = [...source.matchAll(headerSetPattern)];
     const uniqueHeaders = new Set(matches.map((m) => m[1].toLowerCase()));
 
-    // Should have exactly 3 whitelisted headers
-    expect(uniqueHeaders.size).toBe(3);
-    expect(uniqueHeaders).toEqual(new Set(['content-type', 'authorization', 'cookie']));
+    // Should have exactly 4 whitelisted headers (content-type, authorization,
+    // cookie, x-tenant-id).
+    expect(uniqueHeaders.size).toBe(4);
+    expect(uniqueHeaders).toEqual(
+      new Set(['content-type', 'authorization', 'cookie', 'x-tenant-id']),
+    );
   });
 });
