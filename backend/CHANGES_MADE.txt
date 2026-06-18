@@ -1,0 +1,93 @@
+==============================================================================
+DRIZZLE MIGRATION FIXES - CHANGES MADE
+==============================================================================
+
+OBJECTIVE:
+Fix broken Drizzle migrations so `bun run db:migrate` applies cleanly to a
+fresh production database with zero errors.
+
+PROBLEM IDENTIFIED:
+1. Migration 0000 (0000_clean_nomad.sql) created user_roles.tenant_id as TEXT
+2. tenants.id is UUID type
+3. Foreign key constraint in migration 0000 failed due to type mismatch
+4. Migration 0002 attempted to fix with ALTER TABLE SET DATA TYPE but failed
+   because the FK constraint already existed
+
+==============================================================================
+FILE 1: drizzle/0000_clean_nomad.sql
+==============================================================================
+CHANGE: Line 73
+--------
+BEFORE (INCORRECT):
+    "tenant_id" text,
+
+AFTER (CORRECT):
+    "tenant_id" uuid,
+
+REASON:
+user_roles.tenant_id must be UUID to match tenants.id type and satisfy the
+foreign key constraint added on line 144:
+    ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_tenant_id_tenants_id_fk"
+    FOREIGN KEY ("tenant_id") REFERENCES "public"."tenants"("id")
+
+==============================================================================
+FILE 2: drizzle/0002_brief_mastermind.sql
+==============================================================================
+CHANGE: Line 16
+--------
+REMOVED (NO LONGER NEEDED):
+    ALTER TABLE "user_roles" ALTER COLUMN "tenant_id" SET DATA TYPE uuid;--> statement-breakpoint
+
+REASON:
+With user_roles.tenant_id now correctly created as uuid in migration 0000,
+this ALTER statement is no longer needed. Removing it prevents the error that
+would occur when trying to change a column type with an existing FK constraint.
+
+RESULT: Migration 0002 now cleanly adds the site_adapters table and its FK
+without attempting any problematic type conversions.
+
+==============================================================================
+VERIFICATION CHECKLIST
+==============================================================================
+
+Type Consistency:
+✓ invoices.tenant_id = uuid (line 14 in 0000_clean_nomad.sql)
+✓ subscriptions.tenant_id = uuid (line 59 in 0000_clean_nomad.sql)
+✓ user_roles.tenant_id = uuid (line 73 in 0000_clean_nomad.sql) [FIXED]
+✓ user_tenant_access.tenant_id = uuid (line 109 in 0000_clean_nomad.sql)
+✓ webhooks.tenant_id = uuid (line 132 in 0000_clean_nomad.sql)
+✓ site_adapters.tenant_id = uuid (line 3 in 0002_brief_mastermind.sql)
+
+Schema Source-of-Truth Matches:
+✓ role.ts: tenantId: uuid('tenant_id') - matches 0000_clean_nomad.sql line 73
+✓ site-adapter.ts: tenantId: uuid('tenant_id') - matches 0002_brief_mastermind.sql line 3
+✓ user-tenant-access.ts: tenantId: uuid('tenant_id') - matches 0000_clean_nomad.sql line 109
+✓ subscription.ts: tenantId: uuid('tenant_id') - matches 0000_clean_nomad.sql line 59
+✓ webhook.ts: tenantId: uuid('tenant_id') - matches 0000_clean_nomad.sql line 132
+
+==============================================================================
+EXPECTED BEHAVIOR AFTER FIX
+==============================================================================
+
+When running: DATABASE_URL=... bun run db:migrate
+
+Migration Execution Order:
+1. 0000_clean_nomad.sql
+   - Creates all tables with correct UUID types for tenant_id columns
+   - Adds all FK constraints (all type-compatible now)
+   - No errors
+
+2. 0001_worried_husk.sql
+   - Creates auth tables (user, account, session, verification)
+   - Adds FK constraints for auth tables
+   - No errors
+
+3. 0002_brief_mastermind.sql
+   - Creates site_adapters table with UUID tenant_id
+   - Adds FK constraint for site_adapters.tenant_id → tenants.id
+   - No ALTER TABLE type-change statements
+   - No errors
+
+Result: Database is fully provisioned with correct schema matching src/db/schema/*
+
+==============================================================================

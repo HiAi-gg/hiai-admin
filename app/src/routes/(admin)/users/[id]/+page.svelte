@@ -43,7 +43,20 @@ async function revokeSession(sessionId: string) {
       <h1 class="text-2xl font-bold">{data.user?.name}</h1>
       <p class="text-muted-foreground">{data.user?.email} · <span class="capitalize">{data.user?.role?.replace('_', ' ')}</span></p>
     </div>
-    <button onclick={() => showRoleModal = true} class="px-4 py-2 border rounded-md text-sm hover:bg-accent">Change Role</button>
+    <div class="flex gap-2">
+      <a
+        href="/users/{data.user?.id}/edit"
+        class="px-4 py-2 border rounded-md text-sm hover:bg-accent"
+      >
+        Edit
+      </a>
+      <button
+        onclick={() => (showRoleModal = true)}
+        class="px-4 py-2 border rounded-md text-sm hover:bg-accent"
+      >
+        Change Role
+      </button>
+    </div>
   </div>
 
   <div class="flex gap-4 border-b">

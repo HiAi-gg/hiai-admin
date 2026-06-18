@@ -1,6 +1,6 @@
 import { db } from '../../lib/db.js';
-import { users, userRoles } from '../../db/schema/index.js';
-import { eq, like, and, count } from 'drizzle-orm';
+import { users, userRoles, userTenantAccess } from '../../db/schema/index.js';
+import { eq, like, and, count, inArray } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
 export const userService = {
@@ -35,15 +35,38 @@ export const userService = {
       tenantId?: string;
     } = {},
   ) {
-    const { page = 1, limit = 20, search } = options;
+    const { page = 1, limit = 20, search, tenantId } = options;
     const offset = (page - 1) * limit;
+
+    const conditions = [];
+    if (search) conditions.push(like(users.name, `%${search}%`));
+
+    // SECURITY: tenantId filter scopes results to users with a user_tenant_access
+    // row for that tenant — prevents cross-tenant enumeration (BLOCKER-2).
+    let scopedUserIds: string[] | null = null;
+    if (tenantId) {
+      const access = await db
+        .select({ userId: userTenantAccess.userId })
+        .from(userTenantAccess)
+        .where(eq(userTenantAccess.tenantId, tenantId));
+      scopedUserIds = access.map((row) => row.userId);
+      if (scopedUserIds.length === 0) {
+        return {
+          items: [],
+          pagination: { page, limit, total: 0, totalPages: 0, hasMore: false },
+        };
+      }
+      conditions.push(inArray(users.id, scopedUserIds));
+    }
+
+    const where = conditions.length ? and(...conditions) : undefined;
 
     let query = db.select().from(users);
     let countQuery = db.select({ count: count() }).from(users);
 
-    if (search) {
-      query = query.where(like(users.name, `%${search}%`)) as any;
-      countQuery = countQuery.where(like(users.name, `%${search}%`)) as any;
+    if (where) {
+      query = query.where(where) as any;
+      countQuery = countQuery.where(where) as any;
     }
 
     const [items, total] = await Promise.all([query.limit(limit).offset(offset), countQuery]);
@@ -68,6 +91,16 @@ export const userService = {
   async getByEmail(email: string) {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
+  },
+
+  /** Tenant ids this user has explicit access to (via user_tenant_access). Used to
+   *  scope a non-super_admin's view of site adapters to their own tenant(s). */
+  async getAccessibleTenantIds(userId: string): Promise<string[]> {
+    const rows = await db
+      .select({ tenantId: userTenantAccess.tenantId })
+      .from(userTenantAccess)
+      .where(eq(userTenantAccess.userId, userId));
+    return rows.map((r) => r.tenantId);
   },
 
   async assignRole(userId: string, roleId: string, tenantId?: string) {

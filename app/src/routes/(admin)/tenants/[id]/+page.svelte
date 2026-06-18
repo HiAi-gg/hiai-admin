@@ -38,10 +38,26 @@ async function reactivateTenant() {
       <p class="text-muted-foreground">{data.tenant?.slug} · <StatusBadge status={data.tenant?.status} /></p>
     </div>
     <div class="flex gap-2">
+      <a
+        href="/tenants/{data.tenant?.id}/edit"
+        class="px-4 py-2 border rounded-lg text-sm hover:bg-accent"
+      >
+        Edit
+      </a>
       {#if data.tenant?.status === 'active'}
-        <button onclick={() => showSuspendModal = true} class="px-4 py-2 border border-destructive text-destructive rounded-lg text-sm hover:bg-destructive/10">Suspend</button>
+        <button
+          onclick={() => (showSuspendModal = true)}
+          class="px-4 py-2 border border-destructive text-destructive rounded-lg text-sm hover:bg-destructive/10"
+        >
+          Suspend
+        </button>
       {:else}
-        <button onclick={reactivateTenant} class="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:opacity-90">Reactivate</button>
+        <button
+          onclick={reactivateTenant}
+          class="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm hover:opacity-90"
+        >
+          Reactivate
+        </button>
       {/if}
     </div>
   </div>

@@ -1,3 +1,5 @@
+import { env } from '../../lib/config.js';
+
 export type PlanId = 'free' | 'pro' | 'enterprise';
 
 export interface PlanFeatures {
@@ -40,7 +42,7 @@ export const PLAN_FEATURES: Record<PlanId, PlanFeatures> = {
       'Custom domain',
       'API access',
     ],
-    stripePriceId: process.env.STRIPE_PRO_PRICE_ID,
+    stripePriceId: env.STRIPE_PRO_PRICE_ID,
   },
   enterprise: {
     id: 'enterprise',
@@ -61,7 +63,7 @@ export const PLAN_FEATURES: Record<PlanId, PlanFeatures> = {
       'SSO',
       'SLA',
     ],
-    stripePriceId: process.env.STRIPE_ENTERPRISE_PRICE_ID,
+    stripePriceId: env.STRIPE_ENTERPRISE_PRICE_ID,
   },
 };
 

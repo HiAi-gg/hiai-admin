@@ -1,54 +1,54 @@
 <script lang="ts" generics="T extends Record<string, any>">
-  import type { Snippet } from 'svelte';
+import type { Snippet } from 'svelte';
 
-  let {
-    data = [],
-    columns = [],
-    searchPlaceholder = 'Search...',
-    onSearch,
-    onSort,
-    onPageChange,
-    page = 1,
-    totalPages = 1,
-    loading = false,
-    emptyMessage = 'No data found',
-    actions,
-  }: {
-    data: T[];
-    columns: {
-      key: string;
-      label: string;
-      sortable?: boolean;
-      render?: (value: any, row: T) => string;
-    }[];
-    searchPlaceholder?: string;
-    onSearch?: (query: string) => void;
-    onSort?: (key: string, direction: 'asc' | 'desc') => void;
-    onPageChange?: (page: number) => void;
-    page?: number;
-    totalPages?: number;
-    loading?: boolean;
-    emptyMessage?: string;
-    actions?: Snippet<[T]>;
-  } = $props();
+let {
+  data = [],
+  columns = [],
+  searchPlaceholder = 'Search...',
+  onSearch,
+  onSort,
+  onPageChange,
+  page = 1,
+  totalPages = 1,
+  loading = false,
+  emptyMessage = 'No data found',
+  actions,
+}: {
+  data: T[];
+  columns: {
+    key: string;
+    label: string;
+    sortable?: boolean;
+    render?: (value: any, row: T) => string;
+  }[];
+  searchPlaceholder?: string;
+  onSearch?: (query: string) => void;
+  onSort?: (key: string, direction: 'asc' | 'desc') => void;
+  onPageChange?: (page: number) => void;
+  page?: number;
+  totalPages?: number;
+  loading?: boolean;
+  emptyMessage?: string;
+  actions?: Snippet<[T]>;
+} = $props();
 
-  let searchQuery = $state('');
-  let sortKey = $state('');
-  let sortDirection = $state<'asc' | 'desc'>('asc');
+let searchQuery = $state('');
+let sortKey = $state('');
+let sortDirection = $state<'asc' | 'desc'>('asc');
 
-  function handleSearch() {
-    onSearch?.(searchQuery);
+function handleSearch() {
+  onSearch?.(searchQuery);
+}
+
+function handleSort(key: string) {
+  if (sortKey === key) {
+    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortKey = key;
+    sortDirection = 'asc';
   }
-
-  function handleSort(key: string) {
-    if (sortKey === key) {
-      sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      sortKey = key;
-      sortDirection = 'asc';
-    }
-    onSort?.(key, sortDirection);
-  }
+  onSort?.(key, sortDirection);
+}
 </script>
 
 <div class="space-y-4">

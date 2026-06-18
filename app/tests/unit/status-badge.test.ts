@@ -45,10 +45,10 @@ describe('StatusBadge', () => {
     expect(classNames(trialing as HTMLElement)).toContain('bg-info');
   });
 
-  it('falls back to the pending style for unknown statuses', () => {
+  it('falls back to the muted style for unknown statuses', () => {
     const { container } = render(StatusBadge, { status: 'not-a-real-status' });
     const classes = classNames(container as HTMLElement);
-    expect(classes).toContain('bg-warning');
+    expect(classes).toContain('bg-muted');
   });
 
   it('uses the sm size class when size="sm"', () => {

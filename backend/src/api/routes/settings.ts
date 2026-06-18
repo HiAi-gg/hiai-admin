@@ -4,6 +4,7 @@ import { settings } from '../../db/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
+import { updateSettingSchema } from '../validation/settings.schema.js';
 
 export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
   .use(createRateLimiter('admin'))
@@ -35,9 +36,16 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
   .put(
     '/:key',
     async (ctx) => {
-      const { params, body } = ctx as { params: { key: string }; body: { value: unknown; description?: string } };
+      const { params, body } = ctx as { params: { key: string }; body: unknown };
       const user = (ctx as { user?: { id: string } }).user;
-      const { value, description } = body;
+
+      const parsed = updateSettingSchema.safeParse(body);
+      if (!parsed.success) {
+        ctx.set.status = 400;
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
+      const { value, description } = parsed.data;
+
       const [setting] = await db
         .insert(settings)
         .values({

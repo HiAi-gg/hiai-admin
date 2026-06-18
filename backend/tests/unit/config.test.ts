@@ -38,6 +38,8 @@ describe('envSchema (config validation)', () => {
         STRIPE_SECRET_KEY: 'sk_test_123',
         STRIPE_WEBHOOK_SECRET: 'whsec_123',
         STRIPE_PLATFORM_ACCOUNT_ID: 'acct_123',
+        STRIPE_PRO_PRICE_ID: 'price_pro_123',
+        STRIPE_ENTERPRISE_PRICE_ID: 'price_ent_123',
         HIAI_OBSERVE_URL: 'http://localhost:8001',
         API_PORT: '51000',
         FRONTEND_PORT: '51001',
@@ -51,6 +53,8 @@ describe('envSchema (config validation)', () => {
         expect(result.data.NODE_ENV).toBe('production');
         expect(result.data.LOG_LEVEL).toBe('debug');
         expect(result.data.STRIPE_SECRET_KEY).toBe('sk_test_123');
+        expect(result.data.STRIPE_PRO_PRICE_ID).toBe('price_pro_123');
+        expect(result.data.STRIPE_ENTERPRISE_PRICE_ID).toBe('price_ent_123');
       }
     });
 

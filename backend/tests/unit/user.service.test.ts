@@ -199,6 +199,39 @@ describe('userService', () => {
       expect(result.pagination.total).toBe(0);
       expect(result.pagination.hasMore).toBe(false);
     });
+
+    it('scopes results to user_tenant_access rows when tenantId is provided', async () => {
+      const accessChain = createChain([{ userId: 'user-1' }, { userId: 'user-2' }]);
+      const itemsChain = createChain([sampleUser]);
+      const countChain = createChain([{ count: 1 }]);
+      dbMock.select
+        .mockReturnValueOnce(accessChain)
+        .mockReturnValueOnce(itemsChain)
+        .mockReturnValueOnce(countChain);
+
+      const result = await userService.list({ tenantId: 'tenant-1' });
+
+      expect(accessChain.from).toHaveBeenCalled();
+      expect(accessChain.where).toHaveBeenCalled();
+      expect(itemsChain.where).toHaveBeenCalled();
+      expect(countChain.where).toHaveBeenCalled();
+      expect(result.items).toEqual([sampleUser]);
+      expect(result.pagination.total).toBe(1);
+    });
+
+    it('returns an empty page when no users have access to the given tenant', async () => {
+      const accessChain = createChain([]);
+      dbMock.select.mockReturnValueOnce(accessChain);
+
+      const result = await userService.list({ tenantId: 'tenant-orphan' });
+
+      expect(accessChain.from).toHaveBeenCalled();
+      expect(accessChain.where).toHaveBeenCalled();
+      expect(result.items).toEqual([]);
+      expect(result.pagination.total).toBe(0);
+      expect(result.pagination.totalPages).toBe(0);
+      expect(result.pagination.hasMore).toBe(false);
+    });
   });
 
   describe('update', () => {

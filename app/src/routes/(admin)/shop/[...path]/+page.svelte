@@ -1,8 +1,8 @@
 <script lang="ts">
-  // biome-ignore lint/correctness/noUnusedImports: used in template
-  import DataTable from '$lib/components/DataTable.svelte';
+// biome-ignore lint/correctness/noUnusedImports: used in template
+import DataTable from '$lib/components/DataTable.svelte';
 
-  let { data } = $props();
+let { data } = $props();
 
 const rawPath: string = (data.title as string) || 'dashboard';
 const section = rawPath.split('/')[0] || 'dashboard';

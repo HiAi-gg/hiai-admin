@@ -35,14 +35,33 @@ export const envSchema = z.object({
   REDIS_URL: z.string().url().or(z.string().startsWith('redis://')),
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url(),
+  BETTER_AUTH_TRUSTED_ORIGINS: z
+    .string()
+    .optional()
+    .transform((v) =>
+      v
+        ? v
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0)
+        : [],
+    ),
+  FRONTEND_URL: z.string().url().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_PLATFORM_ACCOUNT_ID: z.string().optional(),
+  STRIPE_PRO_PRICE_ID: z.string().optional(),
+  STRIPE_ENTERPRISE_PRICE_ID: z.string().optional(),
   HIAI_OBSERVE_URL: z.string().url().optional(),
   API_PORT: z.coerce.number().default(50200),
   FRONTEND_PORT: z.coerce.number().default(50201),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  AUDIT_FAIL_CLOSED: z
+    .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
+    .optional()
+    .transform((v) => v === 'true' || v === '1'),
+  MAX_BODY_BYTES: z.coerce.number().default(1024 * 1024), // Default 1 MB
 });
 
 export type Env = z.infer<typeof envSchema>;

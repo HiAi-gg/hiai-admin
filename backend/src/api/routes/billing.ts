@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import { stripeService } from '../../modules/billing/stripe.service.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { env } from '../../lib/config.js';
+import { webhookPortalSchema } from '../validation/integration.schema.js';
 
 const PLANS = [
   { id: 'free', name: 'Free', price: 0, features: ['1 user', '100 products', 'Basic analytics'] },
@@ -25,7 +26,12 @@ export const billingRoutes = new Elysia({ prefix: '/api/billing' })
   .post(
     '/portal',
     async ({ body, set }) => {
-      const { customerId, returnUrl } = body as { customerId: string; returnUrl: string };
+      const parsed = webhookPortalSchema.safeParse(body);
+      if (!parsed.success) {
+        set.status = 400;
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
+      const { customerId, returnUrl } = parsed.data;
       try {
         const session = await stripeService.createPortalSession(
           customerId,

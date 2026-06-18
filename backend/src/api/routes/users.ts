@@ -4,6 +4,12 @@ import { authMiddleware } from '../middleware/auth.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
 import { auditMiddleware } from '../middleware/audit.js';
 import { userService } from '../../modules/user/user.service.js';
+import {
+  createUserSchema,
+  updateUserSchema,
+  assignRoleSchema,
+  revokeRoleSchema,
+} from '../validation/user.schema.js';
 
 export const userRoutes = new Elysia({ prefix: '/api/users' })
   .use(authMiddleware)
@@ -83,8 +89,13 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
   .post(
     '/',
     async ({ body, set }) => {
+      const parsed = createUserSchema.safeParse(body);
+      if (!parsed.success) {
+        set.status = 400;
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
       try {
-        return { data: await userService.create(body as any) };
+        return { data: await userService.create(parsed.data) };
       } catch (error: any) {
         set.status = 400;
         return { error: error.message };
@@ -111,8 +122,13 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
   .put(
     '/:id',
     async ({ params, body, set }) => {
+      const parsed = updateUserSchema.safeParse(body);
+      if (!parsed.success) {
+        set.status = 400;
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
       try {
-        return { data: await userService.update(params.id, body as any) };
+        return { data: await userService.update(params.id, parsed.data) };
       } catch (error: any) {
         set.status = 400;
         return { error: error.message };
@@ -151,8 +167,13 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
   .post(
     '/:id/assign-role',
     async ({ params, body, set }) => {
+      const parsed = assignRoleSchema.safeParse(body);
+      if (!parsed.success) {
+        set.status = 400;
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
       try {
-        const { roleId, tenantId } = body as any;
+        const { roleId, tenantId } = parsed.data;
         return { data: await userService.assignRole(params.id, roleId, tenantId) };
       } catch (error: any) {
         set.status = 400;
@@ -171,8 +192,13 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
   .post(
     '/:id/revoke-role',
     async ({ params, body, set }) => {
+      const parsed = revokeRoleSchema.safeParse(body);
+      if (!parsed.success) {
+        set.status = 400;
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
       try {
-        const { roleId, tenantId } = body as any;
+        const { roleId, tenantId } = parsed.data;
         await userService.revokeRole(params.id, roleId, tenantId);
         return { success: true };
       } catch (error: any) {

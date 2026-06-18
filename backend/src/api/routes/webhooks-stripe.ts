@@ -4,12 +4,16 @@ import { db } from '../../lib/db.js';
 import { invoices, subscriptions, tenants } from '../../db/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { logger } from '../../lib/logger.js';
+import { createRateLimiter } from '../middleware/rateLimiter.js';
 
 const log = logger.child({ module: 'webhooks-stripe' });
 
-export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' }).post(
-  '/stripe',
-  async ({ request, set }) => {
+export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
+  // Rate limit protects against webhook flooding. Tier 'billing' allows
+  // 30 requests per minute per IP — generous for legitimate retries,
+  // tight enough to defeat bursts.
+  .use(createRateLimiter('billing'))
+  .post('/stripe', async ({ request, set }) => {
     const signature = request.headers.get('stripe-signature');
     if (!signature) {
       set.status = 400;
@@ -65,7 +69,6 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' }).post
             .update(subscriptions)
             .set({ status: 'canceled', updatedAt: new Date() })
             .where(eq(subscriptions.stripeSubscriptionId, sub.id));
-          // Suspend tenant if subscription is canceled
           const [dbSub] = await db
             .select()
             .from(subscriptions)
@@ -89,5 +92,4 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' }).post
       set.status = 400;
       return { error: err.message };
     }
-  },
-);
+  });

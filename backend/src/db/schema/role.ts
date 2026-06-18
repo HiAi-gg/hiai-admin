@@ -1,4 +1,4 @@
-import { pgTable, text, boolean, timestamp, primaryKey, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, boolean, timestamp, primaryKey, index, uuid } from 'drizzle-orm/pg-core';
 import { users } from './user.js';
 import { tenants } from './tenant.js';
 
@@ -50,7 +50,7 @@ export const userRoles = pgTable(
     roleId: text('role_id')
       .notNull()
       .references(() => roles.id, { onDelete: 'cascade' }),
-    tenantId: text('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
+    tenantId: uuid('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
     grantedBy: text('granted_by'),
     grantedAt: timestamp('granted_at', { withTimezone: true }).defaultNow().notNull(),
   },

@@ -45,3 +45,18 @@ export interface ProxyConfig {
   auth?: 'jwt' | 'api-key';
   rateLimit?: { requests: number; window: number };
 }
+
+/** Generic CMS modules a Site adapter can enable. */
+export type SiteModule = 'articles' | 'homepage' | 'domains' | 'kofi' | 'newsletter' | 'generation';
+
+/**
+ * A Site adapter is a {@link HiAiPlugin} whose proxy target and enabled modules
+ * come from per-tenant configuration (DB) rather than a static manifest. It lets
+ * an arbitrary consumer site register itself as a source of admin data.
+ * See HIAI_ADMIN_DIFFS §3.
+ */
+export interface SiteAdapter extends HiAiPlugin {
+  kind: 'site';
+  tenantId: string;
+  modules: SiteModule[];
+}

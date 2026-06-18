@@ -11,11 +11,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: [
-      'src/__tests__/**/*.test.ts',
-      'tests/integration/**/*.test.ts',
-      'tests/unit/**/*.test.ts',
-    ],
+    include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
     testTimeout: 30_000,
     sequence: { concurrent: false },
   },

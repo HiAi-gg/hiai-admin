@@ -1,20 +1,18 @@
 import { Elysia, t } from 'elysia';
-import { loadSession } from '../middleware/auth.js';
 import { auditMiddleware } from '../middleware/audit.js';
+import { authMiddleware } from '../middleware/auth.js';
+import { rbacMiddleware } from '../middleware/rbac.js';
 import { tenantService } from '../../modules/tenant/tenant.service.js';
+import { createTenantSchema, updateTenantSchema, suspendTenantSchema, changePlanSchema } from '../validation/tenant.schema.js';
 
 export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
+  .use(authMiddleware)
+  .use(rbacMiddleware)
   .use(auditMiddleware)
 
   .get(
     '/',
-    async (ctx: any) => {
-      const { user } = await loadSession(ctx.request.headers);
-      if (!user) {
-        ctx.set.status = 401;
-        return { error: 'Unauthorized' };
-      }
-      const { query, set } = ctx;
+    async ({ query, set }) => {
       try {
         return await tenantService.list({
           page: query.page ?? 1,
@@ -22,12 +20,13 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
           status: query.status,
           search: query.search,
         });
-      } catch (error: any) {
+      } catch (_error: any) {
         set.status = 500;
-        return { error: error.message };
+        return { error: 'Failed to list tenants' };
       }
     },
     {
+      requireSuperAdmin: true,
       query: t.Object({
         page: t.Optional(t.Integer({ minimum: 1, default: 1 })),
         limit: t.Optional(t.Integer({ minimum: 1, maximum: 100, default: 20 })),
@@ -41,40 +40,34 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
 
   .get(
     '/:id',
-    async (ctx: any) => {
-      const { user } = await loadSession(ctx.request.headers);
-      if (!user) {
-        ctx.set.status = 401;
-        return { error: 'Unauthorized' };
-      }
-      const { params, set } = ctx;
+    async ({ params, set }) => {
       try {
         return { data: await tenantService.getById(params.id) };
-      } catch (error: any) {
+      } catch (_error: any) {
         set.status = 404;
-        return { error: error.message };
+        return { error: 'Tenant not found' };
       }
     },
+    { requireSuperAdmin: true },
   )
 
   .post(
     '/',
-    async (ctx: any) => {
-      const { user } = await loadSession(ctx.request.headers);
-      if (!user) {
-        ctx.set.status = 401;
-        return { error: 'Unauthorized' };
-      }
-      const { body, set } = ctx;
-      try {
-        const { name, slug, email, plan } = body as any;
-        return { data: await tenantService.create({ name, slug, email, plan }) };
-      } catch (error: any) {
+    async ({ body, set }) => {
+      const parsed = createTenantSchema.safeParse(body);
+      if (!parsed.success) {
         set.status = 400;
-        return { error: error.message };
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
+      try {
+        return { data: await tenantService.create(parsed.data) };
+      } catch (_error: any) {
+        set.status = 400;
+        return { error: 'Failed to create tenant' };
       }
     },
     {
+      requireSuperAdmin: true,
       body: t.Object({
         name: t.String({ minLength: 1, maxLength: 200 }),
         slug: t.String({ minLength: 1, maxLength: 100 }),
@@ -86,21 +79,21 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
 
   .put(
     '/:id',
-    async (ctx: any) => {
-      const { user } = await loadSession(ctx.request.headers);
-      if (!user) {
-        ctx.set.status = 401;
-        return { error: 'Unauthorized' };
-      }
-      const { params, body, set } = ctx;
-      try {
-        return { data: await tenantService.update(params.id, body as any) };
-      } catch (error: any) {
+    async ({ params, body, set }) => {
+      const parsed = updateTenantSchema.safeParse(body);
+      if (!parsed.success) {
         set.status = 400;
-        return { error: error.message };
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
+      try {
+        return { data: await tenantService.update(params.id, parsed.data) };
+      } catch (_error: any) {
+        set.status = 400;
+        return { error: 'Failed to update tenant' };
       }
     },
     {
+      requireSuperAdmin: true,
       body: t.Object({
         name: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
         slug: t.Optional(t.String({ minLength: 1, maxLength: 100 })),
@@ -112,39 +105,34 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
 
   .delete(
     '/:id',
-    async (ctx: any) => {
-      const { user } = await loadSession(ctx.request.headers);
-      if (!user) {
-        ctx.set.status = 401;
-        return { error: 'Unauthorized' };
-      }
-      const { params, set } = ctx;
+    async ({ params, set }) => {
       try {
         return { data: await tenantService.softDelete(params.id) };
-      } catch (error: any) {
+      } catch (_error: any) {
         set.status = 400;
-        return { error: error.message };
+        return { error: 'Failed to delete tenant' };
       }
     },
+    { requireSuperAdmin: true },
   )
 
   .post(
     '/:id/suspend',
-    async (ctx: any) => {
-      const { user } = await loadSession(ctx.request.headers);
-      if (!user) {
-        ctx.set.status = 401;
-        return { error: 'Unauthorized' };
-      }
-      const { params, body, set } = ctx;
-      try {
-        return { data: await tenantService.suspend(params.id, (body as any)?.reason) };
-      } catch (error: any) {
+    async ({ params, body, set }) => {
+      const parsed = suspendTenantSchema.safeParse(body ?? {});
+      if (!parsed.success) {
         set.status = 400;
-        return { error: error.message };
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
+      try {
+        return { data: await tenantService.suspend(params.id, parsed.data.reason) };
+      } catch (_error: any) {
+        set.status = 400;
+        return { error: 'Failed to suspend tenant' };
       }
     },
     {
+      requireSuperAdmin: true,
       body: t.Object({
         reason: t.Optional(t.String({ maxLength: 500 })),
       }),
@@ -153,39 +141,34 @@ export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
 
   .post(
     '/:id/reactivate',
-    async (ctx: any) => {
-      const { user } = await loadSession(ctx.request.headers);
-      if (!user) {
-        ctx.set.status = 401;
-        return { error: 'Unauthorized' };
-      }
-      const { params, set } = ctx;
+    async ({ params, set }) => {
       try {
         return { data: await tenantService.reactivate(params.id) };
-      } catch (error: any) {
+      } catch (_error: any) {
         set.status = 400;
-        return { error: error.message };
+        return { error: 'Failed to reactivate tenant' };
       }
     },
+    { requireSuperAdmin: true },
   )
 
   .post(
     '/:id/change-plan',
-    async (ctx: any) => {
-      const { user } = await loadSession(ctx.request.headers);
-      if (!user) {
-        ctx.set.status = 401;
-        return { error: 'Unauthorized' };
-      }
-      const { params, body, set } = ctx;
-      try {
-        return { data: await tenantService.changePlan(params.id, (body as any).plan) };
-      } catch (error: any) {
+    async ({ params, body, set }) => {
+      const parsed = changePlanSchema.safeParse(body);
+      if (!parsed.success) {
         set.status = 400;
-        return { error: error.message };
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
+      try {
+        return { data: await tenantService.changePlan(params.id, parsed.data.plan) };
+      } catch (_error: any) {
+        set.status = 400;
+        return { error: 'Failed to change plan' };
       }
     },
     {
+      requireSuperAdmin: true,
       body: t.Object({
         plan: t.String({ minLength: 1 }),
       }),

@@ -10,13 +10,7 @@ const log = createChildLogger('auth');
 export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   baseURL: env.BETTER_AUTH_URL,
-  trustedOrigins: [
-    env.BETTER_AUTH_URL,
-    'http://localhost:50201',
-    'http://localhost:50202',
-    'http://localhost:50203',
-    'http://127.0.0.1:50203',
-  ],
+  trustedOrigins: [env.BETTER_AUTH_URL, ...env.BETTER_AUTH_TRUSTED_ORIGINS],
   database: drizzleAdapter(db, { provider: 'pg', schema }),
   session: {
     expiresIn: 60 * 60 * 24 * 7,

@@ -21,7 +21,7 @@ function getIp(req: Request): string {
 
 export function createRateLimiter(tier: keyof typeof LIMITS = 'public') {
   const cfg = LIMITS[tier] ?? LIMITS.public;
-  return new Elysia({ name: `rate-limit-${tier}` }).derive(async ({ request, set }) => {
+  return new Elysia({ name: `rate-limit-${tier}` }).derive({ as: 'scoped' }, async ({ request, set }) => {
     const key = `${cfg.prefix}:${getIp(request)}`;
     try {
       const count = await redis.incr(key);
@@ -39,7 +39,10 @@ export function createRateLimiter(tier: keyof typeof LIMITS = 'public') {
       return {};
     } catch (err: any) {
       if (err?.message === 'Rate limit exceeded') throw err;
-      log.warn({ err }, 'Rate limiter fail-open');
+      log.warn(
+        { tier, err, key, ip: getIp(request) },
+        'Rate limiter fail-open: Redis unavailable, allowing request through',
+      );
       return {};
     }
   });

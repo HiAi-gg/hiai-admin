@@ -1,6 +1,7 @@
 import type { HiAiPlugin } from './types.js';
 
-const umamiTarget = (typeof process !== 'undefined' && process.env?.UMAMI_URL) || 'http://localhost:3005';
+const umamiTarget =
+  (typeof process !== 'undefined' && process.env?.UMAMI_URL) || 'http://localhost:3005';
 const umamiWebsiteId = (typeof process !== 'undefined' && process.env?.UMAMI_WEBSITE_ID) || '';
 
 export const umamiPlugin: HiAiPlugin = {

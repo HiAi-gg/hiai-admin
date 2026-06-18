@@ -198,6 +198,8 @@ vi.mock('../../src/lib/config.js', () => ({
     STRIPE_SECRET_KEY: 'sk_test_mock',
     STRIPE_WEBHOOK_SECRET: 'whsec_mock',
     STRIPE_PLATFORM_ACCOUNT_ID: 'acct_mock',
+    STRIPE_PRO_PRICE_ID: 'price_pro_test',
+    STRIPE_ENTERPRISE_PRICE_ID: 'price_enterprise_test',
     HIAI_OBSERVE_URL: 'http://localhost:8001',
     API_PORT: 50200,
     FRONTEND_PORT: 50201,

@@ -7,6 +7,8 @@ export * from './auth.js';
 export { permissions, rolePermissions, roles, userRoles } from './role.js';
 // Settings tables (setting.ts defines settings + integrations)
 export { integrations, settings } from './setting.js';
+// Site adapters (per-tenant dynamic plugins for consumer sites)
+export { siteAdapters } from './site-adapter.js';
 // Billing tables (subscription.ts defines subscriptions + invoices)
 export { invoices, subscriptions } from './subscription.js';
 // Tenant and User tables
@@ -23,6 +25,7 @@ import { auditLogs } from './audit-log.js';
 import { permissions, rolePermissions, roles, userRoles } from './role.js';
 import { integrations } from './setting.js';
 import { invoices, subscriptions } from './subscription.js';
+import { siteAdapters } from './site-adapter.js';
 import { tenants } from './tenant.js';
 import { users } from './user.js';
 import { userTenantAccess } from './user-tenant-access.js';
@@ -33,6 +36,11 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
   invoices: many(invoices),
   auditLogs: many(auditLogs),
   integrations: many(integrations),
+  siteAdapters: many(siteAdapters),
+}));
+
+export const siteAdaptersRelations = relations(siteAdapters, ({ one }) => ({
+  tenant: one(tenants, { fields: [siteAdapters.tenantId], references: [tenants.id] }),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({

@@ -4,7 +4,16 @@ import { logger } from '../../lib/logger.js';
 
 const _log = logger.child({ module: 'stripe' });
 
-if (!env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY is required');
+// Fail-closed startup validation — webhook secret is required to verify
+// incoming Stripe events. Without it, the API would silently accept any
+// unsigned event.
+if (!env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY is required');
+}
+if (!env.STRIPE_WEBHOOK_SECRET) {
+  throw new Error('STRIPE_WEBHOOK_SECRET is required to verify webhook signatures');
+}
+
 const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2023-10-16' });
 
 export const stripeService = {
@@ -42,7 +51,11 @@ export const stripeService = {
   },
 
   async constructWebhookEvent(body: string | Buffer, signature: string) {
-    const secret = env.STRIPE_WEBHOOK_SECRET || '';
-    return stripe.webhooks.constructEvent(body, signature, secret);
+    // env.STRIPE_WEBHOOK_SECRET is validated at module load — empty string
+    // cannot reach this code path. Belt-and-suspenders check:
+    if (!env.STRIPE_WEBHOOK_SECRET) {
+      throw new Error('STRIPE_WEBHOOK_SECRET is not configured');
+    }
+    return stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
   },
 };

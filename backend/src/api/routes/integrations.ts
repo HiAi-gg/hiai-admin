@@ -5,6 +5,7 @@ import { and, count, eq } from 'drizzle-orm';
 import { authMiddleware } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
 import { encrypt } from '../../lib/encryption.js';
+import { updateIntegrationSchema, kofiConfigSchema } from '../validation/integration.schema.js';
 
 export const integrationsRoutes = new Elysia({ prefix: '/api/integrations' })
   .use(createRateLimiter('admin'))
@@ -72,10 +73,12 @@ export const integrationsRoutes = new Elysia({ prefix: '/api/integrations' })
   .put(
     '/:id',
     async ({ params, body, set }) => {
-      const { credentials, config } = body as {
-        credentials?: Record<string, string>;
-        config?: Record<string, unknown>;
-      };
+      const parsed = updateIntegrationSchema.safeParse(body);
+      if (!parsed.success) {
+        set.status = 400;
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
+      const { credentials, config } = parsed.data;
       const updateData: Record<string, unknown> = { updatedAt: new Date() };
       if (credentials) updateData.credentialsEncrypted = encrypt(JSON.stringify(credentials));
       if (config) updateData.config = config;
@@ -122,48 +125,12 @@ export const integrationsRoutes = new Elysia({ prefix: '/api/integrations' })
   .put(
     '/kofi/config',
     async ({ body, set }) => {
-      const { webhookUrl, verificationToken } = body as {
-        webhookUrl?: string;
-        verificationToken?: string;
-      };
-      if (!webhookUrl || !verificationToken) {
+      const parsed = kofiConfigSchema.safeParse(body);
+      if (!parsed.success) {
         set.status = 400;
-        return { error: 'Missing webhookUrl or verificationToken' };
+        return { error: 'Validation failed', details: parsed.error.flatten() };
       }
-      const [integration] = await db
-        .update(integrations)
-        .set({
-          config: { webhookUrl, verificationToken },
-          status: 'connected',
-          updatedAt: new Date(),
-        })
-        .where(eq(integrations.id, 'kofi'))
-        .returning();
-      if (!integration) {
-        set.status = 404;
-        return { error: 'Ko-fi integration not found. Run seed first.' };
-      }
-      return { success: true };
-    },
-    {
-      requireSuperAdmin: true,
-      body: t.Object({
-        webhookUrl: t.String({ format: 'uri' }),
-        verificationToken: t.String({ minLength: 1 }),
-      }),
-    },
-  )
-  .post(
-    '/kofi/config',
-    async ({ body, set }) => {
-      const { webhookUrl, verificationToken } = body as {
-        webhookUrl?: string;
-        verificationToken?: string;
-      };
-      if (!webhookUrl || !verificationToken) {
-        set.status = 400;
-        return { error: 'Missing webhookUrl or verificationToken' };
-      }
+      const { webhookUrl, verificationToken } = parsed.data;
       const [integration] = await db
         .update(integrations)
         .set({

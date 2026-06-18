@@ -1,5 +1,32 @@
 # hiai-admin — Agent Operating Instructions
 
+## 📍 Источник правды экосистемы (читать первым)
+
+Этот проект — часть экосистемы HiAi. **Общая правда живёт в корне `projects/`:**
+
+- [`../HIAI_CONVENTIONS.md`](../HIAI_CONVENTIONS.md) — правила, топология, дизайн-токены, plugin-контракт.
+- [`../../packages/hiai-ui/README.md`](../../packages/hiai-ui/README.md) — **@hiai/ui**: контракт потребления (токены/примитивы/композиты); план — [`../HIAI_UI_PACKAGE_PLAN.md`](../HIAI_UI_PACKAGE_PLAN.md).
+- [`../HIAI_ECOSYSTEM_UNIFICATION_PLAN.md`](../HIAI_ECOSYSTEM_UNIFICATION_PLAN.md) — программа унификации (U0–U5).
+- [`../HIAI_ADMIN_INTEGRATION_PLAN.md`](../HIAI_ADMIN_INTEGRATION_PLAN.md) — **главный план проекта** (Блок A доработка + Блок B интеграция в webs).
+- [`../HIAI_ADMIN_DIFFS.md`](../HIAI_ADMIN_DIFFS.md) — дифы критпути (волны W1–W8).
+- [`../HIAI_PROJECTS_ROADMAP.md`](../HIAI_PROJECTS_ROADMAP.md) — место проекта в экосистеме.
+
+**Роль:** универсальный продукт-админка (host). Подключает модули (store/post/docs/observe);
+арендуется сайтами (первый — `webs`). Остаётся независимым upstream — webs получает копию-инстанс.
+**Что дальше:** волны в `HIAI_ADMIN_DIFFS.md` (W1 тесты → W2 SiteAdapter → …).
+
+### Документы проекта (индекс)
+| Документ | Назначение | Статус |
+|---|---|---|
+| `README.md` · `AGENTS.md` (этот) · `todo.md` | обзор · правила · живой статус | core |
+| `SECURITY.md`, `CHANGELOG.md`, `CONTRIBUTING.md` | стандартные | core |
+
+> 7 аудит/план/ревью-доков (`DEVELOPMENT-GUIDE`, `TASK-PLAN`, `CRITIC-REVIEW`, `PRODUCTION-READINESS`,
+> `QUALITY-ASSESSMENT`, `SECURITY-AUDIT`, `SECURITY-AUDIT-WAVE3`) поглощены 2026-06-16 в раздел
+> «📚 Поглощённые документы» внизу `todo.md` и удалены; полный текст — в истории git.
+
+> ⚠️ Статусная сверка: B1/B2/E13 из `todo.md` **уже сделаны в коде** (см. `HIAI_ADMIN_DIFFS.md` §0).
+
 ## Identity & Purpose
 
 `hiai-admin` is the central admin panel for the HiAi SaaS platform. It is the **main control center** of the entire HiAi ecosystem, managing all tenants (stores), users, billing, settings, global analytics, and security.
