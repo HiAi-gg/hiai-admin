@@ -2,7 +2,6 @@
 import { enhance } from '$app/forms';
 import { untrack } from 'svelte';
 import DataTable from '$lib/components/DataTable.svelte';
-import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 import { formatAmount, type Donation, type KofiConfig } from '$lib/sites/kofi.js';
 
 interface PageData {
@@ -13,12 +12,6 @@ interface PageData {
 }
 
 let { data, form } = $props<{ data: PageData; form: any }>();
-
-const breadcrumbs = $derived([
-  { label: 'Sites', href: '/sites' },
-  { label: data.slug, href: `/sites/${data.slug}` },
-  { label: 'Ko-fi' },
-]);
 
 let config = $state<KofiConfig>(untrack(() => data.config));
 let donations = $state<Donation[]>(untrack(() => data.donations ?? []));
@@ -71,8 +64,6 @@ function formatDate(v: string): string {
 </svelte:head>
 
 <div class="space-y-8">
-  <Breadcrumbs items={breadcrumbs} />
-
   <!-- Config Section -->
   <div>
     <div class="flex items-center justify-between mb-6">
@@ -90,13 +81,13 @@ function formatDate(v: string): string {
       </div>
     {/if}
     {#if form?.success}
-      <div class="rounded-md border border-green-500/40 bg-green-500/10 px-4 py-3 text-sm text-green-600 dark:text-green-400 mb-6">
+      <div class="rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success mb-6">
         Ko-fi configuration saved successfully.
       </div>
     {/if}
 
     {#if data.error}
-      <div class="rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400 mb-6">
+      <div class="rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-warning mb-6">
         {data.error}
       </div>
     {/if}
@@ -212,7 +203,7 @@ function formatDate(v: string): string {
             {#each donations as donation (donation.id)}
               <tr class="border-b last:border-0 hover:bg-muted/30">
                 <td class="px-4 py-3 font-medium">{donation.from}</td>
-                <td class="px-4 py-3 font-medium text-green-600 dark:text-green-400">{formatAmount(donation)}</td>
+                <td class="px-4 py-3 font-medium text-success">{formatAmount(donation)}</td>
                 <td class="px-4 py-3 text-muted-foreground">
                   {donation.message || '—'}
                 </td>

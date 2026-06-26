@@ -4,6 +4,11 @@ import { authMiddleware } from '../middleware/auth.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
 import { auditMiddleware } from '../middleware/audit.js';
 import { userService } from '../../modules/user/user.service.js';
+import { db } from '../../lib/db.js';
+import { tenants } from '../../db/schema/index.js';
+import { eq } from 'drizzle-orm';
+import { notificationService } from '../../modules/notifications/notification.service.js';
+import { logger } from '../../lib/logger.js';
 import {
   createUserSchema,
   updateUserSchema,
@@ -11,30 +16,29 @@ import {
   revokeRoleSchema,
 } from '../validation/user.schema.js';
 
+const log = logger.child({ module: 'users-route' });
+
 export const userRoutes = new Elysia({ prefix: '/api/users' })
   .use(authMiddleware)
   .use(rbacMiddleware)
   .use(auditMiddleware)
 
-  .get(
-    '/me',
-    async (ctx: any) => {
-      const session = await auth.api.getSession({ headers: ctx.request.headers });
-      if (!session) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
-      }
-      const u = session.user;
-      const profile = await userService.getByEmail((u as any).email);
-      return {
-        id: (u as any).id,
-        email: (u as any).email,
-        name: (u as any).name,
-        role: profile?.role ?? 'viewer',
-        image: (u as any).image,
-        emailVerified: (u as any).emailVerified,
-      };
-    },
-  )
+  .get('/me', async (ctx: any) => {
+    const session = await auth.api.getSession({ headers: ctx.request.headers });
+    if (!session) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+    }
+    const u = session.user;
+    const profile = await userService.getByEmail(u.email);
+    return {
+      id: u.id,
+      email: u.email,
+      name: u.name,
+      role: profile?.role ?? 'viewer',
+      image: u.image,
+      emailVerified: u.emailVerified,
+    };
+  })
 
   .get(
     '/',
@@ -174,7 +178,34 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
       }
       try {
         const { roleId, tenantId } = parsed.data;
-        return { data: await userService.assignRole(params.id, roleId, tenantId) };
+        const result = await userService.assignRole(params.id, roleId, tenantId);
+
+        // When this is a per-tenant assignment, treat it as a tenant invite:
+        // notify the user they're now a member of the tenant.
+        if (tenantId) {
+          try {
+            const invited = await userService.getById(params.id);
+            const [tenant] = await db
+              .select()
+              .from(tenants)
+              .where(eq(tenants.id, tenantId))
+              .limit(1);
+            if (invited && tenant) {
+              await notificationService.send({
+                userId: invited.id,
+                type: 'tenant_invite',
+                title: `You've been added to ${tenant.name}`,
+                body: `You've been invited to the ${tenant.name} tenant on hiai-admin. Sign in to get started.`,
+                data: { tenantId: tenant.id, tenantSlug: tenant.slug, roleId },
+                subscriber: { email: invited.email, firstName: invited.name ?? undefined },
+              });
+            }
+          } catch (notifyErr: any) {
+            log.warn({ err: notifyErr.message }, 'Failed to send tenant_invite notification');
+          }
+        }
+
+        return { data: result };
       } catch (error: any) {
         set.status = 400;
         return { error: error.message };

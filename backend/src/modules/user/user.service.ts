@@ -1,5 +1,5 @@
 import { db } from '../../lib/db.js';
-import { users, userRoles, userTenantAccess } from '../../db/schema/index.js';
+import { users, userRoles, userTenantAccess, tenants } from '../../db/schema/index.js';
 import { eq, like, and, count, inArray } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
@@ -17,7 +17,7 @@ export const userService = {
     return user;
   },
 
-  async update(id: string, data: Partial<{ name: string; avatarUrl: string }>) {
+  async update(id: string, data: Partial<{ name: string; avatarUrl: string | null }>) {
     const [user] = await db
       .update(users)
       .set({ ...data, updatedAt: new Date() })
@@ -61,15 +61,16 @@ export const userService = {
 
     const where = conditions.length ? and(...conditions) : undefined;
 
-    let query = db.select().from(users);
-    let countQuery = db.select({ count: count() }).from(users);
+    const baseQuery = db.select().from(users);
+    const baseCountQuery = db.select({ count: count() }).from(users);
 
-    if (where) {
-      query = query.where(where) as any;
-      countQuery = countQuery.where(where) as any;
-    }
+    const filteredQuery = where ? baseQuery.where(where) : baseQuery;
+    const filteredCountQuery = where ? baseCountQuery.where(where) : baseCountQuery;
 
-    const [items, total] = await Promise.all([query.limit(limit).offset(offset), countQuery]);
+    const [items, total] = await Promise.all([
+      filteredQuery.limit(limit).offset(offset),
+      filteredCountQuery,
+    ]);
 
     return {
       items,
@@ -143,5 +144,62 @@ export const userService = {
   async remove(id: string) {
     const [user] = await db.delete(users).where(eq(users.id, id)).returning();
     return user;
+  },
+
+  /** Tenants this user has access to (joined with the tenant row for display). */
+  async getTenants(userId: string) {
+    const rows = await db
+      .select({
+        tenantId: userTenantAccess.tenantId,
+        slug: tenants.slug,
+        name: tenants.name,
+        status: tenants.status,
+        plan: tenants.plan,
+        role: userTenantAccess.role,
+        joinedAt: userTenantAccess.createdAt,
+      })
+      .from(userTenantAccess)
+      .innerJoin(tenants, eq(tenants.id, userTenantAccess.tenantId))
+      .where(eq(userTenantAccess.userId, userId));
+    return rows;
+  },
+
+  /** Add the user to an existing tenant by slug. Returns null when the tenant
+   *  doesn't exist, or a flag when the user is already a member. */
+  async joinTenant(
+    userId: string,
+    slug: string,
+    options: { role?: string } = {},
+  ): Promise<
+    | { status: 'joined'; tenantId: string; slug: string; name: string }
+    | { status: 'already_member'; tenantId: string }
+    | { status: 'not_found' }
+  > {
+    const [tenant] = await db.select().from(tenants).where(eq(tenants.slug, slug));
+    if (!tenant) return { status: 'not_found' };
+
+    const [existing] = await db
+      .select()
+      .from(userTenantAccess)
+      .where(and(eq(userTenantAccess.userId, userId), eq(userTenantAccess.tenantId, tenant.id)));
+    if (existing) return { status: 'already_member', tenantId: tenant.id };
+
+    await db.insert(userTenantAccess).values({
+      userId,
+      tenantId: tenant.id,
+      role: options.role ?? 'viewer',
+      permissions: [],
+    });
+    return { status: 'joined', tenantId: tenant.id, slug: tenant.slug, name: tenant.name };
+  },
+
+  /** Remove the user's access row for the given tenant. Returns true when a
+   *  row was actually deleted. */
+  async leaveTenant(userId: string, tenantId: string): Promise<boolean> {
+    const result = await db
+      .delete(userTenantAccess)
+      .where(and(eq(userTenantAccess.userId, userId), eq(userTenantAccess.tenantId, tenantId)))
+      .returning();
+    return result.length > 0;
   },
 };

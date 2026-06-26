@@ -21,29 +21,32 @@ function getIp(req: Request): string {
 
 export function createRateLimiter(tier: keyof typeof LIMITS = 'public') {
   const cfg = LIMITS[tier] ?? LIMITS.public;
-  return new Elysia({ name: `rate-limit-${tier}` }).derive({ as: 'scoped' }, async ({ request, set }) => {
-    const key = `${cfg.prefix}:${getIp(request)}`;
-    try {
-      const count = await redis.incr(key);
-      if (count === 1) await redis.pexpire(key, cfg.windowMs);
-      const _remaining = Math.max(0, cfg.max - count);
-      if (count > cfg.max) {
-        set.status = 429;
-        set.headers = {
-          'X-RateLimit-Limit': String(cfg.max),
-          'X-RateLimit-Remaining': '0',
-          'Retry-After': String(Math.ceil(cfg.windowMs / 1000)),
-        };
-        throw new Error('Rate limit exceeded');
+  return new Elysia({ name: `rate-limit-${tier}` }).derive(
+    { as: 'scoped' },
+    async ({ request, set }) => {
+      const key = `${cfg.prefix}:${getIp(request)}`;
+      try {
+        const count = await redis.incr(key);
+        if (count === 1) await redis.pexpire(key, cfg.windowMs);
+        const _remaining = Math.max(0, cfg.max - count);
+        if (count > cfg.max) {
+          set.status = 429;
+          set.headers = {
+            'X-RateLimit-Limit': String(cfg.max),
+            'X-RateLimit-Remaining': '0',
+            'Retry-After': String(Math.ceil(cfg.windowMs / 1000)),
+          };
+          throw new Error('Rate limit exceeded');
+        }
+        return {};
+      } catch (err: any) {
+        if (err?.message === 'Rate limit exceeded') throw err;
+        log.warn(
+          { tier, err, key, ip: getIp(request) },
+          'Rate limiter fail-open: Redis unavailable, allowing request through',
+        );
+        return {};
       }
-      return {};
-    } catch (err: any) {
-      if (err?.message === 'Rate limit exceeded') throw err;
-      log.warn(
-        { tier, err, key, ip: getIp(request) },
-        'Rate limiter fail-open: Redis unavailable, allowing request through',
-      );
-      return {};
-    }
-  });
+    },
+  );
 }

@@ -72,5 +72,13 @@ export const load: LayoutServerLoad = async ({ locals }) => {
   }
 
   const navGroups = getNavGroups();
-  return { user: locals.user, navGroups, adapters };
+  // Strip non-serializable icon fields (Svelte Component references) from
+  // navGroups before returning to the client. AdminSidebar.resolveIcon()
+  // handles icons on the client side — the server only needs label/href.
+  const serializableNavGroups = navGroups.map((g) => ({
+    ...g,
+    icon: undefined,
+    items: g.items.map((i) => ({ ...i, icon: undefined })),
+  }));
+  return { user: locals.user, navGroups: serializableNavGroups, adapters };
 };

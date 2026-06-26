@@ -1,8 +1,8 @@
 <script lang="ts">
 import { BarChart, LineChart, PieChart } from 'layerchart';
-// biome-ignore lint/correctness/noUnusedImports: used in template
-import StatsCard from '$lib/components/StatsCard.svelte';
+import { StatsCard } from '@hiai/ui';
 import { api } from '$lib/api.js';
+import { Building2, CheckCircle2, Sparkles, DollarSign } from 'lucide-svelte';
 
 let { data } = $props();
 
@@ -103,28 +103,28 @@ const planLabels: Record<string, string> = {
     <StatsCard
       label="Total Tenants"
       value={data.overview.totalTenants}
-      icon="🏪"
+      icon={Building2}
       accent="primary"
       href="/tenants"
     />
     <StatsCard
       label="Active Tenants"
       value={data.overview.activeTenants}
-      icon="✅"
+      icon={CheckCircle2}
       accent="success"
       href="/tenants"
     />
     <StatsCard
       label="New (30d)"
       value={data.overview.newTenants}
-      icon="🆕"
+      icon={Sparkles}
       accent="info"
       href="/tenants"
     />
     <StatsCard
       label="MRR"
       value={`$${((data.overview.mrr ?? 0) / 100).toFixed(2)}`}
-      icon="💰"
+      icon={DollarSign}
       accent="violet"
       href="/billing"
     />

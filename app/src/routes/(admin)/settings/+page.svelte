@@ -1,8 +1,82 @@
 <script lang="ts">
+import { invalidateAll } from '$app/navigation';
+
 let { data } = $props();
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 let saving = $state(false);
 let saveMessage = $state('');
+
+// --- Logo upload state ---
+const MAX_LOGO_BYTES = 1024 * 1024; // 1 MB
+const ACCEPTED_LOGO_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/svg+xml',
+  'image/avif',
+  'image/x-icon',
+];
+let logoFile = $state<File | null>(null);
+let logoPreview = $state<string | null>(null);
+let uploadingLogo = $state(false);
+let logoMessage = $state('');
+const existingLogoUrl = $derived<string | null>(
+  (data.settings?.settings ?? data.settings?.items ?? []).find?.(
+    (s: { id: string }) => s.id === 'logo_url',
+  )?.value ?? null,
+);
+
+function onLogoSelected(event: Event) {
+  logoMessage = '';
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) {
+    logoFile = null;
+    logoPreview = null;
+    return;
+  }
+  if (!ACCEPTED_LOGO_TYPES.includes(file.type)) {
+    logoMessage = 'Unsupported image type. Use PNG, JPEG, WebP, SVG, AVIF, or ICO.';
+    target.value = '';
+    return;
+  }
+  if (file.size > MAX_LOGO_BYTES) {
+    logoMessage = `Image too large (${(file.size / 1024 / 1024).toFixed(1)} MB; max 1 MB).`;
+    target.value = '';
+    return;
+  }
+  logoFile = file;
+  if (logoPreview) URL.revokeObjectURL(logoPreview);
+  logoPreview = URL.createObjectURL(file);
+}
+
+async function uploadLogo() {
+  if (!logoFile) {
+    logoMessage = 'Choose a logo image first.';
+    return;
+  }
+  uploadingLogo = true;
+  logoMessage = '';
+  try {
+    const form = new FormData();
+    form.append('file', logoFile);
+    const res = await fetch('/api/settings/logo', {
+      method: 'POST',
+      body: form,
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error ?? 'Failed to upload logo');
+    }
+    logoMessage = 'Logo uploaded';
+    await invalidateAll();
+    setTimeout(() => (logoMessage = ''), 3000);
+  } catch (err) {
+    logoMessage = err instanceof Error ? err.message : 'Failed to upload logo';
+  } finally {
+    uploadingLogo = false;
+  }
+}
 
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 const sections = [
@@ -229,4 +303,83 @@ function handleToggle(key: string, current: boolean) {
       </div>
     </div>
   {/each}
+
+  <div class="rounded-lg border bg-card">
+    <div class="p-4 border-b">
+      <h2 class="text-lg font-semibold">Branding</h2>
+      <p class="text-xs text-muted-foreground">
+        Upload the platform logo. Stored in Minio under <code>logos/</code> and exposed
+        as the <code>logo_url</code> setting.
+      </p>
+    </div>
+    <div class="space-y-4 p-4">
+      <div class="flex items-center gap-4">
+        {#if logoPreview}
+          <img
+            src={logoPreview}
+            alt="Logo preview"
+            class="h-16 max-w-[16rem] rounded-md border bg-background object-contain p-2"
+          />
+        {:else if existingLogoUrl}
+          <img
+            src={existingLogoUrl}
+            alt="Current logo"
+            class="h-16 max-w-[16rem] rounded-md border bg-background object-contain p-2"
+          />
+        {:else}
+          <div
+            class="h-16 w-32 rounded-md border border-dashed bg-muted/30 flex items-center justify-center text-xs text-muted-foreground"
+          >
+            No logo
+          </div>
+        {/if}
+        <div class="flex-1 space-y-1">
+          <div class="text-sm font-medium">Platform logo</div>
+          <div class="text-xs text-muted-foreground">
+            PNG, JPEG, WebP, SVG, AVIF, or ICO. Max 1 MB.
+          </div>
+          {#if existingLogoUrl}
+            <div class="text-xs text-muted-foreground truncate">
+              Current URL: <code class="break-all">{existingLogoUrl}</code>
+            </div>
+          {/if}
+        </div>
+      </div>
+      <div class="flex flex-col gap-3 border-t pt-4 sm:flex-row sm:items-center">
+        <label class="flex-1">
+          <span class="sr-only">Choose logo image</span>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml,image/avif,image/x-icon"
+            onchange={onLogoSelected}
+            class="block w-full text-sm text-foreground file:mr-3 file:rounded-md file:border file:border-input file:bg-background file:px-3 file:py-1.5 file:text-sm file:font-medium hover:file:bg-accent"
+          />
+        </label>
+        <div class="flex items-center gap-3">
+          {#if logoMessage}
+            <span
+              class="text-xs"
+              class:text-success={!logoMessage.startsWith('Unsupported') &&
+                !logoMessage.startsWith('Image too large') &&
+                !logoMessage.startsWith('Choose') &&
+                !logoMessage.startsWith('Failed')}
+              class:text-destructive={logoMessage.startsWith('Unsupported') ||
+                logoMessage.startsWith('Image too large') ||
+                logoMessage.startsWith('Failed')}
+            >
+              {logoMessage}
+            </span>
+          {/if}
+          <button
+            type="button"
+            onclick={uploadLogo}
+            disabled={!logoFile || uploadingLogo}
+            class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
+            {uploadingLogo ? 'Uploading…' : 'Upload logo'}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

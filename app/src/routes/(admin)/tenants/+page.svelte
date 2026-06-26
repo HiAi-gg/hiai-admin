@@ -74,12 +74,6 @@ const columns = [
       <h1 class="text-2xl font-bold">Tenants</h1>
       <p class="text-muted-foreground">All tenants on the platform</p>
     </div>
-    <a
-      href="/tenants/new"
-      class="px-4 py-2 rounded bg-primary text-primary-foreground hover:opacity-90"
-    >
-      + New Tenant
-    </a>
   </div>
 
   <form

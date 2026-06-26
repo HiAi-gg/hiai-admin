@@ -12,12 +12,14 @@ interface MockChain {
   insert: Mock;
   update: Mock;
   delete: Mock;
+  innerJoin: Mock;
 }
 
 function createChain(terminal: unknown): MockChain {
   const chain = {} as MockChain;
   chain.select = vi.fn(() => chain);
   chain.from = vi.fn(() => chain);
+  chain.innerJoin = vi.fn(() => chain);
   chain.where = vi.fn(() => chain);
   chain.limit = vi.fn(() => chain);
   chain.offset = vi.fn(() => chain);
@@ -329,6 +331,118 @@ describe('userService', () => {
 
       expect(dbMock.delete).toHaveBeenCalled();
       expect(result).toEqual(sampleUser);
+    });
+  });
+
+  describe('getTenants', () => {
+    it('returns the joined tenant list for a user', async () => {
+      const row = {
+        tenantId: 'tenant-1',
+        slug: 'acme',
+        name: 'Acme',
+        status: 'active',
+        plan: 'pro',
+        role: 'editor',
+        joinedAt: new Date('2026-01-01T00:00:00Z'),
+      };
+      const joinChain = createChain([row]);
+      dbMock.select.mockReturnValue(joinChain);
+
+      const result = await userService.getTenants('user-1');
+
+      expect(joinChain.from).toHaveBeenCalled();
+      expect(joinChain.innerJoin).toHaveBeenCalled();
+      expect(joinChain.where).toHaveBeenCalled();
+      expect(result).toEqual([row]);
+    });
+
+    it('returns an empty array when the user has no tenants', async () => {
+      const joinChain = createChain([]);
+      dbMock.select.mockReturnValue(joinChain);
+
+      const result = await userService.getTenants('user-1');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('joinTenant', () => {
+    it('inserts a new access row when tenant exists and user is not a member', async () => {
+      const tenantChain = createChain([{ id: 'tenant-1', slug: 'acme', name: 'Acme' }]);
+      const existingChain = createChain([]);
+      const insertChain = createChain([{ userId: 'user-1', tenantId: 'tenant-1' }]);
+      dbMock.select.mockReturnValueOnce(tenantChain).mockReturnValueOnce(existingChain);
+      dbMock.insert.mockReturnValue(insertChain);
+
+      const result = await userService.joinTenant('user-1', 'acme');
+
+      expect(result).toEqual({
+        status: 'joined',
+        tenantId: 'tenant-1',
+        slug: 'acme',
+        name: 'Acme',
+      });
+      expect(insertChain.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: 'user-1',
+          tenantId: 'tenant-1',
+          role: 'viewer',
+        }),
+      );
+    });
+
+    it('honors the explicit role when joining', async () => {
+      const tenantChain = createChain([{ id: 'tenant-1', slug: 'acme', name: 'Acme' }]);
+      const existingChain = createChain([]);
+      const insertChain = createChain([{ userId: 'user-1', tenantId: 'tenant-1' }]);
+      dbMock.select.mockReturnValueOnce(tenantChain).mockReturnValueOnce(existingChain);
+      dbMock.insert.mockReturnValue(insertChain);
+
+      await userService.joinTenant('user-1', 'acme', { role: 'editor' });
+
+      expect(insertChain.values).toHaveBeenCalledWith(expect.objectContaining({ role: 'editor' }));
+    });
+
+    it('returns not_found when the tenant slug does not exist', async () => {
+      const tenantChain = createChain([]);
+      dbMock.select.mockReturnValueOnce(tenantChain);
+
+      const result = await userService.joinTenant('user-1', 'ghost');
+
+      expect(result).toEqual({ status: 'not_found' });
+      expect(dbMock.insert).not.toHaveBeenCalled();
+    });
+
+    it('returns already_member when the user already has access', async () => {
+      const tenantChain = createChain([{ id: 'tenant-1', slug: 'acme', name: 'Acme' }]);
+      const existingChain = createChain([{ userId: 'user-1', tenantId: 'tenant-1' }]);
+      dbMock.select.mockReturnValueOnce(tenantChain).mockReturnValueOnce(existingChain);
+
+      const result = await userService.joinTenant('user-1', 'acme');
+
+      expect(result).toEqual({ status: 'already_member', tenantId: 'tenant-1' });
+      expect(dbMock.insert).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('leaveTenant', () => {
+    it('deletes the user-tenant access row and returns true', async () => {
+      const deleteChain = createChain([{ userId: 'user-1', tenantId: 'tenant-1' }]);
+      dbMock.delete.mockReturnValue(deleteChain);
+
+      const result = await userService.leaveTenant('user-1', 'tenant-1');
+
+      expect(result).toBe(true);
+      expect(deleteChain.where).toHaveBeenCalled();
+    });
+
+    it('returns false when no row was deleted', async () => {
+      const deleteChain = createChain([]);
+      dbMock.delete.mockReturnValue(deleteChain);
+
+      const result = await userService.leaveTenant('user-1', 'tenant-x');
+
+      expect(result).toBe(false);
     });
   });
 });

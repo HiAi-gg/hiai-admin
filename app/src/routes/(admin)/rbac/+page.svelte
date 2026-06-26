@@ -5,6 +5,7 @@ import { invalidateAll } from '$app/navigation';
 import DataTable from '$lib/components/DataTable.svelte';
 // biome-ignore lint/correctness/noUnusedImports: used in template
 import ConfirmModal from '$lib/components/ConfirmModal.svelte';
+import { Lock } from 'lucide-svelte';
 
 type Role = {
   id: string;
@@ -238,7 +239,7 @@ function roleName(roleId: string): string {
 const roleColumns = [
   { key: 'name', label: 'Role', sortable: true },
   { key: 'description', label: 'Description' },
-  { key: 'isSystem', label: 'Type', render: (val: boolean) => (val ? '🔒 system' : '✏️ custom') },
+  { key: 'isSystem', label: 'Type', render: (val: boolean) => (val ? 'system' : 'custom') },
   { key: 'permissions', label: 'Permissions', render: (val: string[]) => val.length.toString() },
   {
     key: 'createdAt',
@@ -373,7 +374,7 @@ const tabs: { id: Tab; label: string; icon: string }[] = [
                     class="hover:underline disabled:cursor-not-allowed"
                   >
                     {role.name}
-                    {#if role.isSystem}<span class="text-xs ml-1">🔒</span>{/if}
+                    {#if role.isSystem}<Lock class="ml-1 inline h-3.5 w-3.5 text-muted-foreground" />{/if}
                   </button>
                 </th>
               {/each}

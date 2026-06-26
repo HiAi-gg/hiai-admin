@@ -3,6 +3,20 @@ import { auditService } from '../../modules/audit/audit.service.js';
 import { logger } from '../../lib/logger.js';
 import { env } from '../../lib/config.js';
 
+/**
+ * Platform user shape returned by `loadSession` (see `middleware/auth.ts`).
+ * Mirrors `BetterAuthUser & { role?: string }` and is shared across the
+ * backend so middleware can type-derive `ctx.user` consistently.
+ */
+export interface PlatformUser {
+  id: string;
+  email: string;
+  name: string;
+  image?: string | null;
+  emailVerified: boolean;
+  role?: string;
+}
+
 const log = logger.child({ module: 'audit' });
 const AUDIT_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -16,45 +30,70 @@ export function getAuditMetrics() {
   };
 }
 
-export const auditMiddleware = new Elysia({ name: 'audit' }).onAfterHandle({ as: 'scoped' }, async (ctx) => {
-  const { request } = ctx;
-  const user = (ctx as any).user;
-  if (!AUDIT_METHODS.has(request.method) || !user) return;
-  const url = new URL(request.url);
-  const parts = url.pathname.split('/').filter(Boolean);
-  const resource = parts[2] || parts[1] || 'unknown';
-  const resourceId = parts[3] || undefined;
-  const actionMap: Record<string, string> = {
-    POST: 'create',
-    PUT: 'update',
-    PATCH: 'update',
-    DELETE: 'delete',
-  };
-  const action = `${resource}:${actionMap[request.method]}`;
-  try {
-    await auditService.record({
-      actorId: user.id,
-      actorEmail: user.email,
-      action,
-      resource,
-      resourceId,
-      ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1',
-      userAgent: request.headers.get('user-agent') || '',
-    });
-  } catch (err) {
-    auditFailures++;
-    log.warn(
-      { err, method: request.method, path: url.pathname, action, resource, resourceId, actorId: user.id },
-      'Audit log write failed: CUD operation succeeded but compliance trail is incomplete',
-    );
-    if (env.AUDIT_FAIL_CLOSED) {
-      auditFailClosedRejections++;
-      log.error(
-        { err, method: request.method, path: url.pathname, action, resource, resourceId, actorId: user.id },
-        'AUDIT_FAIL_CLOSED enabled: rejecting CUD response to preserve audit trail',
+export const auditMiddleware = new Elysia({ name: 'audit' }).onAfterHandle(
+  { as: 'scoped' },
+  async (ctx) => {
+    const { request } = ctx;
+    // The global `derive` in `api/index.ts` populates `user` on the Elysia
+    // context; Elysia's local type inference does not see cross-plugin
+    // derives, so we cast through `unknown` (instead of `any`) to the
+    // `PlatformUser` shape defined above. This keeps the cast type-safe
+    // (TS verifies the target type) while staying compatible with the
+    // global derive contract.
+    const user = (ctx as unknown as { user: PlatformUser | null }).user;
+    if (!AUDIT_METHODS.has(request.method) || !user) return;
+    const url = new URL(request.url);
+    const parts = url.pathname.split('/').filter(Boolean);
+    const resource = parts[2] || parts[1] || 'unknown';
+    const resourceId = parts[3] || undefined;
+    const actionMap: Record<string, string> = {
+      POST: 'create',
+      PUT: 'update',
+      PATCH: 'update',
+      DELETE: 'delete',
+    };
+    const action = `${resource}:${actionMap[request.method]}`;
+    try {
+      await auditService.record({
+        actorId: user.id,
+        actorEmail: user.email,
+        action,
+        resource,
+        resourceId,
+        ipAddress: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1',
+        userAgent: request.headers.get('user-agent') || '',
+      });
+    } catch (err) {
+      auditFailures++;
+      log.warn(
+        {
+          err,
+          method: request.method,
+          path: url.pathname,
+          action,
+          resource,
+          resourceId,
+          actorId: user.id,
+        },
+        'Audit log write failed: CUD operation succeeded but compliance trail is incomplete',
       );
-      (ctx as any).set.status = 500;
-      return { error: 'Audit log unavailable; operation rejected (AUDIT_FAIL_CLOSED)' };
+      if (env.AUDIT_FAIL_CLOSED) {
+        auditFailClosedRejections++;
+        log.error(
+          {
+            err,
+            method: request.method,
+            path: url.pathname,
+            action,
+            resource,
+            resourceId,
+            actorId: user.id,
+          },
+          'AUDIT_FAIL_CLOSED enabled: rejecting CUD response to preserve audit trail',
+        );
+        (ctx.set as { status: number }).status = 500;
+        return { error: 'Audit log unavailable; operation rejected (AUDIT_FAIL_CLOSED)' };
+      }
     }
-  }
-});
+  },
+);

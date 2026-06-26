@@ -43,7 +43,10 @@ export const rbacRoutes = new Elysia({ prefix: '/api/rbac' })
   .post(
     '/roles',
     async (ctx) => {
-      const { body, set } = ctx as { body: { name: string; description?: string; permissionIds?: string[] }; set: { status: number } };
+      const { body, set } = ctx as {
+        body: { name: string; description?: string; permissionIds?: string[] };
+        set: { status: number };
+      };
       const user = (ctx as { user?: { id: string } }).user;
       try {
         const id = await rbac.createRole(body);
@@ -276,7 +279,11 @@ export const rbacRoutes = new Elysia({ prefix: '/api/rbac' })
   .post(
     '/users/:userId/roles',
     async (ctx) => {
-      const { params, body, set } = ctx as { params: { userId: string }; body: { roleId: string; tenantId?: string | null }; set: { status: number } };
+      const { params, body, set } = ctx as {
+        params: { userId: string };
+        body: { roleId: string; tenantId?: string | null };
+        set: { status: number };
+      };
       const user = (ctx as { user?: { id: string } }).user;
       try {
         await rbac.assignRoleToUser(params.userId, body.roleId, body.tenantId, user?.id);

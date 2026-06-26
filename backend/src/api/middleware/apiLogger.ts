@@ -5,11 +5,11 @@ const log = createChildLogger('api');
 
 export const apiLogger = new Elysia({ name: 'api-logger' })
   .onBeforeHandle(({ request }) => {
-    (request as any)._startTime = performance.now();
+    request._startTime = performance.now();
     log.info({ method: request.method, url: new URL(request.url).pathname }, '→ request');
   })
   .onAfterHandle(({ request, set }) => {
-    const duration = Math.round(performance.now() - ((request as any)._startTime || 0));
+    const duration = Math.round(performance.now() - (request._startTime || 0));
     log.info(
       {
         method: request.method,

@@ -1,6 +1,7 @@
 {
   "name": "hiai-admin",
   "version": "0.0.1",
+  "packageManager": "bun@1.3.14",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,6 +9,8 @@
     "dev:api": "cd backend && bun run dev",
     "dev:frontend": "cd app && bun run dev",
     "build": "cd backend && bun run build && cd ../app && bun run build",
+    "build:api": "cd backend && bun run build",
+    "build:frontend": "cd app && bun run build",
     "lint": "cd backend && bun run lint && cd ../app && bun run lint",
     "lint:fix": "cd backend && bun run lint:fix && cd ../app && bun run lint:fix",
     "format": "cd backend && bun run format && cd ../app && bun run format",

@@ -1,33 +1,33 @@
 <script lang="ts">
-  // biome-ignore lint/correctness/noUnusedImports: used in template
-  import DataTable from '$lib/components/DataTable.svelte';
-  import ModuleLayout from '$lib/components/ModuleLayout.svelte';
+// biome-ignore lint/correctness/noUnusedImports: used in template
+import DataTable from '$lib/components/DataTable.svelte';
+import ModuleLayout from '$lib/components/ModuleLayout.svelte';
 
-  let { data } = $props();
+let { data } = $props();
 
-  function extractArray(payload: unknown): Record<string, unknown>[] {
-    if (Array.isArray(payload)) return payload as Record<string, unknown>[];
-    if (payload && typeof payload === 'object') {
-      const obj = payload as Record<string, unknown>;
-      for (const key of ['items', 'data', 'results', 'documents']) {
-        const candidate = obj[key];
-        if (Array.isArray(candidate)) return candidate as Record<string, unknown>[];
-      }
+function extractArray(payload: unknown): Record<string, unknown>[] {
+  if (Array.isArray(payload)) return payload as Record<string, unknown>[];
+  if (payload && typeof payload === 'object') {
+    const obj = payload as Record<string, unknown>;
+    for (const key of ['items', 'data', 'results', 'documents']) {
+      const candidate = obj[key];
+      if (Array.isArray(candidate)) return candidate as Record<string, unknown>[];
     }
-    return [];
   }
+  return [];
+}
 
-  // biome-ignore lint/correctness/noUnusedVariables: used in template
-  const records = extractArray(data);
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const records = extractArray(data);
 
-  function formatShort(v: unknown): string {
-    if (!v) return '—';
-    const d = new Date(String(v));
-    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
-  }
+function formatShort(v: unknown): string {
+  if (!v) return '—';
+  const d = new Date(String(v));
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+}
 
-  // biome-ignore lint/correctness/noUnusedVariables: used in template
-  const columns = [
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const columns = [
   {
     key: 'title',
     label: 'Title',
@@ -42,10 +42,10 @@
   { key: 'ownerId', label: 'Owner', render: (v: unknown) => (v ? String(v).slice(0, 8) : '—') },
   { key: 'createdAt', label: 'Created', sortable: true, render: formatShort },
   { key: 'updatedAt', label: 'Updated', sortable: true, render: formatShort },
-  ];
+];
 
-  // biome-ignore lint/correctness/noUnusedVariables: used in template
-  const docsTabs = [
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const docsTabs = [
   { value: 'browse', label: 'Browse', href: '/documents' },
   { value: 'search', label: 'Search', href: '/documents/search' },
   { value: 'recent', label: 'Recent', href: '/documents/recent' },

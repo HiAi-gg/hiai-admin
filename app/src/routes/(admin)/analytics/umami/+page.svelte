@@ -1,4 +1,6 @@
 <script lang="ts">
+import { BarChart3 } from 'lucide-svelte';
+
 let { data } = $props();
 </script>
 
@@ -7,7 +9,10 @@ let { data } = $props();
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <div>
-      <h1 class="text-2xl font-bold tracking-tight">📊 Umami Analytics</h1>
+      <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2">
+        <BarChart3 class="h-6 w-6" aria-hidden="true" />
+        Umami Analytics
+      </h1>
       <p class="text-sm text-muted-foreground">Privacy-focused web analytics</p>
     </div>
     {#if data?.umamiUrl}

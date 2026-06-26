@@ -3,6 +3,7 @@ import { db } from '../../lib/db.js';
 import { users, userTenantAccess, userRoles, roles } from '../../db/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { stripeService } from '../billing/stripe.service.js';
+import { notificationService } from '../notifications/notification.service.js';
 import { logger } from '../../lib/logger.js';
 import { randomUUID } from 'node:crypto';
 
@@ -77,6 +78,21 @@ export async function provisionTenant(
     }
 
     log.info({ tenantId: tenant.id, userId }, 'Owner assigned to tenant');
+
+    // Notify the new owner that their tenant is provisioned. Failure here is
+    // non-fatal — the row is still written locally and shown in the bell.
+    try {
+      await notificationService.send({
+        userId,
+        type: 'tenant_created',
+        title: `Welcome to ${name}`,
+        body: `Your tenant "${name}" is ready. Open the admin to configure billing and integrations.`,
+        data: { tenantId: tenant.id, tenantSlug: slug, plan },
+        subscriber: { email: ownerEmail, firstName: ownerEmail.split('@')[0] },
+      });
+    } catch (err: any) {
+      log.warn({ err: err.message, userId, tenantId: tenant.id }, 'Welcome notification failed');
+    }
   } catch (err: any) {
     log.warn({ err: err.message, tenantId: tenant.id }, 'Owner assignment failed');
   }

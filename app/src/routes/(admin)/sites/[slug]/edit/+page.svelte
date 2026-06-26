@@ -3,19 +3,12 @@ import { enhance } from '$app/forms';
 import { untrack } from 'svelte';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@hiai/ui/components/ui/tabs/index.js';
 import { Switch } from '@hiai/ui/components/ui/switch/index.js';
-import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
 
 type SocialLink = { platform: string; url: string };
 
 let { data, form } = $props();
 
-  const site = $derived(data.site);
-
-  const breadcrumbs = $derived([
-    { label: 'Sites', href: '/sites' },
-    { label: data.slug, href: `/sites/${data.slug}` },
-    { label: 'Settings' },
-  ]);
+const site = $derived(data.site);
 
 // Active tab. Defaults to 'general' but can be overridden by ?tab=.
 let activeTab = $state('general');
@@ -66,8 +59,6 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
 </svelte:head>
 
 <div class="space-y-6">
-  <Breadcrumbs items={breadcrumbs} />
-
   <div class="flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold">Edit site</h1>
@@ -94,7 +85,7 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
     {/if}
     {#if form?.success}
       <div
-        class="rounded-md border border-green-500/40 bg-green-500/10 px-4 py-3 text-sm text-green-600 dark:text-green-400"
+        class="rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success"
       >
         Settings saved successfully.
       </div>
@@ -253,13 +244,15 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
                   <input
                     name="primaryColor"
                     type="color"
-                    value={(source?.primaryColor as string) ?? '#000000'}
+                    value={(source?.primaryColor as string) ?? '#20b2aa'}
+                    title="Maps to var(--color-primary)"
                     class="h-9 w-12 cursor-pointer rounded-md border border-input bg-background p-1"
                   />
                   <input
                     type="text"
-                    value={(source?.primaryColor as string) ?? '#000000'}
+                    value={(source?.primaryColor as string) ?? '#20b2aa'}
                     readonly
+                    title="Maps to var(--color-primary)"
                     class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-1 font-mono text-xs text-muted-foreground"
                   />
                 </div>
@@ -270,13 +263,15 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
                   <input
                     name="secondaryColor"
                     type="color"
-                    value={(source?.secondaryColor as string) ?? '#ffffff'}
+                    value={(source?.secondaryColor as string) ?? '#f1f5f9'}
+                    title="Maps to var(--color-secondary)"
                     class="h-9 w-12 cursor-pointer rounded-md border border-input bg-background p-1"
                   />
                   <input
                     type="text"
-                    value={(source?.secondaryColor as string) ?? '#ffffff'}
+                    value={(source?.secondaryColor as string) ?? '#f1f5f9'}
                     readonly
+                    title="Maps to var(--color-secondary)"
                     class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-1 font-mono text-xs text-muted-foreground"
                   />
                 </div>
@@ -288,12 +283,14 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
                     name="accentColor"
                     type="color"
                     value={(source?.accentColor as string) ?? '#3b82f6'}
+                    title="Maps to var(--color-info)"
                     class="h-9 w-12 cursor-pointer rounded-md border border-input bg-background p-1"
                   />
                   <input
                     type="text"
                     value={(source?.accentColor as string) ?? '#3b82f6'}
                     readonly
+                    title="Maps to var(--color-info)"
                     class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-1 font-mono text-xs text-muted-foreground"
                   />
                 </div>
@@ -305,12 +302,14 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
                     name="backgroundColor"
                     type="color"
                     value={(source?.backgroundColor as string) ?? '#ffffff'}
+                    title="Maps to var(--color-background)"
                     class="h-9 w-12 cursor-pointer rounded-md border border-input bg-background p-1"
                   />
                   <input
                     type="text"
                     value={(source?.backgroundColor as string) ?? '#ffffff'}
                     readonly
+                    title="Maps to var(--color-background)"
                     class="flex h-9 w-full rounded-md border border-input bg-muted px-3 py-1 font-mono text-xs text-muted-foreground"
                   />
                 </div>

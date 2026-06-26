@@ -1,4 +1,5 @@
 import type { HiAiPlugin } from './types.js';
+import { BookOpen, History, Search, FileText } from 'lucide-svelte';
 
 const docsTarget = process.env.HIAI_DOCS_API ?? 'http://localhost:50700';
 
@@ -6,15 +7,16 @@ export const hiaiDocsPlugin: HiAiPlugin = {
   id: 'hiai-docs',
   name: 'Documents',
   version: '1.0.0',
-  icon: '📄',
+  icon: FileText,
   description: 'Multi-tenant document collaboration (hiai-docs backend)',
   navGroups: [
     {
       label: 'Documents',
+      icon: FileText,
       items: [
-        { label: 'Browse', href: '/documents', icon: '📚' },
-        { label: 'Search', href: '/documents/search', icon: '🔍' },
-        { label: 'Recent', href: '/documents/recent', icon: '🕘' },
+        { label: 'Browse', href: '/documents', icon: BookOpen },
+        { label: 'Search', href: '/documents/search', icon: Search },
+        { label: 'Recent', href: '/documents/recent', icon: History },
       ],
     },
   ],

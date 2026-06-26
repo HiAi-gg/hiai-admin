@@ -1,8 +1,14 @@
 <script lang="ts">
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import { enhance } from '$app/forms';
 import { untrack } from 'svelte';
-import { BLOCK_TYPES, newBlock, reorder, type HomepageBlock } from '$lib/sites/homepage.js';
-import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+// biome-ignore lint/correctness/noUnusedImports: used in template
+import { Plus, Sun, Moon } from 'lucide-svelte';
+// biome-ignore lint/correctness/noUnusedImports: used in template
+import { newBlock, reorder, type BlockType, type HomepageBlock } from '$lib/sites/homepage.js';
+// biome-ignore lint/correctness/noUnusedImports: used in template
+import { BLOCKS_WITH_META, getBlockMeta } from '$lib/sites/block-meta.js';
+// biome-ignore lint/correctness/noUnusedImports: used in template
 import BlockPreview from '$lib/components/BlockPreview.svelte';
 
 const SOCIAL_PLATFORMS = [
@@ -27,19 +33,13 @@ interface SocialLink {
 
 let { data, form } = $props();
 
-const breadcrumbs = $derived([
-  { label: 'Sites', href: '/sites' },
-  { label: data.slug, href: `/sites/${data.slug}` },
-  { label: 'Homepage' },
-]);
-
 let blocks = $state<HomepageBlock[]>(untrack(() => data.blocks ?? []));
-let selectedType = $state<(typeof BLOCK_TYPES)[number]>('text');
+let previewDark = $state(false);
 let dragIndex = $state<number | null>(null);
 let dropTarget = $state<number | null>(null);
 
-function addBlock() {
-  blocks = [...blocks, newBlock(selectedType)];
+function addBlock(type: BlockType) {
+  blocks = [...blocks, newBlock(type)];
 }
 
 function deleteBlock(id: string) {
@@ -133,8 +133,6 @@ function handleSubmit() {
 </svelte:head>
 
 <div class="space-y-6">
-  <Breadcrumbs items={breadcrumbs} />
-
   <div class="flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold">Homepage</h1>
@@ -148,47 +146,114 @@ function handleSubmit() {
   </div>
 
   {#if form?.error}
-    <div class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+    <div
+      class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive"
+    >
       {form.error}
     </div>
   {/if}
   {#if form?.success}
-    <div class="rounded-md border border-green-500/40 bg-green-500/10 px-4 py-3 text-sm text-green-600 dark:text-green-400">
+    <div
+      class="rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success"
+    >
       Saved {form.updated} block{form.updated === 1 ? '' : 's'}.
     </div>
   {/if}
 
   {#if data.error}
-    <div class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
+    <div
+      class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive"
+    >
       {data.error}
     </div>
   {/if}
 
-  <!-- Add Block -->
-  <div class="flex gap-2 rounded-md border bg-muted/40 p-4">
-    <label class="flex items-center gap-2">
-      <span class="text-sm font-medium">Add block:</span>
-      <select
-        bind:value={selectedType}
-        class="h-8 rounded-md border border-input bg-background px-2 text-sm"
-      >
-        {#each BLOCK_TYPES as type (type)}
-          <option value={type}>{type}</option>
-        {/each}
-      </select>
-    </label>
-    <button
-      type="button"
-      onclick={addBlock}
-      class="inline-flex h-8 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
+  <!-- Block Selector: icon grid (3 cols desktop, 2 cols mobile) -->
+  <!-- Each card is a static preview; the + button (bottom-right) commits the addition. -->
+  <div class="rounded-md border bg-muted/40 p-4">
+    <div class="mb-3 flex items-center justify-between">
+      <div>
+        <h2 class="text-sm font-semibold">Add a block</h2>
+        <p class="text-xs text-muted-foreground">Pick a block type to append to the page.</p>
+      </div>
+      <span class="text-xs text-muted-foreground">{BLOCKS_WITH_META.length} types</span>
+    </div>
+    <div class="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
+      {#each BLOCKS_WITH_META as { type, meta } (type)}
+        {@const Icon = meta.icon}
+        <div
+          class="flex flex-col items-start gap-1 rounded-md border border-border/60 bg-background px-2.5 py-3"
+        >
+          <span
+            class="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary"
+          >
+            <Icon class="h-5 w-5" />
+          </span>
+          <span class="mt-1 text-xs font-medium leading-none">{meta.label}</span>
+          <div class="-mt-0.5 flex items-center gap-1.5 w-full">
+            <span
+              class="line-clamp-2 text-[11px] leading-snug text-muted-foreground flex-1 min-w-0"
+              >{meta.description}</span
+            >
+            <button
+              type="button"
+              onclick={() => addBlock(type)}
+              class="flex-shrink-0 flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 transition-all hover:border-primary/30 hover:text-primary hover:ring-2 hover:ring-primary/20 hover:shadow-lg hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Add {meta.label} block"
+            >
+              <Plus class="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      {/each}
+    </div>
+  </div>
+
+  <!-- Preview Theme Toggle -->
+  <div class="flex items-center justify-between rounded-md border bg-muted/40 px-4 py-3">
+    <div>
+      <h2 class="text-sm font-semibold">Preview theme</h2>
+      <p class="text-xs text-muted-foreground">
+        Switches only the preview area below — your admin theme is unchanged.
+      </p>
+    </div>
+    <div
+      class="inline-flex h-8 items-center rounded-md border border-input bg-background p-0.5"
+      role="radiogroup"
+      aria-label="Preview theme"
     >
-      + Add
-    </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={!previewDark}
+        onclick={() => (previewDark = false)}
+        class="inline-flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-xs font-medium transition-colors {!previewDark
+          ? 'bg-primary text-primary-foreground shadow-sm'
+          : 'text-muted-foreground hover:text-foreground'}"
+      >
+        <Sun class="h-3.5 w-3.5" />
+        Light
+      </button>
+      <button
+        type="button"
+        role="radio"
+        aria-checked={previewDark}
+        onclick={() => (previewDark = true)}
+        class="inline-flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-xs font-medium transition-colors {previewDark
+          ? 'bg-primary text-primary-foreground shadow-sm'
+          : 'text-muted-foreground hover:text-foreground'}"
+      >
+        <Moon class="h-3.5 w-3.5" />
+        Dark
+      </button>
+    </div>
   </div>
 
   <!-- Blocks Editor -->
   {#if blocks.length === 0}
-    <div class="rounded-md border border-dashed px-4 py-12 text-center text-sm text-muted-foreground">
+    <div
+      class="rounded-md border border-dashed px-4 py-12 text-center text-sm text-muted-foreground"
+    >
       No blocks yet. Add your first block to get started.
     </div>
   {:else}
@@ -203,6 +268,8 @@ function handleSubmit() {
 
       <div class="space-y-3">
         {#each blocks as block, idx (block.id)}
+          {@const blockMeta = getBlockMeta(block.type)}
+          {@const BlockIcon = blockMeta.icon}
           <div
             class="rounded-md border bg-muted/40 p-4 transition-colors {dropTarget === idx
               ? 'border-primary ring-2 ring-primary/30'
@@ -225,7 +292,14 @@ function handleSubmit() {
                 >
                   ⋮⋮
                 </span>
-                <span class="text-sm font-medium capitalize">{block.type}</span>
+                {#if BlockIcon}
+                  <span
+                    class="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-primary"
+                  >
+                    <BlockIcon class="h-3.5 w-3.5" />
+                  </span>
+                {/if}
+                <span class="text-sm font-medium">{blockMeta.label}</span>
                 <span class="ml-2 text-xs text-muted-foreground">#{idx + 1}</span>
               </div>
               <div class="flex items-center gap-2">
@@ -359,7 +433,8 @@ function handleSubmit() {
                   <input
                     type="url"
                     value={block.data.avatarUrl ?? ''}
-                    onchange={(e) => updateBlockData(block.id, 'avatarUrl', e.currentTarget.value)}
+                    onchange={(e) =>
+                      updateBlockData(block.id, 'avatarUrl', e.currentTarget.value)}
                     placeholder="https://..."
                     class="flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   />
@@ -369,7 +444,8 @@ function handleSubmit() {
                   <input
                     type="text"
                     value={block.data.displayName ?? ''}
-                    onchange={(e) => updateBlockData(block.id, 'displayName', e.currentTarget.value)}
+                    onchange={(e) =>
+                      updateBlockData(block.id, 'displayName', e.currentTarget.value)}
                     placeholder="Your name"
                     class="flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   />
@@ -422,7 +498,8 @@ function handleSubmit() {
                   <input
                     type="text"
                     value={block.data.description ?? ''}
-                    onchange={(e) => updateBlockData(block.id, 'description', e.currentTarget.value)}
+                    onchange={(e) =>
+                      updateBlockData(block.id, 'description', e.currentTarget.value)}
                     placeholder="Short description"
                     class="flex h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   />
@@ -478,7 +555,7 @@ function handleSubmit() {
               </div>
             {/if}
 
-            <BlockPreview block={block} />
+            <BlockPreview {block} dark={previewDark} />
           </div>
         {/each}
       </div>

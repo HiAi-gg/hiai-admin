@@ -1,8 +1,8 @@
 <script lang="ts">
-// biome-ignore lint/correctness/noUnusedImports: used in template
-import StatsCard from '$lib/components/StatsCard.svelte';
+import { StatsCard } from '@hiai/ui';
 // biome-ignore lint/correctness/noUnusedImports: used in template
 import StatusBadge from '$lib/components/StatusBadge.svelte';
+import { DollarSign, TrendingUp, TrendingDown, Building2 } from 'lucide-svelte';
 
 let { data } = $props();
 // biome-ignore lint/correctness/noUnusedVariables: used in template
@@ -45,10 +45,10 @@ const planColors: Record<string, string> = {
   </div>
 
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <StatsCard label="MRR" value={`$${((data.overview?.mrr || 0) / 100).toLocaleString()}`} icon="💰" />
-    <StatsCard label="ARR" value={`$${((data.overview?.arr || 0) / 100).toLocaleString()}`} icon="📈" />
-    <StatsCard label="Churn Rate" value={`${data.overview?.churnRate || 0}%`} icon="📉" />
-    <StatsCard label="ARPU" value={`$${((data.overview?.arpu || 0) / 100).toFixed(0)}`} icon="🏢" />
+    <StatsCard label="MRR" value={`$${((data.overview?.mrr || 0) / 100).toLocaleString()}`} icon={DollarSign} />
+    <StatsCard label="ARR" value={`$${((data.overview?.arr || 0) / 100).toLocaleString()}`} icon={TrendingUp} />
+    <StatsCard label="Churn Rate" value={`${data.overview?.churnRate || 0}%`} icon={TrendingDown} />
+    <StatsCard label="ARPU" value={`$${((data.overview?.arpu || 0) / 100).toFixed(0)}`} icon={Building2} />
   </div>
 
   <!-- MRR Trend Chart (SVG bar chart) -->

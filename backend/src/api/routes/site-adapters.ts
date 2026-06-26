@@ -2,10 +2,7 @@ import { Elysia } from 'elysia';
 import { authMiddleware } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
 import { siteAdapterService } from '../../modules/site-adapter/site-adapter.service.js';
-import {
-  createSiteAdapterSchema,
-  checkHealthSchema,
-} from '../validation/site-adapter.schema.js';
+import { createSiteAdapterSchema, checkHealthSchema } from '../validation/site-adapter.schema.js';
 
 export const siteAdaptersRoutes = new Elysia({ prefix: '/api/site-adapters' })
   .use(createRateLimiter('admin'))

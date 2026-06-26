@@ -26,6 +26,8 @@ import { billingInvoicesRoutes } from './routes/billing-invoices.js';
 import { proxyPostRoutes } from './routes/proxy-post.js';
 import { proxyStoreRoutes } from './routes/proxy-store.js';
 import { eventsRoutes } from './routes/events.js';
+import { profileRoutes } from './routes/profile.js';
+import { notificationsRoutes } from './routes/notifications.js';
 
 const log = logger.child({ module: 'server' });
 
@@ -68,10 +70,7 @@ const app = new Elysia()
     // AppError instances keep their code/message; everything else collapses to a generic 500
     // so we never leak DB schema, table names, file paths, or stack traces to clients.
     const sanitized = toErrorResponse(error);
-    log.error(
-      { code, status: sanitized.status, error: String(error) },
-      'Unhandled error',
-    );
+    log.error({ code, status: sanitized.status, error: String(error) }, 'Unhandled error');
     set.status = sanitized.status;
     return sanitized.body;
   })
@@ -92,6 +91,8 @@ const app = new Elysia()
   .use(webhooksStripeRoutes)
   .use(proxyPostRoutes)
   .use(proxyStoreRoutes)
+  .use(profileRoutes)
+  .use(notificationsRoutes)
   .listen(env.API_PORT);
 
 log.info({ port: env.API_PORT }, `hiai-admin API running on port ${env.API_PORT}`);

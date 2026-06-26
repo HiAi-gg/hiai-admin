@@ -1,15 +1,9 @@
 <script lang="ts">
 import { enhance } from '$app/forms';
 import { STATUS_OPTIONS, statusLabel, type Article } from '$lib/sites/articles.js';
-import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+import { Eye } from 'lucide-svelte';
 
 let { data, form } = $props();
-
-const breadcrumbs = $derived([
-  { label: 'Sites', href: '/sites' },
-  { label: data.slug, href: `/sites/${data.slug}` },
-  { label: 'Articles' },
-]);
 
 const articles = $derived<Article[]>(data.articles ?? []);
 let selected = $state<Set<string>>(new Set());
@@ -35,9 +29,49 @@ function formatDate(v: string): string {
   return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
 }
 
+function formatViews(n: number | null | undefined): string {
+  if (typeof n !== 'number' || !Number.isFinite(n)) return '—';
+  if (n < 1000) return String(n);
+  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}k`;
+  return `${(n / 1_000_000).toFixed(1)}M`;
+}
+
+/**
+ * Backend today returns a single `language` string per article. Forward-compatible:
+ * if a future backend supplies an array (e.g. via `languages` / `translations`),
+ * we render first 2 as badges + "+N more" popover with the rest.
+ */
+type ArticleLike = Article & {
+  languages?: string[];
+  translations?: string[];
+  views?: number | null;
+  viewCount?: number | null;
+};
+
+function getLanguages(article: ArticleLike): string[] {
+  const candidates: unknown[] = [
+    (article as { languages?: unknown }).languages,
+    (article as { translations?: unknown }).translations,
+  ];
+  for (const c of candidates) {
+    if (Array.isArray(c) && c.length > 0) {
+      const arr = c.filter((x): x is string => typeof x === 'string' && x.length > 0);
+      if (arr.length > 0) return arr;
+    }
+  }
+  // Fallback to the single-language field shipped today.
+  return article.language ? [article.language] : [];
+}
+
+function getViews(article: ArticleLike): number | null {
+  const v =
+    (article as { views?: unknown }).views ?? (article as { viewCount?: unknown }).viewCount;
+  return typeof v === 'number' && Number.isFinite(v) ? v : null;
+}
+
 const statusClasses: Record<string, string> = {
-  published: 'bg-green-500/10 text-green-600 dark:text-green-400',
-  draft: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  published: 'bg-success/10 text-success',
+  draft: 'bg-warning/10 text-warning',
   archived: 'bg-muted text-muted-foreground',
 };
 </script>
@@ -47,8 +81,6 @@ const statusClasses: Record<string, string> = {
 </svelte:head>
 
 <div class="space-y-6">
-  <Breadcrumbs items={breadcrumbs} />
-
   <div class="flex items-center justify-between">
     <div>
       <h1 class="text-2xl font-bold">Articles</h1>
@@ -71,7 +103,7 @@ const statusClasses: Record<string, string> = {
     </div>
   {/if}
   {#if form?.success}
-    <div class="rounded-md border border-green-500/40 bg-green-500/10 px-4 py-3 text-sm text-green-600 dark:text-green-400">
+    <div class="rounded-md border border-success/40 bg-success/10 px-4 py-3 text-sm text-success">
       Updated {form.updated} article{form.updated === 1 ? '' : 's'} → {statusLabel(form.status)}.
     </div>
   {/if}
@@ -137,12 +169,18 @@ const statusClasses: Record<string, string> = {
             <th class="px-4 py-3">Title</th>
             <th class="px-4 py-3">Status</th>
             <th class="px-4 py-3">Language</th>
+            <th class="px-4 py-3">Views</th>
             <th class="px-4 py-3">Updated</th>
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
         <tbody>
           {#each articles as article (article.id)}
+            {@const articleEx = article as ArticleLike}
+            {@const langs = getLanguages(articleEx)}
+            {@const visibleLangs = langs.slice(0, 2)}
+            {@const extraLangs = langs.slice(2)}
+            {@const views = getViews(articleEx)}
             <tr class="border-b last:border-0 hover:bg-muted/30">
               <td class="px-4 py-3">
                 <input
@@ -158,7 +196,59 @@ const statusClasses: Record<string, string> = {
                   {statusLabel(article.status)}
                 </span>
               </td>
-              <td class="px-4 py-3 uppercase text-muted-foreground">{article.language}</td>
+              <td class="px-4 py-3">
+                {#if langs.length === 0}
+                  <span class="text-muted-foreground">—</span>
+                {:else}
+                  <div class="flex flex-wrap items-center gap-1">
+                    {#each visibleLangs as lang (lang)}
+                      <span
+                        class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-foreground/80"
+                      >
+                        {lang}
+                      </span>
+                    {/each}
+                    {#if extraLangs.length > 0}
+                      <div class="group relative">
+                        <button
+                          type="button"
+                          class="inline-flex cursor-pointer items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium text-primary hover:bg-primary/20"
+                          aria-label={`Show ${extraLangs.length} more languages`}
+                        >
+                          +{extraLangs.length} more
+                        </button>
+                        <div
+                          class="pointer-events-none absolute left-0 top-full z-20 mt-1 hidden w-40 rounded-md border bg-popover p-2 text-xs text-popover-foreground shadow-md group-hover:block group-focus-within:block"
+                          role="tooltip"
+                        >
+                          <div class="mb-1 text-[10px] font-semibold uppercase text-muted-foreground">
+                            All languages
+                          </div>
+                          <div class="flex flex-wrap gap-1">
+                            {#each langs as lang (lang)}
+                              <span
+                                class="inline-flex items-center rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide"
+                              >
+                                {lang}
+                              </span>
+                            {/each}
+                          </div>
+                        </div>
+                      </div>
+                    {/if}
+                  </div>
+                {/if}
+              </td>
+              <td class="px-4 py-3">
+                {#if views === null}
+                  <span class="text-muted-foreground">—</span>
+                {:else}
+                  <span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <Eye class="h-3 w-3" aria-hidden="true" />
+                    <span class="font-medium text-foreground/80 tabular-nums">{formatViews(views)}</span>
+                  </span>
+                {/if}
+              </td>
               <td class="px-4 py-3 text-muted-foreground">{formatDate(article.updatedAt)}</td>
               <td class="px-4 py-3 text-right">
                 <a

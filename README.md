@@ -1,5 +1,9 @@
 # hiai-admin
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+[![Bun](https://img.shields.io/badge/Bun-1.3.14%2B-000?logo=bun)](https://bun.sh)
+[![Status](https://img.shields.io/badge/status-active-brightgreen)]()
+
 Central admin panel for the HiAi SaaS platform — tenant management, user administration, billing, analytics, and platform settings.
 
 **This is the main control center of the entire HiAi ecosystem.**
@@ -19,6 +23,17 @@ bun run dev                  # start API (port 50200) + Frontend (port 50201)
 ```bash
 curl -fsS http://localhost:50200/api/health
 ```
+
+## Docker Quick Start
+
+```bash
+docker compose up -d --build
+```
+
+- **API:** http://localhost:50200 (health: `/api/health`)
+- **Frontend:** http://localhost:50201
+- **PostgreSQL:** port 5435
+- **Redis:** port 6382
 
 ## Tech Stack
 
@@ -164,3 +179,7 @@ FRONTEND_PORT=50201
 |---|---|
 | [hiai-store](https://github.com/hiailabs/hiai-store) | E-commerce stores managed by this admin panel |
 | [hiai-post](https://github.com/hiailabs/hiai-post) | Social media publishing managed by this admin panel |
+
+## License
+
+MIT — see [LICENSE](./LICENSE) for details.

@@ -36,7 +36,13 @@ describe('buildSiteAdapterPlugins', () => {
     expect(plugin.navGroups).toHaveLength(1);
     const group = plugin.navGroups[0];
     expect(group.label).toBe('Croco');
-    expect(group.items.map((i) => i.label)).toEqual(['Overview', 'Articles', 'Homepage', 'Domain', 'Ko-fi']);
+    expect(group.items.map((i) => i.label)).toEqual([
+      'Overview',
+      'Articles',
+      'Homepage',
+      'Domain',
+      'Ko-fi',
+    ]);
     expect(group.items.map((i) => i.href)).toEqual([
       '/sites/webs-croco',
       '/sites/webs-croco/articles',
@@ -50,7 +56,12 @@ describe('buildSiteAdapterPlugins', () => {
     const [plugin] = buildSiteAdapterPlugins([
       { ...croco, modules: ['kofi', 'articles', 'domains'] },
     ]);
-    expect(plugin.navGroups[0].items.map((i) => i.label)).toEqual(['Overview', 'Articles', 'Domain', 'Ko-fi']);
+    expect(plugin.navGroups[0].items.map((i) => i.label)).toEqual([
+      'Overview',
+      'Articles',
+      'Domain',
+      'Ko-fi',
+    ]);
   });
 
   it('defaults proxy auth to jwt when not specified', () => {
@@ -70,7 +81,11 @@ describe('buildSiteAdapterPlugins', () => {
     const [plugin] = buildSiteAdapterPlugins([
       { ...croco, modules: ['articles', 'bogus', 'kofi'] },
     ]);
-    expect(plugin.navGroups[0].items.map((i) => i.label)).toEqual(['Overview', 'Articles', 'Ko-fi']);
+    expect(plugin.navGroups[0].items.map((i) => i.label)).toEqual([
+      'Overview',
+      'Articles',
+      'Ko-fi',
+    ]);
   });
 
   it('returns an empty array for no rows', () => {

@@ -1,5 +1,6 @@
 <script lang="ts">
 import { onMount } from 'svelte';
+import { Coffee } from 'lucide-svelte';
 
 let { data } = $props();
 
@@ -65,7 +66,10 @@ onMount(async () => {
 
 <div class="space-y-6 max-w-2xl">
   <div>
-    <h1 class="text-2xl font-bold">☕ Ko-fi Integration</h1>
+    <h1 class="text-2xl font-bold flex items-center gap-2">
+      <Coffee class="h-6 w-6" aria-hidden="true" />
+      Ko-fi Integration
+    </h1>
     <p class="text-sm text-muted-foreground">Configure webhook + verification token</p>
   </div>
 

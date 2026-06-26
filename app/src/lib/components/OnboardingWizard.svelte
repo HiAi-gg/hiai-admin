@@ -1,50 +1,50 @@
 <script lang="ts">
-  let { slug, siteName }: { slug: string; siteName: string } = $props();
+let { slug, siteName }: { slug: string; siteName: string } = $props();
 
-  // Steps are visually marked done as the user advances through them.
-  // Step 2 is implicitly "done" once the site has blocks (parent hides the wizard).
-  let done = $state<Record<1 | 2 | 3, boolean>>({ 1: false, 2: false, 3: false });
+// Steps are visually marked done as the user advances through them.
+// Step 2 is implicitly "done" once the site has blocks (parent hides the wizard).
+let done = $state<Record<1 | 2 | 3, boolean>>({ 1: false, 2: false, 3: false });
 
-  const publicBase = (import.meta.env.PUBLIC_SITE_BASE_URL ?? '').replace(/\/$/, '');
-  const publicSiteUrl = publicBase ? `${publicBase}/${slug}` : null;
+const publicBase = (import.meta.env.PUBLIC_SITE_BASE_URL ?? '').replace(/\/$/, '');
+const publicSiteUrl = publicBase ? `${publicBase}/${slug}` : null;
 
-  const steps = $derived([
-    {
-      n: 1 as const,
-      title: 'Name your site',
-      description: `Give "${siteName}" a memorable name visitors will see.`,
-      href: `/sites/${slug}/edit`,
-      cta: 'Go to settings',
-    },
-    {
-      n: 2 as const,
-      title: 'Add your first block',
-      description: 'Build your homepage by adding your first content block.',
-      href: `/sites/${slug}/homepage`,
-      cta: 'Open homepage editor',
-    },
-    {
-      n: 3 as const,
-      title: 'View your site',
-      description: publicSiteUrl
-        ? 'Open your published site to see it live.'
-        : 'You are all set. Come back here anytime to manage your site.',
-      href: publicSiteUrl ?? null,
-      cta: publicSiteUrl ? 'View site' : 'Finish',
-      external: !!publicSiteUrl,
-    },
-  ]);
+const steps = $derived([
+  {
+    n: 1 as const,
+    title: 'Name your site',
+    description: `Give "${siteName}" a memorable name visitors will see.`,
+    href: `/sites/${slug}/edit`,
+    cta: 'Go to settings',
+  },
+  {
+    n: 2 as const,
+    title: 'Add your first block',
+    description: 'Build your homepage by adding your first content block.',
+    href: `/sites/${slug}/homepage`,
+    cta: 'Open homepage editor',
+  },
+  {
+    n: 3 as const,
+    title: 'View your site',
+    description: publicSiteUrl
+      ? 'Open your published site to see it live.'
+      : 'You are all set. Come back here anytime to manage your site.',
+    href: publicSiteUrl ?? null,
+    cta: publicSiteUrl ? 'View site' : 'Finish',
+    external: !!publicSiteUrl,
+  },
+]);
 
-  const completedCount = $derived(Object.values(done).filter(Boolean).length);
-  const progressPct = $derived(Math.round((completedCount / 3) * 100));
+const completedCount = $derived(Object.values(done).filter(Boolean).length);
+const progressPct = $derived(Math.round((completedCount / 3) * 100));
 
-  function toggle(n: 1 | 2 | 3) {
-    done[n] = !done[n];
-  }
+function toggle(n: 1 | 2 | 3) {
+  done[n] = !done[n];
+}
 
-  function markDone(n: 1 | 2 | 3) {
-    done[n] = true;
-  }
+function markDone(n: 1 | 2 | 3) {
+  done[n] = true;
+}
 </script>
 
 <section

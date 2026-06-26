@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import type { SiteAdapterRow } from '$lib/plugins/site-adapter.js';
+import { goto } from '$app/navigation';
+import type { SiteAdapterRow } from '$lib/plugins/site-adapter.js';
 
-  let { adapters, currentSlug }: { adapters: SiteAdapterRow[]; currentSlug?: string } = $props();
+let { adapters, currentSlug }: { adapters: SiteAdapterRow[]; currentSlug?: string } = $props();
 
-  // biome-ignore lint/correctness/noUnusedVariables: used in template
-  const value = $derived(currentSlug ?? '');
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+const value = $derived(currentSlug ?? '');
 
-  function onChange(e: Event) {
-    const next = (e.currentTarget as HTMLSelectElement).value;
-    if (next && next !== value) {
-      goto(`/sites/${next}`);
-    }
+function onChange(e: Event) {
+  const next = (e.currentTarget as HTMLSelectElement).value;
+  if (next && next !== value) {
+    goto(`/sites/${next}`);
   }
+}
 </script>
 
 {#if adapters.length > 1}

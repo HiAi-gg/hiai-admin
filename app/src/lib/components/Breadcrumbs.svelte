@@ -1,10 +1,10 @@
 <script lang="ts">
-  interface Crumb {
-    label: string;
-    href?: string;
-  }
+interface Crumb {
+  label: string;
+  href?: string;
+}
 
-  let { items }: { items: Crumb[] } = $props();
+let { items }: { items: Crumb[] } = $props();
 </script>
 
 <nav aria-label="Breadcrumb" class="text-sm text-muted-foreground">

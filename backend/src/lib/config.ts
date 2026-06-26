@@ -53,6 +53,8 @@ export const envSchema = z.object({
   STRIPE_PRO_PRICE_ID: z.string().optional(),
   STRIPE_ENTERPRISE_PRICE_ID: z.string().optional(),
   HIAI_OBSERVE_URL: z.string().url().optional(),
+  NOVU_API_KEY: z.string().optional(),
+  NOVU_API_URL: z.string().url().optional(),
   API_PORT: z.coerce.number().default(50200),
   FRONTEND_PORT: z.coerce.number().default(50201),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -62,6 +64,19 @@ export const envSchema = z.object({
     .optional()
     .transform((v) => v === 'true' || v === '1'),
   MAX_BODY_BYTES: z.coerce.number().default(1024 * 1024), // Default 1 MB
+  // Minio — optional. The upload routes check `isMinioConfigured()` before
+  // attempting any upload and return a clear 503 when env is missing.
+  MINIO_ENDPOINT: z.string().min(1).optional(),
+  MINIO_PORT: z.coerce.number().int().positive().optional(),
+  MINIO_USE_SSL: z
+    .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
+    .optional()
+    .transform((v) => v === 'true' || v === '1'),
+  MINIO_ACCESS_KEY: z.string().min(1).optional(),
+  MINIO_SECRET_KEY: z.string().min(1).optional(),
+  MINIO_REGION: z.string().optional(),
+  MINIO_PUBLIC_URL: z.string().url().optional(),
+  MINIO_BUCKET: z.string().min(1).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

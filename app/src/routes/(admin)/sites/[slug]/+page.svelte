@@ -1,59 +1,59 @@
 <script lang="ts">
-  import type { Article } from '$lib/sites/articles.js';
-  import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
-  import OnboardingWizard from '$lib/components/OnboardingWizard.svelte';
+import type { Article } from '$lib/sites/articles.js';
+import OnboardingWizard from '$lib/components/OnboardingWizard.svelte';
+import { Globe, Settings, LayoutDashboard } from 'lucide-svelte';
 
-  let { data } = $props();
+let { data } = $props();
 
-  const adapter = $derived(data.adapter);
-  const settings = $derived(data.settings);
-  const publicUrl = $derived<string | null>(data.publicUrl ?? null);
-  const articlesCount = $derived<number | null>(data.articlesCount ?? null);
-  const blocksCount = $derived<number | null>(data.blocksCount ?? null);
-  const domainStatus = $derived(data.domainStatus ?? { state: 'none' as const });
-  const recentArticles = $derived<Article[]>(data.recentArticles ?? []);
+const adapter = $derived(data.adapter);
+const settings = $derived(data.settings);
+const publicUrl = $derived<string | null>(data.publicUrl ?? null);
+const articlesCount = $derived<number | null>(data.articlesCount ?? null);
+const blocksCount = $derived<number | null>(data.blocksCount ?? null);
+const domainStatus = $derived(data.domainStatus ?? { state: 'none' as const });
+const recentArticles = $derived<Article[]>(data.recentArticles ?? []);
 
-  // Header display name: settings name (loaded from the site backend) wins over the adapter name.
-  const siteName = $derived(settings.name || adapter?.name || 'Site');
-  // Subtitle slug falls back to params-derived slug when the adapter is missing.
-  const subtitleSlug = $derived(adapter?.slug ?? settings.slug ?? '');
-  // Show the onboarding wizard only when the site is empty (no homepage blocks yet).
-  const showOnboarding = $derived(blocksCount === 0);
+// Header display name: settings name (loaded from the site backend) wins over the adapter name.
+const siteName = $derived(settings.name || adapter?.name || 'Site');
+// Subtitle slug falls back to params-derived slug when the adapter is missing.
+const subtitleSlug = $derived(adapter?.slug ?? settings.slug ?? '');
+// Show the onboarding wizard only when the site is empty (no homepage blocks yet).
+const showOnboarding = $derived(blocksCount === 0);
 
-  const breadcrumbs = $derived([{ label: 'Sites', href: '/sites' }, { label: siteName }]);
+function formatDate(v: string): string {
+  if (!v) return '—';
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+}
 
-  function formatDate(v: string): string {
-    if (!v) return '—';
-    const d = new Date(v);
-    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
-  }
+function countDisplay(n: number | null): string {
+  return n === null ? '—' : n.toLocaleString();
+}
 
-  function countDisplay(n: number | null): string {
-    return n === null ? '—' : n.toLocaleString();
-  }
+function domainLabel(state: typeof domainStatus): string {
+  if (state.state === 'none') return 'No domains';
+  if (state.state === 'pending') return 'Pending';
+  if (state.state === 'verified') return state.count === 1 ? 'Verified' : `${state.count} verified`;
+  return state.count === 1 ? 'Error' : `${state.count} errors`;
+}
 
-  function domainLabel(state: typeof domainStatus): string {
-    if (state.state === 'none') return 'No domains';
-    if (state.state === 'pending') return 'Pending';
-    if (state.state === 'verified') return state.count === 1 ? 'Verified' : `${state.count} verified`;
-    return state.count === 1 ? 'Error' : `${state.count} errors`;
-  }
+function domainToneClass(state: typeof domainStatus): string {
+  if (state.state === 'verified') return 'text-success';
+  if (state.state === 'pending') return 'text-warning';
+  if (state.state === 'error') return 'text-destructive';
+  return 'text-muted-foreground';
+}
 
-  function domainToneClass(state: typeof domainStatus): string {
-    if (state.state === 'verified') return 'text-success';
-    if (state.state === 'pending') return 'text-warning';
-    if (state.state === 'error') return 'text-destructive';
-    return 'text-muted-foreground';
-  }
-
-  const statusBadgeClass = $derived((() => {
+const statusBadgeClass = $derived(
+  (() => {
     const s = settings.status;
     if (s === 'active') return 'bg-success/10 text-success border-success/20';
     if (s === 'suspended') return 'bg-destructive/10 text-destructive border-destructive/20';
     if (s === 'draft') return 'bg-muted text-muted-foreground border-border';
     if (s === 'inactive') return 'bg-muted text-muted-foreground border-border';
     return 'bg-info/10 text-info border-info/20';
-  })());
+  })(),
+);
 </script>
 
 <svelte:head>
@@ -61,8 +61,6 @@
 </svelte:head>
 
 <div class="space-y-6">
-  <Breadcrumbs items={breadcrumbs} />
-
   {#if data.error}
     <div class="rounded-md border border-destructive bg-destructive/10 px-4 py-3 text-sm text-destructive">
       {data.error}
@@ -170,21 +168,21 @@
             href={`/sites/${adapter.slug}/homepage`}
             class="inline-flex h-10 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted"
           >
-            <span aria-hidden="true">🧱</span>
+            <LayoutDashboard class="h-4 w-4" aria-hidden="true" />
             Edit homepage
           </a>
           <a
             href={`/sites/${adapter.slug}/domain`}
             class="inline-flex h-10 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted"
           >
-            <span aria-hidden="true">🌐</span>
+            <Globe class="h-4 w-4" aria-hidden="true" />
             Manage domain
           </a>
           <a
             href={`/sites/${adapter.slug}/edit`}
             class="inline-flex h-10 items-center justify-center gap-2 rounded-md border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted"
           >
-            <span aria-hidden="true">⚙</span>
+            <Settings class="h-4 w-4" aria-hidden="true" />
             Site settings
           </a>
         {:else}

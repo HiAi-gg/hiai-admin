@@ -29,7 +29,11 @@ function createChain(terminal: unknown): MockChain {
 
 const dbMock = { select: vi.fn(), insert: vi.fn() };
 
-vi.mock('../../src/lib/db.js', () => ({ db: dbMock, dbHealthCheck: vi.fn(), withTransaction: vi.fn() }));
+vi.mock('../../src/lib/db.js', () => ({
+  db: dbMock,
+  dbHealthCheck: vi.fn(),
+  withTransaction: vi.fn(),
+}));
 vi.mock('../../src/lib/config.js', () => ({
   env: {
     DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
@@ -43,7 +47,9 @@ vi.mock('../../src/lib/encryption.js', () => ({
   decrypt: vi.fn((ciphertext: string) => ciphertext.replace(/^enc\((.*)\)$/, '$1')),
 }));
 
-const { siteAdapterService } = await import('../../src/modules/site-adapter/site-adapter.service.js');
+const { siteAdapterService } = await import(
+  '../../src/modules/site-adapter/site-adapter.service.js'
+);
 
 const dbRow = {
   id: 'a1',
@@ -175,7 +181,10 @@ describe('siteAdapterService', () => {
     });
 
     it('reports the failing status for a non-2xx response', async () => {
-      vi.stubGlobal('fetch', vi.fn(async () => new Response('no', { status: 503 })));
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async () => new Response('no', { status: 503 })),
+      );
 
       expect(await siteAdapterService.checkHealth('http://api:3001')).toEqual({
         ok: false,

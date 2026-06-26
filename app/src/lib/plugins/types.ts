@@ -1,10 +1,16 @@
 import type { Component } from 'svelte';
+// Re-use @hiai/ui's NavIcon so plugin manifest types stay structurally
+// compatible with the AdminSidebar's NavGroup / NavItem — variance issues
+// aside, this keeps a single source of truth for the icon contract.
+import type { NavGroup, NavItem, NavIcon as UINavIcon } from '@hiai/ui';
+
+export type NavIcon = UINavIcon;
 
 export interface HiAiPlugin {
   id: string;
   name: string;
   version: string;
-  icon?: string;
+  icon?: NavIcon;
   description: string;
   navGroups: NavGroup[];
   proxy: ProxyConfig;
@@ -14,20 +20,7 @@ export interface HiAiPlugin {
   onUninstall?(): Promise<void>;
 }
 
-export interface NavGroup {
-  label?: string;
-  icon?: string;
-  items: NavItem[];
-}
-
-export interface NavItem {
-  label: string;
-  href: string;
-  icon?: string;
-  badge?: string | number;
-  comingSoon?: boolean;
-  disabled?: boolean;
-}
+export type { NavGroup, NavItem };
 
 export interface PluginPage {
   path: string;

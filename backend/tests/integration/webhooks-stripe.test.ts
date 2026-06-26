@@ -41,7 +41,11 @@ const dbMock = {
 
 const constructWebhookEvent = vi.fn();
 
-vi.mock('../../src/lib/db.js', () => ({ db: dbMock, dbHealthCheck: vi.fn(), withTransaction: vi.fn() }));
+vi.mock('../../src/lib/db.js', () => ({
+  db: dbMock,
+  dbHealthCheck: vi.fn(),
+  withTransaction: vi.fn(),
+}));
 vi.mock('../../src/lib/logger.js', () => {
   const noop = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() };
   return {

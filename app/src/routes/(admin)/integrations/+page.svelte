@@ -1,12 +1,25 @@
 <script lang="ts">
+import { CreditCard, Package, BarChart3, Bell } from 'lucide-svelte';
+import type { NavIcon } from '@hiai/ui';
+
+type IntegrationRow = {
+  id: string;
+  name: string;
+  type: string;
+  icon: NavIcon;
+  desc: string;
+  status: string;
+  lastSync: string | null;
+};
+
 let { data } = $props();
-let integrations = $state(
+let integrations = $state<IntegrationRow[]>(
   data.integrations || [
     {
       id: 'stripe',
       name: 'Stripe',
       type: 'stripe',
-      icon: '💳',
+      icon: CreditCard,
       desc: 'Payments and billing',
       status: 'disconnected',
       lastSync: null,
@@ -15,7 +28,7 @@ let integrations = $state(
       id: 'shippo',
       name: 'Shippo',
       type: 'shippo',
-      icon: '📦',
+      icon: Package,
       desc: 'Shipping and label generation',
       status: 'disconnected',
       lastSync: null,
@@ -24,7 +37,7 @@ let integrations = $state(
       id: 'observe',
       name: 'HiAi Observe',
       type: 'observe',
-      icon: '📊',
+      icon: BarChart3,
       desc: 'Error tracking and monitoring',
       status: 'disconnected',
       lastSync: null,
@@ -33,7 +46,7 @@ let integrations = $state(
       id: 'novu',
       name: 'Novu',
       type: 'novu',
-      icon: '🔔',
+      icon: Bell,
       desc: 'Notification delivery',
       status: 'disconnected',
       lastSync: null,
@@ -63,7 +76,7 @@ async function testConnection(id: string) {
 // biome-ignore lint/correctness/noUnusedVariables: button onclick
 async function disconnect(id: string) {
   await fetch(`/api/integrations/${id}`, { method: 'DELETE' });
-  integrations = integrations.map((i: { id: string; status: string }) =>
+  integrations = integrations.map((i: IntegrationRow) =>
     i.id === id ? { ...i, status: 'disconnected' } : i,
   );
 }
@@ -87,7 +100,9 @@ function statusColor(status: string) {
     {#each integrations as integration}
       <div class="rounded-lg border bg-card p-6">
         <div class="flex items-center gap-3 mb-3">
-          <span class="text-2xl">{integration.icon}</span>
+          {#if integration.icon}
+            <svelte:component this={integration.icon as any} class="h-6 w-6 text-muted-foreground" />
+          {/if}
           <div class="flex-1">
             <h2 class="font-semibold">{integration.name}</h2>
             <p class="text-sm text-muted-foreground">{integration.desc}</p>

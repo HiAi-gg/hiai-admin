@@ -49,14 +49,23 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   // Load site adapter from the in-process list (same pattern as the layout/sites page).
   try {
     const dtos = await siteAdapterService.list();
-    const adapters = dtos.map((dto: { tenantId: string; slug: string; name: string; backendUrl: string; modules: string[]; enabled?: boolean }) => ({
-      tenantId: dto.tenantId,
-      slug: dto.slug,
-      name: dto.name,
-      backendUrl: dto.backendUrl,
-      modules: dto.modules,
-      enabled: dto.enabled,
-    }));
+    const adapters = dtos.map(
+      (dto: {
+        tenantId: string;
+        slug: string;
+        name: string;
+        backendUrl: string;
+        modules: string[];
+        enabled?: boolean;
+      }) => ({
+        tenantId: dto.tenantId,
+        slug: dto.slug,
+        name: dto.name,
+        backendUrl: dto.backendUrl,
+        modules: dto.modules,
+        enabled: dto.enabled,
+      }),
+    );
     adapter = adapters.find((a) => a.slug === slug) || null;
     if (!adapter) error = 'Site not found';
   } catch (e) {
@@ -69,9 +78,13 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
       const res = await fetch(`/api/${slug}/sites/${slug}`);
       if (res.ok) {
         const body = await res.json();
-        const site = body && typeof body === 'object' && !Array.isArray(body) && (body as { site?: unknown }).site
-          ? (body as { site: Record<string, unknown> }).site
-          : body;
+        const site =
+          body &&
+          typeof body === 'object' &&
+          !Array.isArray(body) &&
+          (body as { site?: unknown }).site
+            ? (body as { site: Record<string, unknown> }).site
+            : body;
         if (site && typeof site === 'object') {
           const s = site as Record<string, unknown>;
           settings = {
@@ -94,11 +107,22 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   const publicUrl = computePublicUrl(settings.domain, slug);
 
   // Best-effort counts + samples. Each fetch is isolated so a single failure can't break the others.
-  const blocksCount = await safeCount(fetch, `/api/${slug}/homepage-blocks/admin/site-by-slug/${slug}`);
-  const domainStatus = await safeDomainStatus(fetch, `/api/${slug}/domains?site=${encodeURIComponent(slug)}`);
-  const articlesPayload = await safeJson(fetch, `/api/${slug}/articles/admin/list?site=${encodeURIComponent(slug)}`);
+  const blocksCount = await safeCount(
+    fetch,
+    `/api/${slug}/homepage-blocks/admin/site-by-slug/${slug}`,
+  );
+  const domainStatus = await safeDomainStatus(
+    fetch,
+    `/api/${slug}/domains?site=${encodeURIComponent(slug)}`,
+  );
+  const articlesPayload = await safeJson(
+    fetch,
+    `/api/${slug}/articles/admin/list?site=${encodeURIComponent(slug)}`,
+  );
   const recentArticles = articlesPayload ? pickRecentArticles(articlesPayload) : [];
-  const articlesCount = articlesPayload ? countFromPayload(articlesPayload) ?? recentArticles.length : null;
+  const articlesCount = articlesPayload
+    ? (countFromPayload(articlesPayload) ?? recentArticles.length)
+    : null;
 
   return {
     slug,
@@ -154,14 +178,19 @@ function countFromPayload(body: unknown): number | null {
   return null;
 }
 
-async function safeDomainStatus(fetchFn: typeof globalThis.fetch, url: string): Promise<DomainSummary> {
+async function safeDomainStatus(
+  fetchFn: typeof globalThis.fetch,
+  url: string,
+): Promise<DomainSummary> {
   try {
     const res = await fetchFn(url);
     if (!res.ok) return { state: 'none' };
     const body = await res.json();
     const domains: DomainRecord[] = normalizeDomains(body);
     if (domains.length === 0) return { state: 'none' };
-    const errorCount = domains.filter((d) => d.dnsStatus === 'error' || d.sslStatus === 'error').length;
+    const errorCount = domains.filter(
+      (d) => d.dnsStatus === 'error' || d.sslStatus === 'error',
+    ).length;
     if (errorCount > 0) return { state: 'error', count: errorCount };
     const verifiedCount = domains.filter((d) => d.verified).length;
     if (verifiedCount > 0) return { state: 'verified', count: verifiedCount };

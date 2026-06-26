@@ -1,4 +1,30 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import type { LayoutServerLoad } from './$types';
+
+/**
+ * Read the hiai-admin root `package.json` once at server start and
+ * surface its `version` to every page. The file lookup is resolved
+ * relative to this module (the root `+layout.server.ts` lives in
+ * `app/src/routes/`, so the workspace `package.json` is three levels up).
+ *
+ * If the file is missing or malformed we return `null` rather than
+ * throwing — the version is a presentational label, never a hard
+ * runtime dependency.
+ */
+function readAppVersion(): string | null {
+  try {
+    // ../../../package.json — `app/src/routes/+layout.server.ts` → `<root>/package.json`
+    const here = dirname(fileURLToPath(import.meta.url));
+    const pkgPath = resolve(here, '../../../package.json');
+    const raw = readFileSync(pkgPath, 'utf-8');
+    const parsed = JSON.parse(raw) as { version?: unknown };
+    return typeof parsed.version === 'string' ? parsed.version : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Root layout server load — exposes the public Umami tracking config to
@@ -21,5 +47,6 @@ export const load: LayoutServerLoad = () => {
       url: umamiUrl.replace(/\/$/, ''),
       websiteId: umamiWebsiteId,
     },
+    appVersion: readAppVersion(),
   };
 };

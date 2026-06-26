@@ -1,46 +1,47 @@
 <script lang="ts">
-  import type { HomepageBlock } from '$lib/sites/homepage.js';
+import type { HomepageBlock } from '$lib/sites/homepage.js';
 
-  let { block }: { block: HomepageBlock } = $props();
+let { block, dark = false }: { block: HomepageBlock; dark?: boolean } = $props();
 
-  function str(v: unknown): string {
-    return typeof v === 'string' ? v : '';
-  }
+function str(v: unknown): string {
+  return typeof v === 'string' ? v : '';
+}
 
-  const title = $derived(str(block.data.title));
-  const subtitle = $derived(str(block.data.subtitle));
-  const ctaLabel = $derived(str(block.data.ctaLabel));
-  const text = $derived(str(block.data.text));
-  const url = $derived(str(block.data.url));
-  const alt = $derived(str(block.data.alt));
-  const label = $derived(str(block.data.label));
-  const avatarUrl = $derived(str(block.data.avatarUrl));
-  const displayName = $derived(str(block.data.displayName));
-  const bio = $derived(str(block.data.bio));
-  const icon = $derived(str(block.data.icon));
-  const description = $derived(str(block.data.description));
+const title = $derived(str(block.data.title));
+const subtitle = $derived(str(block.data.subtitle));
+const ctaLabel = $derived(str(block.data.ctaLabel));
+const text = $derived(str(block.data.text));
+const url = $derived(str(block.data.url));
+const alt = $derived(str(block.data.alt));
+const label = $derived(str(block.data.label));
+const avatarUrl = $derived(str(block.data.avatarUrl));
+const displayName = $derived(str(block.data.displayName));
+const bio = $derived(str(block.data.bio));
+const icon = $derived(str(block.data.icon));
+const description = $derived(str(block.data.description));
 
-  const socialLinks = $derived.by(() => {
-    const v = block.data.links;
-    if (!Array.isArray(v)) return [] as Array<{ platform: string; url: string }>;
-    return v
-      .filter(
-        (entry): entry is { platform: string; url: string } =>
-          !!entry &&
-          typeof entry === 'object' &&
-          typeof (entry as { platform?: unknown }).platform === 'string' &&
-          typeof (entry as { url?: unknown }).url === 'string',
-      )
-      .map((entry) => ({ platform: entry.platform, url: entry.url }));
-  });
+const socialLinks = $derived.by(() => {
+  const v = block.data.links;
+  if (!Array.isArray(v)) return [] as Array<{ platform: string; url: string }>;
+  return v
+    .filter(
+      (entry): entry is { platform: string; url: string } =>
+        !!entry &&
+        typeof entry === 'object' &&
+        typeof (entry as { platform?: unknown }).platform === 'string' &&
+        typeof (entry as { url?: unknown }).url === 'string',
+    )
+    .map((entry) => ({ platform: entry.platform, url: entry.url }));
+});
 
-  function initial(name: string): string {
-    return name.trim().charAt(0).toUpperCase() || '?';
-  }
+function initial(name: string): string {
+  return name.trim().charAt(0).toUpperCase() || '?';
+}
 </script>
 
 <div
   class="pointer-events-none mt-4 rounded-md border border-dashed bg-muted/30 p-2 text-xs"
+  class:dark={dark}
   aria-label="Live preview"
 >
   <div class="mb-2 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">

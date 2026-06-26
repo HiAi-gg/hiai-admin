@@ -1,6 +1,6 @@
 <script lang="ts">
-  // biome-ignore lint/correctness/noUnusedVariables: used in template
-  let { href }: { href?: string | null } = $props();
+// biome-ignore lint/correctness/noUnusedVariables: used in template
+let { href }: { href?: string | null } = $props();
 </script>
 
 {#if href}

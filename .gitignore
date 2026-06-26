@@ -32,6 +32,12 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 
+# Internal planning / audit files (not for open-source)
+AGENTS.md
+todo.md
+AGENTS.md.bak
+todo.md.bak
+
 # Backups
 *.bak
 
@@ -41,3 +47,6 @@ coverage/
 
 # Claude Code
 .claude/
+
+# Bob / Sub-agent artifacts
+.bob/

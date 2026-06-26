@@ -1,6 +1,7 @@
 <script lang="ts">
 // biome-ignore lint/correctness/noUnusedImports: used in template
 import StatusBadge from '$lib/components/StatusBadge.svelte';
+import { ChevronRight } from 'lucide-svelte';
 
 let { data } = $props();
 // biome-ignore lint/correctness/noUnusedVariables: used in template
@@ -68,7 +69,7 @@ let sessions = data.sessions || [];
             <h2 class="text-lg font-semibold group-hover:text-primary transition-colors">Audit Logs</h2>
             <p class="text-sm text-muted-foreground mt-1">View all platform actions and changes</p>
           </div>
-          <svg class="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+          <ChevronRight class="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
       </a>
       <a href="/settings/security" class="block rounded-lg border bg-card p-6 hover:shadow-md transition-shadow group">
@@ -77,7 +78,7 @@ let sessions = data.sessions || [];
             <h2 class="text-lg font-semibold group-hover:text-primary transition-colors">Security Settings</h2>
             <p class="text-sm text-muted-foreground mt-1">Configure 2FA, password policies, and session limits</p>
           </div>
-          <svg class="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+          <ChevronRight class="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
         </div>
       </a>
       <div class="rounded-lg border bg-card p-6">

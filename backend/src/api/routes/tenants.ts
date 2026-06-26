@@ -3,7 +3,12 @@ import { auditMiddleware } from '../middleware/audit.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
 import { tenantService } from '../../modules/tenant/tenant.service.js';
-import { createTenantSchema, updateTenantSchema, suspendTenantSchema, changePlanSchema } from '../validation/tenant.schema.js';
+import {
+  createTenantSchema,
+  updateTenantSchema,
+  suspendTenantSchema,
+  changePlanSchema,
+} from '../validation/tenant.schema.js';
 
 export const tenantRoutes = new Elysia({ prefix: '/api/tenants' })
   .use(authMiddleware)

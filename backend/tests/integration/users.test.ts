@@ -80,16 +80,12 @@ function setDbResponse() {
   const itemsForScope = () =>
     usersTable.filter((u) => {
       if (!currentTenantId) return true;
-      return accessTable.some(
-        (a) => a.tenantId === currentTenantId && a.userId === u.id,
-      );
+      return accessTable.some((a) => a.tenantId === currentTenantId && a.userId === u.id);
     });
   const tenantScoped = currentTenantId !== null;
   const accessList = () =>
     currentTenantId
-      ? accessTable
-          .filter((a) => a.tenantId === currentTenantId)
-          .map((a) => ({ userId: a.userId }))
+      ? accessTable.filter((a) => a.tenantId === currentTenantId).map((a) => ({ userId: a.userId }))
       : [];
 
   const makeThenable = (value: unknown) => {
@@ -225,7 +221,7 @@ describe('userService.list() tenant isolation (BLOCKER-2)', () => {
     expect(result.pagination.total).toBe(4);
   });
 
-  it('tenant_admin passing another tenant\'s id cannot enumerate other tenants\' users', async () => {
+  it("tenant_admin passing another tenant's id cannot enumerate other tenants' users", async () => {
     seedTwoTenants();
     sessionsTable.set('token-alice', {
       userId: 'alice',

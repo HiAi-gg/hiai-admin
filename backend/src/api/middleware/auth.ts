@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import type { User } from 'better-auth';
 import { auth } from '../../auth/index.js';
 import { userService } from '../../modules/user/user.service.js';
 
@@ -15,7 +16,7 @@ export async function loadSession(headers: Headers) {
   const session = await auth.api.getSession({ headers });
   if (!session) return { user: null, session: null };
 
-  const baUser = session.user as any;
+  const baUser: User = session.user;
   let role: string | undefined;
   try {
     const profile = await userService.getByEmail(baUser?.email);
@@ -27,30 +28,29 @@ export async function loadSession(headers: Headers) {
 
   return {
     user: { ...baUser, role },
-    session: session.session as any,
+    session: session.session,
   };
 }
 
-export const authMiddleware = new Elysia({ name: 'auth' })
-  .macro({
-    requireAuth: {
-      beforeHandle: async ({ user, session, set }: any) => {
-        if (!user || !session) {
-          set.status = 401;
-          return { error: 'Unauthorized' };
-        }
-      },
+export const authMiddleware = new Elysia({ name: 'auth' }).macro({
+  requireAuth: {
+    beforeHandle: async ({ user, session, set }: any) => {
+      if (!user || !session) {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
     },
-    requireSuperAdmin: {
-      beforeHandle: async ({ user, session, set }: any) => {
-        if (!user || !session) {
-          set.status = 401;
-          return { error: 'Unauthorized' };
-        }
-        if (user.role !== 'super_admin') {
-          set.status = 403;
-          return { error: 'Forbidden — super admin required' };
-        }
-      },
+  },
+  requireSuperAdmin: {
+    beforeHandle: async ({ user, session, set }: any) => {
+      if (!user || !session) {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      if (user.role !== 'super_admin') {
+        set.status = 403;
+        return { error: 'Forbidden — super admin required' };
+      }
     },
-  });
+  },
+});

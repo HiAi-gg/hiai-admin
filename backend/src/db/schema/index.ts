@@ -3,6 +3,8 @@
 // Audit
 export * from './audit-log.js';
 export * from './auth.js';
+// Notifications (persistent per-user notification log)
+export { notifications } from './notification.js';
 // RBAC tables (role.ts defines roles, permissions, rolePermissions, userRoles)
 export { permissions, rolePermissions, roles, userRoles } from './role.js';
 // Settings tables (setting.ts defines settings + integrations)

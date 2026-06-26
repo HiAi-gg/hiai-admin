@@ -1,6 +1,7 @@
 <script lang="ts">
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
+import { Download } from 'lucide-svelte';
 
 // biome-ignore lint/correctness/noUnusedVariables: typed but unused in this view
 let { data } = $props();
@@ -36,7 +37,7 @@ function exportCSV() {
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold">Audit Logs</h1>
     <button onclick={exportCSV} class="inline-flex items-center gap-2 px-4 py-2 rounded border text-sm hover:bg-muted">
-      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <Download class="h-3.5 w-3.5" />
       Export CSV
     </button>
   </div>

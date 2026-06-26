@@ -27,7 +27,9 @@ export const proxyPostRoutes = new Elysia({ prefix: '/api/social' })
           method: request.method,
           headers,
           body:
-            request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,
+            request.method !== 'GET' && request.method !== 'HEAD'
+              ? await request.text()
+              : undefined,
         });
 
         const body = await res.text();

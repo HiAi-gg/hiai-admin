@@ -42,12 +42,12 @@ function getPathsForTag(tag: string) {
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 function getMethodColor(method: string) {
   const colors: Record<string, string> = {
-    get: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-    post: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-    put: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-    delete: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    get: 'bg-success/10 text-success',
+    post: 'bg-info/10 text-info',
+    put: 'bg-warning/10 text-warning',
+    delete: 'bg-destructive/10 text-destructive',
   };
-  return colors[method] || 'bg-gray-100 text-gray-800';
+  return colors[method] || 'bg-muted text-muted-foreground';
 }
 
 // biome-ignore lint/correctness/noUnusedVariables: button onclick
@@ -113,7 +113,7 @@ function togglePath(path: string) {
 
                   {#if d.security}
                     <div class="flex items-center gap-2 text-sm">
-                      <span class="px-2 py-0.5 rounded bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 text-xs font-medium">Auth Required</span>
+                      <span class="px-2 py-0.5 rounded bg-warning/10 text-warning text-xs font-medium">Auth Required</span>
                     </div>
                   {/if}
 
@@ -126,7 +126,7 @@ function togglePath(path: string) {
                             <code class="text-xs bg-muted px-1.5 py-0.5 rounded">{param.name}</code>
                             <span class="text-muted-foreground">{param.in}</span>
                             {#if param.required}
-                              <span class="text-red-500 text-xs">required</span>
+                              <span class="text-destructive text-xs">required</span>
                             {/if}
                             <span class="text-muted-foreground text-xs">{param.schema?.type || ''}</span>
                           </div>
@@ -148,7 +148,7 @@ function togglePath(path: string) {
                       <div class="space-y-1">
                         {#each Object.entries(d.responses) as [code, resp]}
                           <div class="flex items-center gap-2 text-sm">
-                            <span class="px-1.5 py-0.5 rounded text-xs font-mono {Number(code) < 400 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}">{code}</span>
+                            <span class="px-1.5 py-0.5 rounded text-xs font-mono {Number(code) < 400 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}">{code}</span>
                             <span>{(resp as any).description || ''}</span>
                           </div>
                         {/each}

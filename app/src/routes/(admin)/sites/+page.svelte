@@ -62,7 +62,7 @@ const adapters = $derived(data.adapters ?? []);
                 <span
                   class={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                     adapter.enabled !== false
-                      ? 'bg-green-500/10 text-green-600 dark:text-green-400'
+                      ? 'bg-success/10 text-success'
                       : 'bg-muted text-muted-foreground'
                   }`}
                 >

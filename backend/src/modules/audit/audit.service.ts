@@ -45,8 +45,8 @@ export const auditService = {
     const { page = 1, limit = 50, actorId, action, resource, startDate, endDate } = options;
     const offset = (page - 1) * limit;
 
-    let query = db.select().from(auditLogs);
-    let countQuery = db.select({ count: count() }).from(auditLogs);
+    const baseQuery = db.select().from(auditLogs);
+    const baseCountQuery = db.select({ count: count() }).from(auditLogs);
 
     // Apply filters
     const conditions = [];
@@ -56,12 +56,14 @@ export const auditService = {
     if (startDate) conditions.push(gte(auditLogs.createdAt, startDate));
     if (endDate) conditions.push(lte(auditLogs.createdAt, endDate));
 
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as any;
-      countQuery = countQuery.where(and(...conditions)) as any;
-    }
+    const filteredQuery = conditions.length > 0 ? baseQuery.where(and(...conditions)) : baseQuery;
+    const filteredCountQuery =
+      conditions.length > 0 ? baseCountQuery.where(and(...conditions)) : baseCountQuery;
 
-    const [items, total] = await Promise.all([query.limit(limit).offset(offset), countQuery]);
+    const [items, total] = await Promise.all([
+      filteredQuery.limit(limit).offset(offset),
+      filteredCountQuery,
+    ]);
 
     return {
       items,

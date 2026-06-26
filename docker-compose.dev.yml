@@ -12,8 +12,8 @@ services:
     container_name: hiai-admin-api
     entrypoint: ["echo", "Run 'cd backend && bun run dev' on host"]
     environment:
-      DATABASE_URL: "postgresql://aiuser:aipassword@host.docker.internal:5433/hiai_admin"
-      REDIS_URL: "redis://host.docker.internal:6380"
+      DATABASE_URL: "${DB_URL:-postgresql://user:password@host.docker.internal:5433/hiai_admin}"
+      REDIS_URL: "${REDIS_URL:-redis://host.docker.internal:6380}"
       BETTER_AUTH_URL: "http://localhost:50200"
       API_PORT: "50200"
     labels:

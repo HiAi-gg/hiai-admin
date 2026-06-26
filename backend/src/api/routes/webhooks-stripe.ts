@@ -1,10 +1,17 @@
 import { Elysia } from 'elysia';
 import { stripeService } from '../../modules/billing/stripe.service.js';
 import { db } from '../../lib/db.js';
-import { invoices, subscriptions, tenants } from '../../db/schema/index.js';
+import {
+  invoices,
+  subscriptions,
+  tenants,
+  userTenantAccess,
+  users,
+} from '../../db/schema/index.js';
 import { eq } from 'drizzle-orm';
 import { logger } from '../../lib/logger.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
+import { notificationService } from '../../modules/notifications/notification.service.js';
 
 const log = logger.child({ module: 'webhooks-stripe' });
 
@@ -41,6 +48,50 @@ export const webhooksStripeRoutes = new Elysia({ prefix: '/api/webhooks' })
             .set({ status: 'past_due' })
             .where(eq(invoices.stripeInvoiceId, invoice.id));
           log.warn({ invoiceId: invoice.id }, 'Invoice payment failed — grace period started');
+
+          // Notify the tenant owner(s) so they can fix the payment method.
+          // Best-effort — failures here must not break the webhook ack.
+          try {
+            const stripeCustomerId =
+              typeof invoice.customer === 'string' ? invoice.customer : invoice.customer?.id;
+            if (stripeCustomerId) {
+              const [tenant] = await db
+                .select()
+                .from(tenants)
+                .where(eq(tenants.stripeCustomerId, stripeCustomerId))
+                .limit(1);
+              if (tenant) {
+                const ownerRows = await db
+                  .select({ id: users.id, email: users.email, name: users.name })
+                  .from(userTenantAccess)
+                  .innerJoin(users, eq(users.id, userTenantAccess.userId))
+                  .where(eq(userTenantAccess.tenantId, tenant.id));
+                const amountDue = invoice.amount_due
+                  ? ` Amount due: ${(invoice.amount_due / 100).toFixed(2)} ${invoice.currency?.toUpperCase()}.`
+                  : '';
+                for (const owner of ownerRows) {
+                  await notificationService.send({
+                    userId: owner.id,
+                    type: 'payment_failed',
+                    title: `Payment failed for ${tenant.name}`,
+                    body: `A Stripe invoice payment failed.${amountDue} Update your payment method to avoid service interruption.`,
+                    data: {
+                      tenantId: tenant.id,
+                      invoiceId: invoice.id,
+                      amountDue: invoice.amount_due,
+                      currency: invoice.currency,
+                    },
+                    subscriber: {
+                      email: owner.email ?? undefined,
+                      firstName: owner.name ?? undefined,
+                    },
+                  });
+                }
+              }
+            }
+          } catch (notifyErr: any) {
+            log.warn({ err: notifyErr.message }, 'Failed to dispatch payment_failed notification');
+          }
           break;
         }
         case 'customer.subscription.updated': {
