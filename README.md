@@ -46,13 +46,13 @@ docker compose up -d --build
 | **Database** | PostgreSQL + pgvector | 18.4 |
 | **Cache/Queue** | Redis | 8.6+ |
 | **Frontend** | Svelte 5 + SvelteKit | 2.60+ |
-| **UI Components** | shadcn-svelte + Tailwind CSS v4 | latest |
+| **UI Components** | @hiai-gg/hiai-ui (shadcn-svelte + Tailwind CSS v4) | ^0.0.4 |
 | **Data Tables** | TanStack Table | latest |
 | **Data Fetching** | TanStack Query | latest |
 | **Auth** | Better Auth | latest |
 | **Payments** | Stripe | 14.10+ |
 | **Charts** | LayerChart | latest |
-| **Observability** | HiAi Observe | local |
+| **Observability** | @hiai-gg/hiai-observe | ^0.1.9 |
 
 ## Architecture
 
@@ -71,7 +71,7 @@ hiai-admin-api (Elysia)     hiai-admin-frontend (SvelteKit)
               ├── PostgreSQL 18.4 (tenants, users, roles, billing, audit)
               ├── Redis 8.6+ (sessions, rate limiting, caching)
               ├── Stripe (subscriptions, Connect, invoicing)
-              └── HiAi Observe (errors, uptime, traces)
+              └── @hiai-gg/hiai-observe (errors, uptime, traces)  ← npm package
 ```
 
 The module consists of two parts:
@@ -88,7 +88,7 @@ Both can run as a single monolith or as separate services.
 - **Global analytics** — MRR, churn, LTV, CAC, active tenants, growth metrics
 - **Platform settings** — global configuration, feature flags, integrations
 - **Security & audit** — 2FA, session management, complete audit trail of all actions
-- **Integration management** — Stripe, Shippo, HiAi Observe, and third-party service configuration
+- **Integration management** — Stripe, Shippo, @hiai-gg/hiai-observe, and third-party service configuration
 
 ## Project Structure
 
@@ -165,7 +165,7 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 STRIPE_PLATFORM_ACCOUNT_ID=acct_...
 
-# HiAi Observe (optional)
+# @hiai-gg/hiai-observe (npm: ^0.1.9) — observability SDK
 HIAI_OBSERVE_URL=http://localhost:8001
 
 # Ports
