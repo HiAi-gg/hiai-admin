@@ -298,7 +298,7 @@ jobs:
       - name: Build app image
         uses: docker/build-push-action@v6
         with:
-          context: ./app
+          context: .
           file: ./app/Dockerfile
           push: false
           load: true

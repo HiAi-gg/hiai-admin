@@ -12,7 +12,9 @@ services:
     restart: unless-stopped
 
   hiai-admin-frontend:
-    build: ./app
+    build:
+      context: .
+      dockerfile: ./app/Dockerfile
     ports: ["50201:3000"]
     env_file: .env
     depends_on: [hiai-admin-api]
