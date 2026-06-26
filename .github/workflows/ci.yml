@@ -20,6 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clone hiai-ui workspace
+        run: |
+          mkdir -p packages
+          git clone --depth 1 https://github.com/HiAi-gg/hiai-ui.git packages/hiai-ui
+          # Fix package name to match workspace dependency
+          sed -i 's|"name": "@hiai-gg/hiai-ui"|"name": "@hiai/ui"|' packages/hiai-ui/package.json
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -35,12 +42,7 @@ jobs:
           restore-keys: |
             bun-${{ runner.os }}-
 
-      - name: Install backend deps
-        working-directory: backend
-        run: bun install --frozen-lockfile || bun install
-
-      - name: Install app deps
-        working-directory: app
+      - name: Install all dependencies
         run: bun install
 
       - name: Biome lint (backend)
@@ -65,6 +67,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clone hiai-ui workspace
+        run: |
+          mkdir -p packages
+          git clone --depth 1 https://github.com/HiAi-gg/hiai-ui.git packages/hiai-ui
+          # Fix package name to match workspace dependency
+          sed -i 's|"name": "@hiai-gg/hiai-ui"|"name": "@hiai/ui"|' packages/hiai-ui/package.json
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -80,12 +89,7 @@ jobs:
           restore-keys: |
             bun-${{ runner.os }}-
 
-      - name: Install backend deps
-        working-directory: backend
-        run: bun install --frozen-lockfile || bun install
-
-      - name: Install app deps
-        working-directory: app
+      - name: Install all dependencies
         run: bun install
 
       - name: Typecheck backend
@@ -102,6 +106,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clone hiai-ui workspace
+        run: |
+          mkdir -p packages
+          git clone --depth 1 https://github.com/HiAi-gg/hiai-ui.git packages/hiai-ui
+          # Fix package name to match workspace dependency
+          sed -i 's|"name": "@hiai-gg/hiai-ui"|"name": "@hiai/ui"|' packages/hiai-ui/package.json
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -117,12 +128,7 @@ jobs:
           restore-keys: |
             bun-${{ runner.os }}-
 
-      - name: Install backend deps
-        working-directory: backend
-        run: bun install --frozen-lockfile || bun install
-
-      - name: Install app deps
-        working-directory: app
+      - name: Install all dependencies
         run: bun install
 
       - name: Build backend
@@ -190,6 +196,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Clone hiai-ui workspace
+        run: |
+          mkdir -p packages
+          git clone --depth 1 https://github.com/HiAi-gg/hiai-ui.git packages/hiai-ui
+          # Fix package name to match workspace dependency
+          sed -i 's|"name": "@hiai-gg/hiai-ui"|"name": "@hiai/ui"|' packages/hiai-ui/package.json
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
@@ -205,12 +218,7 @@ jobs:
           restore-keys: |
             bun-${{ runner.os }}-
 
-      - name: Install backend deps
-        working-directory: backend
-        run: bun install --frozen-lockfile || bun install
-
-      - name: Install app deps
-        working-directory: app
+      - name: Install all dependencies
         run: bun install
 
       - name: Apply database schema

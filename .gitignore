@@ -50,3 +50,6 @@ todo.md.bak
 
 # Bob / Sub-agent artifacts
 .bob/
+
+# CI workspace (cloned at runtime, not committed)
+packages/

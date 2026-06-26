@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "packageManager": "bun@1.3.14",
   "private": true,
+  "workspaces": ["packages/*"],
   "type": "module",
   "scripts": {
     "dev": "bun run --parallel dev:api dev:frontend",
