@@ -13,9 +13,7 @@ export const umamiPlugin: HiAiPlugin = {
   description: 'Privacy-focused web analytics',
   navGroups: [
     {
-      items: [
-        { label: 'Umami', href: '/analytics/umami', icon: BarChart3 as unknown as string },
-      ],
+      items: [{ label: 'Umami', href: '/analytics/umami', icon: BarChart3 as unknown as string }],
     },
   ],
   proxy: { prefix: '/api/umami', target: umamiTarget, auth: 'api-key' },

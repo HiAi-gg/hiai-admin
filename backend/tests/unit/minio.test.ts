@@ -112,12 +112,7 @@ describe('lib/minio', () => {
 
       const { uploadFile, MinioError } = await import('../../src/lib/minio.js');
       await expect(
-        uploadFile(
-          'hiai-admin',
-          'avatars/x.png',
-          Buffer.from('hello'),
-          '' as unknown as string,
-        ),
+        uploadFile('hiai-admin', 'avatars/x.png', Buffer.from('hello'), '' as unknown as string),
       ).rejects.toBeInstanceOf(MinioError);
     });
 
@@ -151,12 +146,7 @@ describe('lib/minio', () => {
       vi.spyOn(Client.prototype, 'putObject').mockResolvedValue({} as never);
 
       const { uploadFile } = await import('../../src/lib/minio.js');
-      const url = await uploadFile(
-        'hiai-admin',
-        'logos/site.png',
-        Buffer.from('x'),
-        'image/png',
-      );
+      const url = await uploadFile('hiai-admin', 'logos/site.png', Buffer.from('x'), 'image/png');
       // Trailing slash should be stripped so we don't produce `//logos/...`.
       expect(url).toBe('https://cdn.example.com/hiai-admin/logos/site.png');
     });
@@ -166,21 +156,14 @@ describe('lib/minio', () => {
       process.env.MINIO_ACCESS_KEY = 'minioadmin';
       process.env.MINIO_SECRET_KEY = 'minioadmin';
       const { Client } = await import('minio');
-      const bucketExists = vi
-        .spyOn(Client.prototype, 'bucketExists')
-        .mockResolvedValue(false);
+      const bucketExists = vi.spyOn(Client.prototype, 'bucketExists').mockResolvedValue(false);
       const makeBucket = vi
         .spyOn(Client.prototype, 'makeBucket')
         .mockResolvedValue(undefined as never);
       vi.spyOn(Client.prototype, 'putObject').mockResolvedValue({} as never);
 
       const { uploadFile } = await import('../../src/lib/minio.js');
-      const url = await uploadFile(
-        'hiai-admin',
-        'logos/site.png',
-        Buffer.from('x'),
-        'image/png',
-      );
+      const url = await uploadFile('hiai-admin', 'logos/site.png', Buffer.from('x'), 'image/png');
 
       expect(bucketExists).toHaveBeenCalledWith('hiai-admin');
       expect(makeBucket).toHaveBeenCalledWith('hiai-admin');

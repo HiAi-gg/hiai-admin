@@ -1,13 +1,5 @@
 import type { HiAiPlugin, NavIcon } from './types.js';
-import {
-  BarChart3,
-  Bell,
-  CircleDot,
-  Radio,
-  Satellite,
-  ScrollText,
-  Tv,
-} from 'lucide-svelte';
+import { BarChart3, Bell, CircleDot, Radio, Satellite, ScrollText, Tv } from 'lucide-svelte';
 
 /**
  * hiai-observe plugin manifest.

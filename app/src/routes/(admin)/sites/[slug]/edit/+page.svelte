@@ -1,8 +1,8 @@
 <script lang="ts">
 import { enhance } from '$app/forms';
 import { untrack } from 'svelte';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@hiai/ui/components/ui/tabs/index.js';
-import { Switch } from '@hiai/ui/components/ui/switch/index.js';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@hiai/ui/components/ui/tabs/index';
+import { Switch } from '@hiai/ui/components/ui/switch/index';
 
 type SocialLink = { platform: string; url: string };
 

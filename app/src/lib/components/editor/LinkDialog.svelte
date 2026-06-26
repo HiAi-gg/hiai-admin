@@ -1,13 +1,13 @@
 <!-- LinkDialog.svelte — Modal dialog to set/edit a link on the active TipTap selection -->
 <script lang="ts">
-import { Button } from '@hiai/ui/components/ui/button/index.js';
+import { Button } from '@hiai/ui/components/ui/button/index';
 import {
   Dialog,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@hiai/ui/components/ui/dialog/index.js';
-import { Input } from '@hiai/ui/components/ui/input/index.js';
+} from '@hiai/ui/components/ui/dialog/index';
+import { Input } from '@hiai/ui/components/ui/input/index';
 import type { Editor } from '@tiptap/core';
 
 let {
