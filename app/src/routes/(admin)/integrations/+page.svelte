@@ -1,12 +1,12 @@
 <script lang="ts">
 import { CreditCard, Package, BarChart3, Bell } from 'lucide-svelte';
-import type { NavIcon } from '@hiai/ui';
+import type { Component } from 'svelte';
 
 type IntegrationRow = {
   id: string;
   name: string;
   type: string;
-  icon: NavIcon;
+  icon: Component;
   desc: string;
   status: string;
   lastSync: string | null;

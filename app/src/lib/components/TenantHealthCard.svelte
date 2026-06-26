@@ -117,28 +117,28 @@ const errorRate = $derived.by(() => {
       <StatsCard
         label="Uptime (24h)"
         value="{data.uptimePercent?.toFixed(1) ?? 0}%"
-        icon={CheckCircle2}
+        icon={CheckCircle2 as unknown as string}
         accent={data.uptimePercent >= 99.9 ? 'success' : data.uptimePercent >= 99 ? 'warning' : 'danger'}
         href="/observe/uptime?tenant_id={tenantId}"
       />
       <StatsCard
         label="Errors (24h)"
         value={data.errorCount24h}
-        icon={Flame}
+        icon={Flame as unknown as string}
         accent={data.errorCount24h === 0 ? 'success' : data.errorCount24h > 100 ? 'danger' : 'warning'}
         href="/observe/issues?tenant_id={tenantId}"
       />
       <StatsCard
         label="Active alerts"
         value={data.alertCount ?? 0}
-        icon={Bell}
+        icon={Bell as unknown as string}
         accent={(data.alertCount ?? 0) === 0 ? 'success' : 'warning'}
         href="/observe/alerts?tenant_id={tenantId}"
       />
       <StatsCard
         label="Containers"
         value={data.activeContainers}
-        icon={Package}
+        icon={Package as unknown as string}
         accent="info"
         href="/observe/infrastructure?tenant_id={tenantId}"
       />

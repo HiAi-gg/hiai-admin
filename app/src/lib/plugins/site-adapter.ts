@@ -1,6 +1,5 @@
 import { FileText, Globe, Home, Mail, Sparkles, Coffee } from 'lucide-svelte';
-import type { NavGroup, SiteAdapter, SiteModule } from './types.js';
-import type { NavIcon } from '@hiai/ui';
+import type { NavGroup, NavIcon, SiteAdapter, SiteModule } from './types.js';
 
 /** Shape of a site adapter as delivered by the backend `/api/site-adapters` (secrets stripped). */
 export interface SiteAdapterRow {
@@ -15,12 +14,12 @@ export interface SiteAdapterRow {
 }
 
 const MODULE_NAV: Record<SiteModule, { label: string; icon: NavIcon; segment: string }> = {
-  articles: { label: 'Articles', icon: FileText, segment: 'articles' },
-  homepage: { label: 'Homepage', icon: Home, segment: 'homepage' },
-  domains: { label: 'Domain', icon: Globe, segment: 'domain' },
-  kofi: { label: 'Ko-fi', icon: Coffee, segment: 'kofi' },
-  newsletter: { label: 'Newsletter', icon: Mail, segment: 'newsletter' },
-  generation: { label: 'Generation', icon: Sparkles, segment: 'generation' },
+  articles: { label: 'Articles', icon: FileText as unknown as NavIcon, segment: 'articles' },
+  homepage: { label: 'Homepage', icon: Home as unknown as NavIcon, segment: 'homepage' },
+  domains: { label: 'Domain', icon: Globe as unknown as NavIcon, segment: 'domain' },
+  kofi: { label: 'Ko-fi', icon: Coffee as unknown as NavIcon, segment: 'kofi' },
+  newsletter: { label: 'Newsletter', icon: Mail as unknown as NavIcon, segment: 'newsletter' },
+  generation: { label: 'Generation', icon: Sparkles as unknown as NavIcon, segment: 'generation' },
 };
 
 // Stable display order regardless of how `modules` is stored.
@@ -44,14 +43,14 @@ export function buildSiteAdapterPlugins(rows: SiteAdapterRow[]): SiteAdapter[] {
     .map((row) => {
       const modules = MODULE_ORDER.filter((m) => row.modules.includes(m));
       const items = [
-        { label: 'Overview', href: `/sites/${row.slug}`, icon: Home as NavIcon },
+        { label: 'Overview', href: `/sites/${row.slug}`, icon: Home as unknown as string },
         ...modules.map((m) => ({
           label: MODULE_NAV[m].label,
           href: `/sites/${row.slug}/${MODULE_NAV[m].segment}`,
-          icon: MODULE_NAV[m].icon,
+          icon: MODULE_NAV[m].icon as unknown as string,
         })),
       ];
-      const navGroups: NavGroup[] = [{ label: row.name, icon: Globe, items }];
+      const navGroups: NavGroup[] = [{ label: row.name, items }];
 
       return {
         kind: 'site',
@@ -59,7 +58,7 @@ export function buildSiteAdapterPlugins(rows: SiteAdapterRow[]): SiteAdapter[] {
         tenantId: row.tenantId,
         name: row.name,
         version: '1.0.0',
-        icon: Globe,
+        icon: Globe as unknown as NavIcon,
         description: `Site adapter for ${row.name}`,
         navGroups,
         modules,

@@ -1,6 +1,5 @@
-import type { HiAiPlugin } from './types.js';
+import type { HiAiPlugin, NavIcon } from './types.js';
 import {
-  Activity,
   BarChart3,
   Bell,
   CircleDot,
@@ -28,19 +27,18 @@ export const hiaiObservePlugin: HiAiPlugin = {
   id: 'hiai-observe',
   name: 'Observe',
   version: '1.0.0',
-  icon: Radio,
+  icon: Radio as unknown as NavIcon,
   description: 'Observability dashboard — errors, uptime, alerts, logs, traces',
   navGroups: [
     {
       label: 'Observe',
-      icon: Radio,
       items: [
-        { label: 'Overview', href: '/observe', icon: BarChart3 },
-        { label: 'Monitors', href: '/observe/monitors', icon: CircleDot },
-        { label: 'Alerts', href: '/observe/alerts', icon: Bell },
-        { label: 'Status Page', href: '/observe/status', icon: Tv },
-        { label: 'Logs', href: '/observe/logs', icon: ScrollText },
-        { label: 'Traces', href: '/observe/traces', icon: Satellite },
+        { label: 'Overview', href: '/observe', icon: BarChart3 as unknown as string },
+        { label: 'Monitors', href: '/observe/monitors', icon: CircleDot as unknown as string },
+        { label: 'Alerts', href: '/observe/alerts', icon: Bell as unknown as string },
+        { label: 'Status Page', href: '/observe/status', icon: Tv as unknown as string },
+        { label: 'Logs', href: '/observe/logs', icon: ScrollText as unknown as string },
+        { label: 'Traces', href: '/observe/traces', icon: Satellite as unknown as string },
       ],
     },
   ],

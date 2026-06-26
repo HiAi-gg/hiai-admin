@@ -25,7 +25,7 @@ export const bodyLimitMiddleware = new Elysia({ name: 'body-limit' }).onBeforeHa
 
     if (contentLength) {
       const bytes = parseInt(contentLength, 10);
-      if (isNaN(bytes) || bytes > limit) {
+      if (Number.isNaN(bytes) || bytes > limit) {
         set.status = 413;
         return {
           error: `Request body exceeds maximum size of ${limit} bytes.`,

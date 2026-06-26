@@ -103,28 +103,28 @@ const planLabels: Record<string, string> = {
     <StatsCard
       label="Total Tenants"
       value={data.overview.totalTenants}
-      icon={Building2}
+      icon={Building2 as unknown as string}
       accent="primary"
       href="/tenants"
     />
     <StatsCard
       label="Active Tenants"
       value={data.overview.activeTenants}
-      icon={CheckCircle2}
+      icon={CheckCircle2 as unknown as string}
       accent="success"
       href="/tenants"
     />
     <StatsCard
       label="New (30d)"
       value={data.overview.newTenants}
-      icon={Sparkles}
+      icon={Sparkles as unknown as string}
       accent="info"
       href="/tenants"
     />
     <StatsCard
       label="MRR"
       value={`$${((data.overview.mrr ?? 0) / 100).toFixed(2)}`}
-      icon={DollarSign}
+      icon={DollarSign as unknown as string}
       accent="violet"
       href="/billing"
     />

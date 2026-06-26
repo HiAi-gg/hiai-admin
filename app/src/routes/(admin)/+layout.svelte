@@ -20,7 +20,6 @@ import {
   Activity,
   BarChart3,
   CreditCard,
-  LayoutDashboard,
   Link2,
   Plug,
   Settings,
@@ -52,18 +51,17 @@ type AdminSidebarGroups = ComponentProps<typeof AdminSidebar>['groups'];
 const coreNavGroups: NavGroup[] = [
   {
     label: 'Platform',
-    icon: LayoutDashboard,
     items: [
-      { label: 'Dashboard', href: '/dashboard', icon: BarChart3 },
-      { label: 'Tenants', href: '/tenants', icon: Store },
-      { label: 'Connect Site', href: '/sites/connect', icon: Plug },
-      { label: 'Users', href: '/users', icon: UsersRound },
-      { label: 'RBAC', href: '/rbac', icon: Shield },
-      { label: 'Billing', href: '/billing', icon: CreditCard },
-      { label: 'Analytics', href: '/analytics', icon: TrendingUp },
-      { label: 'Settings', href: '/settings', icon: Settings },
-      { label: 'Security', href: '/security/audit', icon: Activity },
-      { label: 'Integrations', href: '/integrations', icon: Link2 },
+      { label: 'Dashboard', href: '/dashboard', icon: BarChart3 as unknown as string },
+      { label: 'Tenants', href: '/tenants', icon: Store as unknown as string },
+      { label: 'Connect Site', href: '/sites/connect', icon: Plug as unknown as string },
+      { label: 'Users', href: '/users', icon: UsersRound as unknown as string },
+      { label: 'RBAC', href: '/rbac', icon: Shield as unknown as string },
+      { label: 'Billing', href: '/billing', icon: CreditCard as unknown as string },
+      { label: 'Analytics', href: '/analytics', icon: TrendingUp as unknown as string },
+      { label: 'Settings', href: '/settings', icon: Settings as unknown as string },
+      { label: 'Security', href: '/security/audit', icon: Activity as unknown as string },
+      { label: 'Integrations', href: '/integrations', icon: Link2 as unknown as string },
     ],
   },
 ];
@@ -125,12 +123,10 @@ async function handleSignOut(): Promise<void> {
     groups={allNavGroups}
     collapsed={sidebarStore.collapsed}
     onToggle={() => sidebarStore.toggle()}
-    logoHref={isSuperAdmin ? '/dashboard' : (currentSiteSlug ? `/sites/${currentSiteSlug}` : '/dashboard')}
-    version={data.appVersion ?? undefined}
   />
 
   <div class="flex flex-1 flex-col overflow-hidden">
-    <AdminHeader user={data.user} onSignOut={handleSignOut}>
+    <AdminHeader user={data.user}>
       {#snippet actions()}
         <SiteSwitcher adapters={data.adapters ?? []} currentSlug={currentSiteSlug} />
         <ViewSiteButton href={currentSiteUrl} />

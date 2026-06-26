@@ -1,4 +1,4 @@
-import type { HiAiPlugin } from './types.js';
+import type { HiAiPlugin, NavIcon } from './types.js';
 import { BarChart3 } from 'lucide-svelte';
 
 const umamiTarget =
@@ -9,10 +9,14 @@ export const umamiPlugin: HiAiPlugin = {
   id: 'umami',
   name: 'Umami Analytics',
   version: '1.0.0',
-  icon: BarChart3,
+  icon: BarChart3 as unknown as NavIcon,
   description: 'Privacy-focused web analytics',
   navGroups: [
-    { icon: BarChart3, items: [{ label: 'Umami', href: '/analytics/umami', icon: BarChart3 }] },
+    {
+      items: [
+        { label: 'Umami', href: '/analytics/umami', icon: BarChart3 as unknown as string },
+      ],
+    },
   ],
   proxy: { prefix: '/api/umami', target: umamiTarget, auth: 'api-key' },
 };

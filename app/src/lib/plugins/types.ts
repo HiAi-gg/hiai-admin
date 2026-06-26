@@ -1,10 +1,17 @@
 import type { Component } from 'svelte';
-// Re-use @hiai/ui's NavIcon so plugin manifest types stay structurally
-// compatible with the AdminSidebar's NavGroup / NavItem — variance issues
-// aside, this keeps a single source of truth for the icon contract.
-import type { NavGroup, NavItem, NavIcon as UINavIcon } from '@hiai/ui';
+import type { NavGroup, NavItem } from '@hiai/ui';
 
-export type NavIcon = UINavIcon;
+// Local icon contract for plugin manifests. The fresh @hiai/ui NavItem.icon
+// is typed as `string` (AdminSidebar renders it as text), but the plugins
+// in this directory still pass Svelte components (lucide-svelte Svelte
+// 4-style classes) as the runtime icon — AdminSidebar ignores the icon
+// shape, so a permissive `unknown` is the pragmatic bridge. Plugin code
+// can assign either a lucide component or an emoji/string here.
+//
+// Use `NavIcon` for plugin-level metadata (HiAiPlugin.icon). For NavItem
+// entries that feed AdminSidebar, the type system demands `string`; cast
+// with `as unknown as string` at the assignment site.
+export type NavIcon = unknown;
 
 export interface HiAiPlugin {
   id: string;

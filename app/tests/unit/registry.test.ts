@@ -10,7 +10,7 @@ import {
   registerPlugin,
   resetRegistry,
 } from '../../src/lib/plugins/registry';
-import type { HiAiPlugin, PluginPage } from '../../src/lib/plugins/types';
+import type { HiAiPlugin, NavIcon, PluginPage } from '../../src/lib/plugins/types';
 
 const stubComponent: Component = (() => ({})) as unknown as Component;
 
@@ -19,7 +19,7 @@ function makePlugin(overrides: Partial<HiAiPlugin> = {}): HiAiPlugin {
     id: 'sample',
     name: 'Sample Plugin',
     version: '1.0.0',
-    icon: '🧪',
+    icon: '🧪' as unknown as NavIcon,
     description: 'sample plugin used in tests',
     navGroups: [
       {
@@ -104,14 +104,12 @@ describe('plugin registry — getNavGroups', () => {
     registerPlugin(
       makePlugin({
         id: 'shop',
-        icon: '🛒',
         navGroups: [{ label: 'Shop', items: [{ label: 'Products', href: '/shop/products' }] }],
       }),
     );
     registerPlugin(
       makePlugin({
         id: 'social',
-        icon: '📱',
         navGroups: [{ items: [{ label: 'Posts', href: '/social/posts' }] }],
       }),
     );
@@ -121,32 +119,22 @@ describe('plugin registry — getNavGroups', () => {
     const socialGroup = groups.find((g) => g.items[0]?.href === '/social/posts');
 
     expect(shopGroup).toBeDefined();
-    expect(shopGroup?.icon).toBe('🛒');
+    expect(shopGroup?.items).toEqual([{ label: 'Products', href: '/shop/products' }]);
     expect(socialGroup).toBeDefined();
-    expect(socialGroup?.icon).toBe('📱');
+    expect(socialGroup?.items).toEqual([{ label: 'Posts', href: '/social/posts' }]);
   });
 
-  it('falls back to the plugin icon when a group omits one', () => {
+  it('passes each nav group through unchanged (no icon fallback at group level)', () => {
+    // NavGroup no longer carries an icon field in @hiai/ui; getNavGroups()
+    // simply returns each plugin's navGroups as-is.
     registerPlugin(
       makePlugin({
         id: 'analytics',
-        icon: '📊',
         navGroups: [{ items: [{ label: 'Reports', href: '/analytics' }] }],
       }),
     );
     const group = getNavGroups()[0];
-    expect(group?.icon).toBe('📊');
-  });
-
-  it('preserves a group-supplied icon when provided', () => {
-    registerPlugin(
-      makePlugin({
-        id: 'kofi',
-        icon: '☕',
-        navGroups: [{ icon: '💸', items: [{ label: 'Donations', href: '/kofi' }] }],
-      }),
-    );
-    expect(getNavGroups()[0]?.icon).toBe('💸');
+    expect(group?.items).toEqual([{ label: 'Reports', href: '/analytics' }]);
   });
 });
 

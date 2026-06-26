@@ -30,7 +30,7 @@ export const csrfMiddleware = new Elysia({ name: 'csrf' }).onBeforeHandle(
 
     // If Bearer token is present (server-to-server), bypass CSRF check
     const authHeader = request.headers.get('authorization');
-    if (authHeader && authHeader.toLowerCase().startsWith('bearer ')) {
+    if (authHeader?.toLowerCase().startsWith('bearer ')) {
       return;
     }
 

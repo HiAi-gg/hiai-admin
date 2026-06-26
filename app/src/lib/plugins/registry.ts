@@ -22,10 +22,7 @@ export function getNavGroups(): NavGroup[] {
   const groups: NavGroup[] = [];
   for (const plugin of plugins.values()) {
     for (const group of plugin.navGroups) {
-      groups.push({
-        ...group,
-        icon: group.icon ?? plugin.icon,
-      });
+      groups.push({ ...group });
     }
   }
   return groups;

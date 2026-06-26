@@ -1,7 +1,6 @@
-import type { HiAiPlugin } from './types.js';
+import type { HiAiPlugin, NavIcon } from './types.js';
 import {
   BarChart3,
-  ChartBar,
   CreditCard,
   Package,
   Receipt,
@@ -15,20 +14,19 @@ export const hiaiStorePlugin: HiAiPlugin = {
   id: 'hiai-store',
   name: 'E-Commerce',
   version: '1.0.0',
-  icon: ShoppingCart,
+  icon: ShoppingCart as unknown as NavIcon,
   description: 'Multi-tenant e-commerce platform',
   navGroups: [
     {
       label: 'E-Commerce',
-      icon: ShoppingCart,
       items: [
-        { label: 'Dashboard', href: '/shop/dashboard', icon: BarChart3 },
-        { label: 'Products', href: '/shop/products', icon: Package },
-        { label: 'Orders', href: '/shop/orders', icon: Receipt },
-        { label: 'Payments', href: '/shop/payments', icon: CreditCard },
-        { label: 'Promotions', href: '/shop/promotions', icon: Tag },
-        { label: 'Shipping', href: '/shop/shipping', icon: Truck },
-        { label: 'Analytics', href: '/shop/analytics', icon: TrendingUp },
+        { label: 'Dashboard', href: '/shop/dashboard', icon: BarChart3 as unknown as string },
+        { label: 'Products', href: '/shop/products', icon: Package as unknown as string },
+        { label: 'Orders', href: '/shop/orders', icon: Receipt as unknown as string },
+        { label: 'Payments', href: '/shop/payments', icon: CreditCard as unknown as string },
+        { label: 'Promotions', href: '/shop/promotions', icon: Tag as unknown as string },
+        { label: 'Shipping', href: '/shop/shipping', icon: Truck as unknown as string },
+        { label: 'Analytics', href: '/shop/analytics', icon: TrendingUp as unknown as string },
       ],
     },
   ],

@@ -45,10 +45,10 @@ const planColors: Record<string, string> = {
   </div>
 
   <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <StatsCard label="MRR" value={`$${((data.overview?.mrr || 0) / 100).toLocaleString()}`} icon={DollarSign} />
-    <StatsCard label="ARR" value={`$${((data.overview?.arr || 0) / 100).toLocaleString()}`} icon={TrendingUp} />
-    <StatsCard label="Churn Rate" value={`${data.overview?.churnRate || 0}%`} icon={TrendingDown} />
-    <StatsCard label="ARPU" value={`$${((data.overview?.arpu || 0) / 100).toFixed(0)}`} icon={Building2} />
+    <StatsCard label="MRR" value={`$${((data.overview?.mrr || 0) / 100).toLocaleString()}`} icon={DollarSign as unknown as string} />
+    <StatsCard label="ARR" value={`$${((data.overview?.arr || 0) / 100).toLocaleString()}`} icon={TrendingUp as unknown as string} />
+    <StatsCard label="Churn Rate" value={`${data.overview?.churnRate || 0}%`} icon={TrendingDown as unknown as string} />
+    <StatsCard label="ARPU" value={`$${((data.overview?.arpu || 0) / 100).toFixed(0)}`} icon={Building2 as unknown as string} />
   </div>
 
   <!-- MRR Trend Chart (SVG bar chart) -->
