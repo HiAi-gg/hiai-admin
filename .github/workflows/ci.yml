@@ -67,6 +67,8 @@ jobs:
       REDIS_URL: redis://localhost:6379
       BETTER_AUTH_SECRET: placeholder-must-be-at-least-32-characters-long-ok
       BETTER_AUTH_URL: http://localhost:50200
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
     steps:
       - uses: actions/checkout@v4
 
@@ -109,6 +111,8 @@ jobs:
       REDIS_URL: redis://localhost:6379
       BETTER_AUTH_SECRET: placeholder-must-be-at-least-32-characters-long-ok
       BETTER_AUTH_URL: http://localhost:50200
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
     steps:
       - uses: actions/checkout@v4
 
@@ -193,6 +197,8 @@ jobs:
       REDIS_URL: redis://localhost:6379
       BETTER_AUTH_SECRET: test-secret-must-be-at-least-32-characters-long-please
       BETTER_AUTH_URL: http://localhost:50200
+      STRIPE_SECRET_KEY: sk_test_placeholder
+      STRIPE_WEBHOOK_SECRET: whsec_placeholder
       API_PORT: "50200"
       NODE_ENV: test
       HIAI_ADMIN_API: http://localhost:50200
