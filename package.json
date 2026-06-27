@@ -1,10 +1,15 @@
 {
-  "name": "hiai-admin",
-  "version": "0.0.1",
+  "name": "@hiai-gg/hiai-admin",
+  "version": "0.0.1-beta.1",
   "packageManager": "bun@1.3.14",
-  "private": true,
-  "workspaces": ["packages/*"],
   "type": "module",
+  "description": "Central admin panel for the HiAi SaaS platform — tenant management, billing, analytics, and platform settings",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HiAi-gg/hiai-admin"
+  },
+  "license": "MIT",
+  "keywords": ["admin", "saas", "billing", "tenant", "analytics", "hiai"],
   "scripts": {
     "dev": "bun run --parallel dev:api dev:frontend",
     "dev:api": "cd backend && bun run dev",
