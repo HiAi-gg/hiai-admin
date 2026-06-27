@@ -177,8 +177,11 @@ FRONTEND_PORT=50201
 
 | Project | Relationship |
 |---|---|
-| [hiai-store](https://github.com/hiailabs/hiai-store) | E-commerce stores managed by this admin panel |
-| [hiai-post](https://github.com/hiailabs/hiai-post) | Social media publishing managed by this admin panel |
+| [hiai-store](https://github.com/HiAi-gg/hiai-store) | E-commerce module managed by this admin panel |
+| [hiai-post](https://github.com/HiAi-gg/hiai-post) | Social media publishing managed by this admin panel |
+| [hiai-docs](https://github.com/HiAi-gg/hiai-docs) | AI-native knowledge base module |
+| [hiai-observe](https://github.com/HiAi-gg/hiai-observe) | Observability platform (errors, uptime, logs, traces) |
+| [hiai-ui](https://github.com/HiAi-gg/hiai-ui) | Design system — shared UI components and tokens |
 
 ## License
 

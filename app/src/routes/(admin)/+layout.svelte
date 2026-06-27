@@ -126,7 +126,7 @@ async function handleSignOut(): Promise<void> {
   />
 
   <div class="flex flex-1 flex-col overflow-hidden">
-    <AdminHeader user={data.user}>
+    <AdminHeader user={data.user} onSignOut={handleSignOut}>
       {#snippet actions()}
         <SiteSwitcher adapters={data.adapters ?? []} currentSlug={currentSiteSlug} />
         <ViewSiteButton href={currentSiteUrl} />
