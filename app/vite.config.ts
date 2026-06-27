@@ -7,6 +7,9 @@ const API_TARGET = process.env.API_URL ?? 'http://localhost:50200';
 export default defineConfig({
   plugins: [tailwindcss(), sveltekit()],
   envDir: '..',
+  optimizeDeps: {
+    exclude: ['@hiai/ui'],
+  },
   // The app imports backend modules in-process (auth/db/services via ../../backend).
   // Keep the backend's Node/native runtime deps EXTERNAL so they are required from
   // node_modules at runtime instead of being bundled into the SvelteKit server build
