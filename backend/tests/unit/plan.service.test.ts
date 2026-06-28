@@ -1,4 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.hoisted(() => {
+  process.env.DATABASE_URL = 'postgresql://test:test@localhost:5432/test';
+  process.env.REDIS_URL = 'redis://localhost:6379';
+  process.env.BETTER_AUTH_SECRET = 'test-shared-secret-min-32-characters-long-x';
+  process.env.BETTER_AUTH_URL = 'http://localhost:50200';
+});
+
 import {
   PLAN_FEATURES,
   getPlanFeatures,
