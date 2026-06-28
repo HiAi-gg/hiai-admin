@@ -436,12 +436,12 @@ jobs:
           cache-to: type=gha,mode=max
 
   npm-publish:
-    name: Publish to npm
-    if: startsWith(github.ref, 'refs/tags/')
+    name: Publish NPM Package
     needs: [lint, typecheck, build, test]
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -450,18 +450,38 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: Install dependencies (backend + app)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Install dependencies
         run: |
           cd backend && bun install --frozen-lockfile || bun install
           cd ../app && bun install
 
-      - name: Run tests
-        run: bun run test:unit
+      - name: Set version from tag
+        run: |
+          TAG_VERSION="${{ github.ref_name }}"
+          CLEAN_VERSION="${TAG_VERSION#v}"
+          bun -e "
+            const fs = require('fs');
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            pkg.version = '${CLEAN_VERSION}';
+            fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          "
 
       - name: Publish to npm
         run: |
-          npm config set "//registry.npmjs.org/:_authToken" "${{ secrets.NPM_TOKEN }}"
-          npm publish --provenance --access public
+          version=$(node -p "require('./package.json').version")
+          if npm view "@hiai-gg/hiai-admin@${version}" version >/dev/null 2>&1; then
+            echo "::notice::@hiai-gg/hiai-admin@${version} already on npm — skipping."
+          else
+            npm publish --access public --provenance --ignore-scripts
+          fi
 
   github-release:
     name: Create GitHub Release
