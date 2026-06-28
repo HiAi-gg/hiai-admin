@@ -31,7 +31,7 @@ jobs:
             ~/.bun/install/cache
             backend/node_modules
             app/node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('backend/bun.lock', 'app/package.json') }}
+          key: bun-${{ runner.os }}-${{ hashFiles('backend/bun.lock', 'app/package.json', 'app/bun.lock') }}
           restore-keys: |
             bun-${{ runner.os }}-
 
@@ -83,7 +83,7 @@ jobs:
             ~/.bun/install/cache
             backend/node_modules
             app/node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('backend/bun.lock', 'app/package.json') }}
+          key: bun-${{ runner.os }}-${{ hashFiles('backend/bun.lock', 'app/package.json', 'app/bun.lock') }}
           restore-keys: |
             bun-${{ runner.os }}-
 
@@ -127,7 +127,7 @@ jobs:
             ~/.bun/install/cache
             backend/node_modules
             app/node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('backend/bun.lock', 'app/package.json') }}
+          key: bun-${{ runner.os }}-${{ hashFiles('backend/bun.lock', 'app/package.json', 'app/bun.lock') }}
           restore-keys: |
             bun-${{ runner.os }}-
 
@@ -217,7 +217,7 @@ jobs:
             ~/.bun/install/cache
             backend/node_modules
             app/node_modules
-          key: bun-${{ runner.os }}-${{ hashFiles('backend/bun.lock', 'app/package.json') }}
+          key: bun-${{ runner.os }}-${{ hashFiles('backend/bun.lock', 'app/package.json', 'app/bun.lock') }}
           restore-keys: |
             bun-${{ runner.os }}-
 
