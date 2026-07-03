@@ -1,14 +1,15 @@
+import { randomUUID } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import { db } from '../lib/db.js';
 import {
-  roles,
   permissions,
   rolePermissions,
+  roles,
+  subscriptions,
+  tenants,
   userRoles,
   users,
-  tenants,
-  subscriptions,
 } from './schema/index.js';
-import { randomUUID } from 'node:crypto';
 
 async function seed() {
   console.log('🌱 Seeding hiai-admin database...');
@@ -238,18 +239,33 @@ async function seed() {
   }
   console.log(`  ✅ ${rolePermMappings.length} role-permission mappings seeded`);
 
-  const tenantId = randomUUID();
-  await db
-    .insert(tenants)
-    .values({
-      id: tenantId,
-      slug: 'demo-store',
-      name: 'Demo Store',
-      email: 'admin@demo.hiai.store',
-      status: 'active',
-      plan: 'pro',
-    })
-    .onConflictDoNothing();
+  // Idempotent lookup-or-insert: on a 2nd seed run (e.g. container restart
+  // with a persistent volume) the slug conflict makes the insert a no-op,
+  // so we fall back to the existing tenant id instead of generating a new
+  // UUID that would FK-fail later when userRoles reference it.
+  const existingDemoTenant = await db
+    .select({ id: tenants.id })
+    .from(tenants)
+    .where(eq(tenants.slug, 'demo-store'))
+    .limit(1);
+  let tenantId: string;
+  if (existingDemoTenant[0]) {
+    tenantId = existingDemoTenant[0].id;
+  } else {
+    const inserted = await db
+      .insert(tenants)
+      .values({
+        id: randomUUID(),
+        slug: 'demo-store',
+        name: 'Demo Store',
+        email: 'admin@demo.hiai.store',
+        status: 'active',
+        plan: 'pro',
+      })
+      .returning();
+    if (!inserted[0]) throw new Error('Failed to insert demo tenant');
+    tenantId = inserted[0].id;
+  }
   console.log('  ✅ Demo tenant seeded');
 
   const superAdminId = 'usr_super_admin_001';

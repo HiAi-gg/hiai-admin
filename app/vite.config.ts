@@ -31,6 +31,11 @@ export default defineConfig({
   },
   server: {
     port: 50201,
+    // Vite's default host allowlist blocks every Host header except
+    // localhost. In dev we accept any host — vite is a dev-only server
+    // (not used in production builds). If a future deployment scenario
+    // needs strict host checks, gate this on NODE_ENV.
+    allowedHosts: true,
     proxy: {
       '/api/auth': {
         target: API_TARGET,
