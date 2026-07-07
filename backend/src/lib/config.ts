@@ -50,6 +50,17 @@ function sec(defaultValue: number) {
   }, z.number().int().nonnegative());
 }
 
+function num(defaultValue: number) {
+  return z.preprocess(
+    (v) => {
+      if (v === undefined || v === null || v === '') return defaultValue;
+      const n = Number(v);
+      return Number.isFinite(n) ? n : defaultValue;
+    },
+    z.number(),
+  );
+}
+
 /**
  * Build a Postgres connection URL from split DB_* variables when DATABASE_URL
  * is not provided. This lets downstream consumers (e.g. webs docker-compose)
@@ -75,20 +86,29 @@ function buildDatabaseUrl(parts: {
 }
 
 export const envSchema = z.object({
-  DATABASE_URL: z.string().min(1).or(z.string().startsWith('postgresql://')).optional(),
+  DATABASE_URL: z.string().url().optional(),
 
   // Split-form DB connection parts. When DATABASE_URL is absent, the API
   // assembles it from these. Useful in docker-compose where we do not want
   // to ship a hardcoded, percent-encoded password in plain text.
   DB_HOST: z.string().min(1).optional(),
-  DB_PORT: z.coerce.number().int().positive().optional(),
+  DB_PORT: z.preprocess(
+    (v) => (v === undefined || v === null || v === '' ? undefined : Number(v)),
+    z.number().int().positive().optional(),
+  ),
   DB_USER: z.string().min(1).optional(),
   DB_PASSWORD: z.string().min(1).optional(),
   DB_NAME: z.string().min(1).optional(),
 
-  REDIS_URL: z.string().min(1).or(z.string().startsWith('redis://')).optional(),
-  REDIS_MAX_RETRIES: z.coerce.number().int().nonnegative().optional(),
-  REDIS_RETRY_MAX_DELAY_MS: z.coerce.number().int().nonnegative().optional(),
+  REDIS_URL: z.string().startsWith('redis://'),
+  REDIS_MAX_RETRIES: z.preprocess(
+    (v) => (v === undefined || v === null || v === '' ? undefined : Number(v)),
+    z.number().int().nonnegative().optional(),
+  ),
+  REDIS_RETRY_MAX_DELAY_MS: z.preprocess(
+    (v) => (v === undefined || v === null || v === '' ? undefined : Number(v)),
+    z.number().int().nonnegative().optional(),
+  ),
 
   BETTER_AUTH_SECRET: z.string().min(32),
   BETTER_AUTH_URL: z.string().url(),
@@ -134,8 +154,8 @@ export const envSchema = z.object({
   NOVU_API_KEY: z.string().optional(),
   NOVU_API_URL: z.string().url().optional(),
 
-  API_PORT: z.coerce.number().default(50200),
-  FRONTEND_PORT: z.coerce.number().default(50201),
+  API_PORT: num(50200),
+  FRONTEND_PORT: num(50201),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
 
@@ -143,7 +163,7 @@ export const envSchema = z.object({
     .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
     .optional()
     .transform((v) => v === 'true' || v === '1'),
-  MAX_BODY_BYTES: z.coerce.number().default(1024 * 1024),
+  MAX_BODY_BYTES: num(1024 * 1024),
 
   // Minio — optional. The upload routes check `isMinioConfigured()` before
   // attempting any upload and return a clear 503 when env is missing.
@@ -158,6 +178,19 @@ export const envSchema = z.object({
   MINIO_REGION: z.string().optional(),
   MINIO_PUBLIC_URL: z.string().url().optional(),
   MINIO_BUCKET: z.string().min(1).optional(),
+}).superRefine((val, ctx) => {
+  const hasDbUrl = typeof val.DATABASE_URL === 'string';
+  const hasParts = Boolean(
+    val.DB_HOST && val.DB_PORT && val.DB_USER && val.DB_PASSWORD && val.DB_NAME,
+  );
+  if (!hasDbUrl && !hasParts) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message:
+        'Either DATABASE_URL or all of DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME must be set',
+      path: ['DATABASE_URL'],
+    });
+  }
 });
 
 export type Env = z.infer<typeof envSchema> & {

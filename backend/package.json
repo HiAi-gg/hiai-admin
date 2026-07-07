@@ -18,7 +18,7 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push --force",
+    "db:push": "bun run db:auto-push",
     "db:auto-push": "bun run src/db/auto-push.ts",
     "db:seed": "bun run src/db/seed.ts"
   },

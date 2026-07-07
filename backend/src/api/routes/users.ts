@@ -30,11 +30,13 @@ export const userRoutes = new Elysia({ prefix: '/api/users' })
     }
     const u = session.user;
     const profile = await userService.getByEmail(u.email);
+    const tenantIds = profile ? await userService.getAccessibleTenantIds(profile.id) : [];
     return {
       id: u.id,
       email: u.email,
       name: u.name,
       role: profile?.role ?? 'viewer',
+      tenantIds,
       image: u.image,
       emailVerified: u.emailVerified,
     };

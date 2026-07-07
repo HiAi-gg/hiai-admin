@@ -21,9 +21,11 @@ WORKDIR /app
 COPY --from=builder /build/app/build ./build
 COPY --from=builder /build/app/package.json ./
 COPY --from=builder /build/app/node_modules ./node_modules
-# Backend source needed at runtime — SSR imports backend modules directly
-# (e.g. hooks.server.ts -> backend/src/auth). Runtime env (DATABASE_URL etc.)
-# arrives via the `env_file` directive in docker-compose.
+# Backend source is intentionally copied: the SvelteKit SSR layer mints SSO tokens
+# using the decrypted per-adapter JWT secret (app/src/lib/server/adapter-secret.ts),
+# which must never cross an HTTP boundary, and several server routes import backend
+# services in-process. Full removal requires moving SSO minting into the backend
+# (future refactor). Runtime env (DATABASE_URL etc.) arrives via the `env_file`.
 COPY --from=builder /build/backend ./backend
 EXPOSE 3000
 CMD ["bun", "run", "build/index.js"]
