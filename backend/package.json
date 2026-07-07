@@ -1,6 +1,6 @@
 {
   "name": "hiai-admin-backend",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "scripts": {
@@ -18,7 +18,8 @@
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
+    "db:push": "drizzle-kit push --force",
+    "db:auto-push": "bun run src/db/auto-push.ts",
     "db:seed": "bun run src/db/seed.ts"
   },
   "dependencies": {

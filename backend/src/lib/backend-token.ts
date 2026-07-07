@@ -3,27 +3,16 @@ import { createHmac } from 'node:crypto';
 /**
  * Mints a backend JWT for SSO with a consumer site (HIAI_ADMIN_DIFFS §12).
  *
- * The admin proxies an adapter's API by presenting a short-lived HS256 token
+ * The admin proxies an adapter`s API by presenting a short-lived HS256 token
  * signed with the per-adapter shared secret — the same format the consumer
- * site`s own admin issues:
- *   header  { alg: 'HS256' }
- *   payload { sub, email, role, iat, exp }   (exp = iat + BACKEND_TOKEN_EXPIRES_IN_SEC)
+ * site`s own admin issues. Implemented with `node:crypto` HMAC (no `jose`).
  *
- * Implemented with `node:crypto` HMAC (no `jose` dependency). The output is a
- * standard JWT verifiable by any HS256 verifier holding the shared secret.
+ * This is the BACKEND twin of app/src/lib/server/backend-token.ts. Both keep
+ * the same role mapping table and TTL policy so the SSO tokens look identical
+ * regardless of which layer minted them.
  */
 
-/**
- * Admin -> site backend role mapping.
- *
- * Internal hiai-admin roles (super_admin, admin, editor, viewer, tenant_admin,
- * …) are mapped to the public set the consumer site understands. `tenant_admin`
- * is the historical name inside the admin platform; webs / hiai-store see
- * `admin` instead. `site_admin` is kept as an alias from an earlier iteration.
- *
- * Unmapped roles pass through unchanged so future additions don`t need a
- * code change to keep being forwarded.
- */
+/** Admin -> site-backend role mapping. */
 const ROLE_MAPPING: Record<string, string> = {
   site_admin: 'editor',
   tenant_admin: 'admin',
@@ -53,11 +42,9 @@ function base64url(input: string): string {
 /**
  * Resolve the SSO token TTL.
  *
- * 1. Explicit `opts.expiresInSec` wins (tests, ad-hoc overrides).
- * 2. Otherwise BACKEND_TOKEN_EXPIRES_IN_SEC from the runtime config — set by
- *    operators in their docker-compose / .env to scale beyond the legacy
- *    1h default (e.g. webs composes pass 86400 for 24h).
- * 3. Falling back to 3600s if neither is set.
+ *   1. Explicit `opts.expiresInSec` wins (tests / overrides).
+ *   2. Otherwise BACKEND_TOKEN_EXPIRES_IN_SEC from the runtime config.
+ *   3. Falls back to 3600 (1h) if neither is set.
  */
 function resolveExpiresInSec(opts: MintOptions): number {
   if (opts.expiresInSec !== undefined) return opts.expiresInSec;

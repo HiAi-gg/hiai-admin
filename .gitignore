@@ -53,3 +53,6 @@ todo.md.bak
 
 # CI workspace (cloned at runtime, not committed)
 packages/
+
+# Local scratch directory (Python helpers, temp notes)
+.scratch/

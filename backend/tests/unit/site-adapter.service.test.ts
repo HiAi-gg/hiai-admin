@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 interface MockChain {
   select: Mock;
@@ -55,11 +55,16 @@ const dbRow = {
   id: 'a1',
   tenantId: 't1',
   slug: 'webs-croco',
+  adapterSlug: 'webs-croco',
+  publicSlug: 'croco',
+  siteId: 'site-croco',
   name: 'Croco',
   backendUrl: 'http://api:3001',
+  apiBase: '/api/v1',
   auth: 'jwt',
   jwtSecretEncrypted: 'enc(s3cr3t)',
   modules: ['articles', 'kofi'],
+  pathMap: {},
   enabled: true,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -81,10 +86,15 @@ describe('siteAdapterService', () => {
         id: 'a1',
         tenantId: 't1',
         slug: 'webs-croco',
+        adapterSlug: 'webs-croco',
+        publicSlug: 'croco',
+        siteId: 'site-croco',
         name: 'Croco',
         backendUrl: 'http://api:3001',
+        apiBase: '/api/v1',
         auth: 'jwt',
         modules: ['articles', 'kofi'],
+        pathMap: {},
         enabled: true,
       });
       expect(dto).not.toHaveProperty('jwtSecretEncrypted');
@@ -110,9 +120,11 @@ describe('siteAdapterService', () => {
         slug: 'webs-croco',
         name: 'Croco',
         backendUrl: 'http://api:3001',
+        apiBase: '/api/v1',
         auth: 'jwt',
         jwtSecret: 's3cr3t',
         modules: ['articles', 'kofi'],
+        pathMap: {},
       });
 
       expect(chain.values).toHaveBeenCalledWith(
@@ -130,8 +142,10 @@ describe('siteAdapterService', () => {
         slug: 'webs-x',
         name: 'X',
         backendUrl: 'http://api:3001',
+        apiBase: '/api/v1',
         auth: 'jwt',
         modules: [],
+        pathMap: {},
       });
 
       expect(chain.values).toHaveBeenCalledWith(

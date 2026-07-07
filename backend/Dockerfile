@@ -1,7 +1,10 @@
 FROM oven/bun:1.3.14 AS builder
 WORKDIR /app
 COPY package.json bun.lock* ./
-RUN bun install --frozen-lockfile 2>/dev/null || bun install
+# --ignore-scripts avoids running any package postinstall (which can fail in
+# networked Docker builds when scripts reach outbound URLs). Pure Bun runtime
+# has no native bindings, so no compiled-output is needed.
+RUN bun install --ignore-scripts --frozen-lockfile 2>/dev/null || bun install --ignore-scripts
 COPY . .
 RUN bun build src/api/index.ts --outdir dist --target bun
 

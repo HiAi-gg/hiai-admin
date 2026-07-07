@@ -3,6 +3,27 @@ services:
     build: ./backend
     ports: ["50200:3000"]
     env_file: .env
+    environment:
+      # Phase 1 P0.3: provide DB parts explicitly so the API can assemble
+      # DATABASE_URL itself. Set these in .env (or as compose `environment:`
+      # overrides); either DATABASE_URL or all five DB_* parts must be set.
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: hiadmin
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: hiai_admin
+      # Phase 4 P0: explicit opt-in for drizzle-kit push. Empty = refuse to
+      # push; the entrypoint never runs `drizzle-kit push` implicitly.
+      DB_AUTO_PUSH: ${DB_AUTO_PUSH:-}
+      # Phase 1 P0.1: 30d sessions to match the legacy Dockerfile patch.
+      SESSION_EXPIRES_IN_SEC: ${SESSION_EXPIRES_IN_SEC:-2592000}
+      SESSION_UPDATE_AGE_SEC: ${SESSION_UPDATE_AGE_SEC:-86400}
+      SESSION_COOKIE_CACHE_MAX_AGE_SEC: ${SESSION_COOKIE_CACHE_MAX_AGE_SEC:-300}
+      # Phase 1 P0.2: 24h backend (SSO) tokens.
+      BACKEND_TOKEN_EXPIRES_IN_SEC: ${BACKEND_TOKEN_EXPIRES_IN_SEC:-86400}
+      # Phase 2 P0.4: infinite Redis retry (0) capped at 30s backoff.
+      REDIS_MAX_RETRIES: ${REDIS_MAX_RETRIES:-0}
+      REDIS_RETRY_MAX_DELAY_MS: ${REDIS_RETRY_MAX_DELAY_MS:-30000}
     depends_on: [postgres, redis]
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
@@ -17,6 +38,11 @@ services:
       dockerfile: ./app/Dockerfile
     ports: ["50201:3000"]
     env_file: .env
+    environment:
+      # Phase 2 P1: NO backend env placeholders needed at build time anymore
+      # (config.ts is lazy; auth init is lazy). Real values arrive at runtime
+      # via env_file.
+      API_URL: http://localhost:50200
     depends_on: [hiai-admin-api]
     restart: unless-stopped
 
