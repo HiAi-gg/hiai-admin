@@ -1,4 +1,9 @@
-import { S3Client, HeadBucketCommand, CreateBucketCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  HeadBucketCommand,
+  CreateBucketCommand,
+  PutObjectCommand,
+} from '@aws-sdk/client-s3';
 import { z } from 'zod';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -58,10 +63,13 @@ function num(defaultValue: number) {
 /** Boolean from env string with explicit default. */
 function boolOpt(defaultVal: boolean) {
   return z
-    .preprocess((v) => {
-      if (v === undefined || v === null || v === '') return defaultVal ? 'true' : 'false';
-      return v;
-    }, z.union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')]))
+    .preprocess(
+      (v) => {
+        if (v === undefined || v === null || v === '') return defaultVal ? 'true' : 'false';
+        return v;
+      },
+      z.union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')]),
+    )
     .transform((v) => v === 'true' || v === '1');
 }
 
@@ -217,7 +225,8 @@ export async function uploadFile(
   contentType: string,
 ): Promise<string> {
   if (!bucket) throw new ObjectStorageError('bucket is required');
-  if (!key || key.startsWith('/')) throw new ObjectStorageError('key must be a relative object path');
+  if (!key || key.startsWith('/'))
+    throw new ObjectStorageError('key must be a relative object path');
   if (!buffer || buffer.length === 0) throw new ObjectStorageError('buffer is empty');
   if (!contentType) throw new ObjectStorageError('contentType is required');
 
@@ -261,7 +270,10 @@ async function ensureBucketFor(bucket: string): Promise<void> {
   } catch (err: unknown) {
     const e = err as Record<string, unknown>;
     // HeadBucket throws NotFound when the bucket does not exist.
-    if (e?.name === 'NotFound' || (e?.$metadata as Record<string, unknown>)?.httpStatusCode === 404) {
+    if (
+      e?.name === 'NotFound' ||
+      (e?.$metadata as Record<string, unknown>)?.httpStatusCode === 404
+    ) {
       await client.send(new CreateBucketCommand({ Bucket: bucket }));
       log.info({ bucket }, 'Created object storage bucket');
     } else {

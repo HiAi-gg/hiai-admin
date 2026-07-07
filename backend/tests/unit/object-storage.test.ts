@@ -15,7 +15,9 @@ vi.mock('@aws-sdk/client-s3', () => {
     return ctor;
   }
   return {
-    S3Client: vi.fn(function () { return { send: mockSend }; }),
+    S3Client: vi.fn(function () {
+      return { send: mockSend };
+    }),
     HeadBucketCommand: makeCommand('HeadBucket'),
     CreateBucketCommand: makeCommand('CreateBucket'),
     PutObjectCommand: makeCommand('PutObject'),

@@ -8,7 +8,12 @@ import { userService } from '../../modules/user/user.service.js';
 import { joinTenantSchema, updateProfileSchema } from '../validation/user.schema.js';
 import { auditService } from '../../modules/audit/audit.service.js';
 import { AppError, ErrorCode } from '../../lib/errors.js';
-import { HIAI_ADMIN_BUCKET, ObjectStorageError, isObjectStorageConfigured, uploadFile } from '../../lib/object-storage.js';
+import {
+  HIAI_ADMIN_BUCKET,
+  ObjectStorageError,
+  isObjectStorageConfigured,
+  uploadFile,
+} from '../../lib/object-storage.js';
 
 /** Max avatar size: 1 MB (matches the default MAX_BODY_BYTES). */
 const MAX_AVATAR_BYTES = 1024 * 1024;
@@ -106,7 +111,7 @@ export const profileRoutes = new Elysia({ prefix: '/api/profile' })
    * POST /api/profile/avatar
    *
    * multipart/form-data with a single `file` field. Uploads the image to
-    * object storage (bucket `hiai-admin`, prefix `avatars/`) and persists the public
+   * object storage (bucket `hiai-admin`, prefix `avatars/`) and persists the public
    * URL on the platform user's `avatar_url` column. The legacy `PUT /`
    * `avatarUrl` field is also kept in sync so the audit trail and any
    * downstream consumers continue to work.

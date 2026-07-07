@@ -7,7 +7,12 @@ import { authMiddleware } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
 import { updateSettingSchema } from '../validation/settings.schema.js';
 import type { PlatformUser } from '../middleware/audit.js';
-import { HIAI_ADMIN_BUCKET, ObjectStorageError, isObjectStorageConfigured, uploadFile } from '../../lib/object-storage.js';
+import {
+  HIAI_ADMIN_BUCKET,
+  ObjectStorageError,
+  isObjectStorageConfigured,
+  uploadFile,
+} from '../../lib/object-storage.js';
 import { ErrorCode } from '../../lib/errors.js';
 
 /** Max logo size: 1 MB (matches the default MAX_BODY_BYTES). */
@@ -99,7 +104,7 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
    * POST /api/settings/logo
    *
    * multipart/form-data with a single `file` field. Uploads the image to
-    * object storage (bucket `hiai-admin`, prefix `logos/`) and persists the resulting
+   * object storage (bucket `hiai-admin`, prefix `logos/`) and persists the resulting
    * public URL into the `settings` table under the `logo_url` key. Restricted
    * to super_admin — the platform logo is global branding.
    */
