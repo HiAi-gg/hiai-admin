@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-07-07
+
+### Changed
+
+- **Clean release retry** after partially failed v0.0.3 tag (CI tag run failed; Docker push, npm publish, and GitHub Release did not complete).
+- Includes all SeaweedFS/Object Storage migration content from v0.0.3.
+- Fixed backend Dockerfile for CI context (`f561340`).
+- Fixed Biome formatting across the codebase.
+
 ## [0.0.3] - 2026-07-07
 
 ### Changed
