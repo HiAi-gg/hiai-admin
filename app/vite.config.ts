@@ -18,12 +18,7 @@ export default defineConfig({
     // Keep only native/runtime deps external — ESM libraries (better-auth,
     // elysia, drizzle-orm, stripe, etc.) bundle fine with Vite's SSR and
     // cause "writeBundle unresolved Promise" deadlocks when externalized.
-    external: [
-      'pino',
-      'pino-pretty',
-      'postgres',
-      'ioredis',
-    ],
+    external: ['pino', 'pino-pretty', 'postgres', 'ioredis'],
   },
   server: {
     port: 50201,
