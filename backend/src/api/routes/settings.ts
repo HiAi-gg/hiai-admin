@@ -7,7 +7,7 @@ import { authMiddleware } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
 import { updateSettingSchema } from '../validation/settings.schema.js';
 import type { PlatformUser } from '../middleware/audit.js';
-import { HIAI_ADMIN_BUCKET, MinioError, isMinioConfigured, uploadFile } from '../../lib/minio.js';
+import { HIAI_ADMIN_BUCKET, ObjectStorageError, isObjectStorageConfigured, uploadFile } from '../../lib/object-storage.js';
 import { ErrorCode } from '../../lib/errors.js';
 
 /** Max logo size: 1 MB (matches the default MAX_BODY_BYTES). */
@@ -99,17 +99,17 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
    * POST /api/settings/logo
    *
    * multipart/form-data with a single `file` field. Uploads the image to
-   * Minio (bucket `hiai-admin`, prefix `logos/`) and persists the resulting
+    * object storage (bucket `hiai-admin`, prefix `logos/`) and persists the resulting
    * public URL into the `settings` table under the `logo_url` key. Restricted
    * to super_admin — the platform logo is global branding.
    */
   .post(
     '/logo',
     async (ctx: any) => {
-      if (!isMinioConfigured()) {
+      if (!isObjectStorageConfigured()) {
         ctx.set.status = 503;
         return {
-          error: 'File uploads are not configured on this server (MINIO_* env missing).',
+          error: 'File uploads are not configured on this server (OBJECT_STORAGE_* env missing).',
           code: ErrorCode.INTERNAL_ERROR,
         };
       }
@@ -156,7 +156,7 @@ export const settingsRoutes = new Elysia({ prefix: '/api/settings' })
       try {
         url = await uploadFile(HIAI_ADMIN_BUCKET, key, buffer, contentType);
       } catch (err) {
-        if (err instanceof MinioError) {
+        if (err instanceof ObjectStorageError) {
           ctx.set.status = 502;
           return { error: err.message, code: ErrorCode.UPSTREAM_ERROR };
         }

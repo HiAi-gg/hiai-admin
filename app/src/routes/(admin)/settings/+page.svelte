@@ -308,7 +308,7 @@ function handleToggle(key: string, current: boolean) {
     <div class="p-4 border-b">
       <h2 class="text-lg font-semibold">Branding</h2>
       <p class="text-xs text-muted-foreground">
-        Upload the platform logo. Stored in Minio under <code>logos/</code> and exposed
+        Upload the platform logo. Stored in object storage under <code>logos/</code> and exposed
         as the <code>logo_url</code> setting.
       </p>
     </div>

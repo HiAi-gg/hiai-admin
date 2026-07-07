@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-07-07
+
+### Changed
+
+- **BREAKING**: Replaced MinIO with SeaweedFS S3-compatible object storage.
+  - New env vars: `OBJECT_STORAGE_*` (replaces `MINIO_*`).
+  - New npm dependency: `@aws-sdk/client-s3` (removed `minio`).
+  - `backend/src/lib/minio.ts` → `backend/src/lib/object-storage.ts`.
+  - Exports renamed: `MinioError` → `ObjectStorageError`, `isMinioConfigured` → `isObjectStorageConfigured`.
+  - Internal API changed to AWS SDK v3 commands (`S3Client`, `HeadBucketCommand`, `CreateBucketCommand`, `PutObjectCommand`).
+  - Infra: `shared-minio` replaced by `shared-seaweedfs` in docker compose.
+  - See updated `.env.example` for new variables.
+- Root/backend package versions bumped to 0.0.3.
+
 ## [0.0.2] - 2026-07-07
 
 ### Changed
@@ -50,5 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/vlgalib/hiai-admin/compare/v0.0.1...HEAD
+[Unreleased]: https://github.com/vlgalib/hiai-admin/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/vlgalib/hiai-admin/releases/tag/v0.0.3
+[0.0.2]: https://github.com/vlgalib/hiai-admin/releases/tag/v0.0.2
 [0.0.1]: https://github.com/vlgalib/hiai-admin/releases/tag/v0.0.1

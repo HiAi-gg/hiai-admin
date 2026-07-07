@@ -173,6 +173,33 @@ API_PORT=50200
 FRONTEND_PORT=50201
 ```
 
+### Object Storage (`OBJECT_STORAGE_*`)
+
+| Variable | Default | Description |
+|---|---|---|
+| `OBJECT_STORAGE_ENDPOINT` | `localhost:8333` | SeaweedFS S3 endpoint host:port |
+| `OBJECT_STORAGE_PORT` | `8333` | S3 API port |
+| `OBJECT_STORAGE_USE_SSL` | `false` | Whether to use HTTPS for S3 connections |
+| `OBJECT_STORAGE_ACCESS_KEY` | `seaweedfs` | S3 access key |
+| `OBJECT_STORAGE_SECRET_KEY` | `seaweedfs` | S3 secret key |
+| `OBJECT_STORAGE_REGION` | `us-east-1` | S3 region (ignored by SeaweedFS but required by SDK) |
+| `OBJECT_STORAGE_BUCKET` | `hiai-admin` | Bucket name for admin uploads |
+| `OBJECT_STORAGE_PUBLIC_URL` | — | Public CDN/base URL for generated object URLs (optional) |
+| `OBJECT_STORAGE_FORCE_PATH_STYLE` | `true` | Path-style addressing (`http://endpoint/bucket/key`) — required for SeaweedFS |
+
+## Object Storage
+
+hiai-admin uses **SeaweedFS** as its S3-compatible object storage backend, replacing the previous MinIO integration. This decision was driven by MinIO support concerns in our self-hosted stack; standardising on SeaweedFS provides a consistent S3-compatible layer across the ecosystem.
+
+- **Protocol:** S3-compatible (AWS SDK v3 via `@aws-sdk/client-s3`)
+- **Bucket:** `hiai-admin`
+- **Upload endpoints:**
+  - `POST /api/profile/avatar` — user avatar upload (stored under `avatars/`)
+  - `POST /api/settings/logo` — platform logo upload (stored under `logos/`)
+- **Authentication:** Each upload is guarded by RBAC (`super_admin` for logo, authenticated user for avatar) and the checksum-verified by the backend before returning a public URL.
+- **Server-side configuration:** All `OBJECT_STORAGE_*` variables are optional — when unset, the upload endpoints return HTTP 503 with a clear message and the UI gracefully shows "upload disabled".
+- **Infrastructure note:** hiai-admin's own `docker-compose.yml` does not run object storage. SeaweedFS is deployed as part of the shared infrastructure (`infra/docker/docker-compose.shared.yml`) on ports **9020** (S3 API), **9021** (master), and **9022** (volume). Local development can point at the shared stack or a standalone SeaweedFS instance.
+
 ## Related Projects
 
 | Project | Relationship |

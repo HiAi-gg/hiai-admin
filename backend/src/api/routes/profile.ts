@@ -8,7 +8,7 @@ import { userService } from '../../modules/user/user.service.js';
 import { joinTenantSchema, updateProfileSchema } from '../validation/user.schema.js';
 import { auditService } from '../../modules/audit/audit.service.js';
 import { AppError, ErrorCode } from '../../lib/errors.js';
-import { HIAI_ADMIN_BUCKET, MinioError, isMinioConfigured, uploadFile } from '../../lib/minio.js';
+import { HIAI_ADMIN_BUCKET, ObjectStorageError, isObjectStorageConfigured, uploadFile } from '../../lib/object-storage.js';
 
 /** Max avatar size: 1 MB (matches the default MAX_BODY_BYTES). */
 const MAX_AVATAR_BYTES = 1024 * 1024;
@@ -106,7 +106,7 @@ export const profileRoutes = new Elysia({ prefix: '/api/profile' })
    * POST /api/profile/avatar
    *
    * multipart/form-data with a single `file` field. Uploads the image to
-   * Minio (bucket `hiai-admin`, prefix `avatars/`) and persists the public
+    * object storage (bucket `hiai-admin`, prefix `avatars/`) and persists the public
    * URL on the platform user's `avatar_url` column. The legacy `PUT /`
    * `avatarUrl` field is also kept in sync so the audit trail and any
    * downstream consumers continue to work.
@@ -114,12 +114,13 @@ export const profileRoutes = new Elysia({ prefix: '/api/profile' })
   .post(
     '/avatar',
     async (ctx: any) => {
-      if (!isMinioConfigured()) {
-        // Missing Minio config is a server-side setup issue, not a downstream
-        // outage — surface 503 so the UI can show a clear "uploads disabled" hint.
+      if (!isObjectStorageConfigured()) {
+        // Missing object storage config is a server-side setup issue, not a
+        // downstream outage — surface 503 so the UI can show a clear
+        // "uploads disabled" hint.
         ctx.set.status = 503;
         return {
-          error: 'File uploads are not configured on this server (MINIO_* env missing).',
+          error: 'File uploads are not configured on this server (OBJECT_STORAGE_* env missing).',
           code: ErrorCode.INTERNAL_ERROR,
         };
       }
@@ -174,7 +175,7 @@ export const profileRoutes = new Elysia({ prefix: '/api/profile' })
       try {
         url = await uploadFile(HIAI_ADMIN_BUCKET, key, buffer, contentType);
       } catch (err) {
-        if (err instanceof MinioError) {
+        if (err instanceof ObjectStorageError) {
           ctx.set.status = 502;
           return { error: err.message, code: ErrorCode.UPSTREAM_ERROR };
         }

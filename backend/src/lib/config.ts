@@ -163,19 +163,27 @@ export const envSchema = z
       .transform((v) => v === 'true' || v === '1'),
     MAX_BODY_BYTES: num(1024 * 1024),
 
-    // Minio — optional. The upload routes check `isMinioConfigured()` before
-    // attempting any upload and return a clear 503 when env is missing.
-    MINIO_ENDPOINT: z.string().min(1).optional(),
-    MINIO_PORT: z.coerce.number().int().positive().optional(),
-    MINIO_USE_SSL: z
+    // Object storage (SeaweedFS S3-compatible) — optional. The upload routes
+    // check `isObjectStorageConfigured()` before attempting any upload and
+    // return a clear 503 when env is missing.
+    OBJECT_STORAGE_ENDPOINT: z.string().min(1).optional(),
+    OBJECT_STORAGE_PORT: z.preprocess(
+      (v) => (v === undefined || v === null || v === '' ? undefined : Number(v)),
+      z.number().int().positive().optional(),
+    ),
+    OBJECT_STORAGE_USE_SSL: z
       .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
       .optional()
       .transform((v) => v === 'true' || v === '1'),
-    MINIO_ACCESS_KEY: z.string().min(1).optional(),
-    MINIO_SECRET_KEY: z.string().min(1).optional(),
-    MINIO_REGION: z.string().optional(),
-    MINIO_PUBLIC_URL: z.string().url().optional(),
-    MINIO_BUCKET: z.string().min(1).optional(),
+    OBJECT_STORAGE_ACCESS_KEY: z.string().min(1).optional(),
+    OBJECT_STORAGE_SECRET_KEY: z.string().min(1).optional(),
+    OBJECT_STORAGE_REGION: z.string().optional(),
+    OBJECT_STORAGE_PUBLIC_URL: z.string().url().optional(),
+    OBJECT_STORAGE_BUCKET: z.string().min(1).optional(),
+    OBJECT_STORAGE_FORCE_PATH_STYLE: z
+      .union([z.literal('true'), z.literal('false'), z.literal('1'), z.literal('0')])
+      .optional()
+      .transform((v) => v === 'true' || v === '1'),
   })
   .superRefine((val, ctx) => {
     const hasDbUrl = typeof val.DATABASE_URL === 'string';

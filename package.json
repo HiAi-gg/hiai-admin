@@ -1,6 +1,6 @@
 {
   "name": "@hiai-gg/hiai-admin",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "packageManager": "bun@1.3.14",
   "type": "module",
   "description": "Central admin panel for the HiAi SaaS platform — tenant management, billing, analytics, and platform settings",
