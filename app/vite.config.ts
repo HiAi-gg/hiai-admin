@@ -15,18 +15,14 @@ export default defineConfig({
   // node_modules at runtime instead of being bundled into the SvelteKit server build
   // (bundling pino's worker-transport breaks with `__dirname is not defined` in ESM).
   ssr: {
+    // Keep only native/runtime deps external — ESM libraries (better-auth,
+    // elysia, drizzle-orm, stripe, etc.) bundle fine with Vite's SSR and
+    // cause "writeBundle unresolved Promise" deadlocks when externalized.
     external: [
       'pino',
       'pino-pretty',
       'postgres',
       'ioredis',
-      'better-auth',
-      '@better-auth/kysely-adapter',
-      'kysely',
-      'drizzle-orm',
-      'elysia',
-      '@elysiajs/cors',
-      'stripe',
     ],
   },
   server: {

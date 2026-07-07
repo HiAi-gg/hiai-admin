@@ -9,6 +9,9 @@
     "url": "https://github.com/HiAi-gg/hiai-admin"
   },
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": ["admin", "saas", "billing", "tenant", "analytics", "hiai"],
   "scripts": {
     "dev": "bun run --parallel dev:api dev:frontend",
