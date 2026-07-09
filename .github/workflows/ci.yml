@@ -475,6 +475,9 @@ jobs:
             fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           "
 
+      - name: Install sigstore for npm provenance
+        run: npm install -g sigstore
+
       - name: Publish to npm
         run: |
           version=$(node -p "require('./package.json').version")
