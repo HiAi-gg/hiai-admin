@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-07-09
+
+### Added
+
+- **@hiai/ui 0.1.1 integration**: App frontend now depends on published `@hiai-gg/hiai-ui@0.1.1` via `@hiai/ui` alias, replacing the local `file:` override.
+- **Select unification**: All 15 native `<select>` elements across the app migrated to hiai-ui `SelectRoot`/`SelectTrigger`/`SelectContent`/`SelectItem` primitives (users, tenants, settings, security, RBAC, sites, articles pages).
+- **NotificationBell Popover**: Replaced bespoke click/outside/Escape popover logic with hiai-ui `Popover` primitive.
+- **EditorToolbar DropdownMenu/Popover**: 6 bespoke toolbar panels migrated to hiai-ui `DropdownMenu` (3) and `Popover` (3) primitives, removing ~170 lines of manual DOM event handling.
+
+### Changed
+
+- Root/backend package versions bumped to 0.0.5.
+
 ## [0.0.4] - 2026-07-07
 
 ### Changed
@@ -73,7 +86,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/vlgalib/hiai-admin/compare/v0.0.3...HEAD
-[0.0.3]: https://github.com/vlgalib/hiai-admin/releases/tag/v0.0.3
-[0.0.2]: https://github.com/vlgalib/hiai-admin/releases/tag/v0.0.2
-[0.0.1]: https://github.com/vlgalib/hiai-admin/releases/tag/v0.0.1
+[Unreleased]: https://github.com/HiAi-gg/hiai-admin/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/HiAi-gg/hiai-admin/releases/tag/v0.0.5
+[0.0.4]: https://github.com/HiAi-gg/hiai-admin/releases/tag/v0.0.4
+[0.0.3]: https://github.com/HiAi-gg/hiai-admin/releases/tag/v0.0.3
+[0.0.2]: https://github.com/HiAi-gg/hiai-admin/releases/tag/v0.0.2
+[0.0.1]: https://github.com/HiAi-gg/hiai-admin/releases/tag/v0.0.1
