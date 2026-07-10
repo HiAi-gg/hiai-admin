@@ -41,9 +41,26 @@ Tests
 - `bunx vitest run backend/tests/integration/site-invites.test.ts`
   - failed in this sandbox due tempdir write restriction (`ReadOnlyFileSystem`).
 - `cd /mnt/ai_data/projects/hiai-admin/backend && bun run vitest run tests/integration/site-invites.test.ts`
-  - passed: `1 passed (1)` file, `4 passed (4)` tests.
+  - passed: `1 passed (1)` file, `5 passed (5)` tests.
 - `cd /mnt/ai_data/projects/hiai-admin && bun run typecheck`
   - passed with non-blocking pre-existing Svelte warnings; no errors.
+
+Concurrency Safety Fix (important finding from reviewer)
+- `backend/src/modules/site-membership/site-invite.service.ts` now uses atomic claim semantics:
+  - Replaced pre-read + later update flow with:
+    - `UPDATE site_invites SET accepted_at = NOW()`
+    - `WHERE token_hash = ? AND accepted_at IS NULL AND email = ? AND expires_at >= NOW() AND role NOT IN ('super_admin','tenant_admin')`
+    - `RETURNING` invite payload for immediate validation and downstream insert work.
+  - On empty claim result, service now performs a deterministic follow-up select on `token_hash` to keep existing error semantics:
+    - `NOT_FOUND`
+    - `Invite has already been accepted`
+    - `Invite has expired`
+    - `Invite email does not match current session`
+    - `Invite role is not allowed`
+- Added a focused race/concurrency regression test in `backend/tests/integration/site-invites.test.ts`:
+  - `only allows one concurrent acceptance attempt for a single-use invite`
+  - Exercises two parallel `acceptInvite()` calls with the same invite token and asserts one success plus one `Invite has already been accepted` rejection.
+- Result: single-use guarantee now enforced at service/repository boundary and compatible with existing error behavior.
 
 Concerns
 - `bunx` could not be used in this environment due filesystem restrictions, so the exact command in the task brief could not be executed directly.

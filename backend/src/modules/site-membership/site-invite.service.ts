@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, gte, isNull, ne } from 'drizzle-orm';
 import { AppError, badRequest, ErrorCode } from '../../lib/errors.js';
 import { withTransaction } from '../../lib/db.js';
 import { auditService } from '../audit/audit.service.js';
@@ -40,7 +40,19 @@ export const siteInviteService = {
 
     return withTransaction(async (tx) => {
       const [invite] = await tx
-        .select({
+        .update(siteInvites)
+        .set({ acceptedAt: now })
+        .where(
+            and(
+              eq(siteInvites.tokenHash, tokenHash),
+              isNull(siteInvites.acceptedAt),
+              eq(siteInvites.email, input.email),
+              gte(siteInvites.expiresAt, now),
+              ne(siteInvites.role, 'super_admin'),
+              ne(siteInvites.role, 'tenant_admin'),
+            ),
+        )
+        .returning({
           id: siteInvites.id,
           tenantId: siteInvites.tenantId,
           siteAdapterId: siteInvites.siteAdapterId,
@@ -49,28 +61,44 @@ export const siteInviteService = {
           permissions: siteInvites.permissions,
           acceptedAt: siteInvites.acceptedAt,
           expiresAt: siteInvites.expiresAt,
-        })
-        .from(siteInvites)
-        .where(and(eq(siteInvites.tokenHash, tokenHash)))
-        .limit(1);
+        });
 
       if (!invite) {
-        throw new AppError({ code: ErrorCode.NOT_FOUND, message: 'Invite not found' });
+        const [inviteSnapshot] = await tx
+          .select({
+            id: siteInvites.id,
+            tenantId: siteInvites.tenantId,
+            siteAdapterId: siteInvites.siteAdapterId,
+            email: siteInvites.email,
+            role: siteInvites.role,
+            permissions: siteInvites.permissions,
+            acceptedAt: siteInvites.acceptedAt,
+            expiresAt: siteInvites.expiresAt,
+          })
+          .from(siteInvites)
+          .where(eq(siteInvites.tokenHash, tokenHash))
+          .limit(1);
+
+        if (!inviteSnapshot) {
+          throw new AppError({ code: ErrorCode.NOT_FOUND, message: 'Invite not found' });
+        }
+
+        if (inviteSnapshot.acceptedAt) {
+          throw badRequest('Invite has already been accepted');
+        }
+
+        if (inviteSnapshot.expiresAt && inviteSnapshot.expiresAt < now) {
+          throw badRequest('Invite has expired');
+        }
+
+        if (inviteSnapshot.email !== input.email) {
+          throw badRequest('Invite email does not match current session');
+        }
+
+        throw badRequest('Invite role is not allowed');
       }
 
-      if (invite.acceptedAt) {
-        throw badRequest('Invite has already been accepted');
-      }
-
-      if (invite.expiresAt && invite.expiresAt < now) {
-        throw badRequest('Invite has expired');
-      }
-
-      if (invite.email !== input.email) {
-        throw badRequest('Invite email does not match current session');
-      }
-
-    const role = resolveInviteRole(invite.role ?? 'viewer');
+      const role = resolveInviteRole(invite.role ?? 'viewer');
       const permissions = invite.permissions ?? [];
 
       await tx
@@ -106,8 +134,6 @@ export const siteInviteService = {
             permissions,
           },
         });
-
-      await tx.update(siteInvites).set({ acceptedAt: now }).where(eq(siteInvites.id, invite.id));
 
       await auditService.record({
         actorId: input.userId,

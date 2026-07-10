@@ -230,7 +230,7 @@ describe('site invite security regressions', () => {
     });
 
     expect(dbMock.insert).not.toHaveBeenCalled();
-    expect(dbMock.update).not.toHaveBeenCalled();
+    expect(dbMock.update).toHaveBeenCalledTimes(1);
   });
 
   it('accepts an unexpired single-use invite for the exact session email', async () => {
@@ -242,7 +242,7 @@ describe('site invite security regressions', () => {
       expiresAt: new Date(Date.now() + 3600_000),
       acceptedAt: null,
     });
-    dbState.selectCalls.rows.push([inviteRow]);
+    dbState.updateCalls.rows.push([{ ...inviteRow, acceptedAt: new Date() }]);
     dbState.insertCalls.rows.push([
       { userId: 'user-1', tenantId: 'tenant-1', role: 'editor', permissions: ['articles:read'] },
     ]);
@@ -255,7 +255,6 @@ describe('site invite security regressions', () => {
         permissions: ['articles:read'],
       },
     ]);
-    dbState.updateCalls.rows.push([{ id: 'invite-1', acceptedAt: new Date() }]);
     auditRecordSpy.mockResolvedValue({ id: 'log-1' } as any);
 
     const result = await siteInviteService.acceptInvite({
@@ -284,6 +283,88 @@ describe('site invite security regressions', () => {
     expect(auditLog.newValue).not.toHaveProperty('token');
   });
 
+  it('only allows one concurrent acceptance attempt for a single-use invite', async () => {
+    const token = 'race-token';
+
+    dbState.updateCalls.rows.push(
+      [
+        {
+          id: 'invite-1',
+          tenantId: 'tenant-1',
+          siteAdapterId: 'adapter-1',
+          email: 'member@hiai.local',
+          role: 'viewer',
+          permissions: ['articles:read'],
+          acceptedAt: new Date(),
+          expiresAt: new Date(Date.now() + 3600_000),
+        },
+      ],
+      [],
+    );
+    dbState.selectCalls.rows.push([
+      {
+        id: 'invite-1',
+        tenantId: 'tenant-1',
+        siteAdapterId: 'adapter-1',
+        email: 'member@hiai.local',
+        role: 'viewer',
+        permissions: ['articles:read'],
+        acceptedAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600_000),
+      },
+    ]);
+    dbState.insertCalls.rows.push([
+      { userId: 'user-1', tenantId: 'tenant-1', role: 'viewer', permissions: ['articles:read'] },
+    ]);
+    dbState.insertCalls.rows.push([
+      {
+        userId: 'user-1',
+        siteAdapterId: 'adapter-1',
+        globalRole: 'viewer',
+        role: 'viewer',
+        permissions: ['articles:read'],
+      },
+    ]);
+    auditRecordSpy.mockResolvedValue({ id: 'log-1' } as any);
+
+    const [firstResult, secondResult] = await Promise.allSettled([
+      siteInviteService.acceptInvite({
+        token,
+        email: 'member@hiai.local',
+        userId: 'user-1',
+        actorEmail: 'member@hiai.local',
+      }),
+      siteInviteService.acceptInvite({
+        token,
+        email: 'member@hiai.local',
+        userId: 'user-1',
+        actorEmail: 'member@hiai.local',
+      }),
+    ]);
+
+    if (firstResult.status === 'fulfilled') {
+      expect(firstResult.value).toMatchObject({
+        status: 'accepted',
+        tenantId: 'tenant-1',
+        siteAdapterId: 'adapter-1',
+        role: 'viewer',
+      });
+    } else {
+      throw new Error('First accept should have succeeded');
+    }
+
+    if (secondResult.status === 'rejected') {
+      expect(secondResult.reason).toMatchObject({
+        message: 'Invite has already been accepted',
+        code: 'BAD_REQUEST',
+      });
+    } else {
+      throw new Error('Second accept should have been rejected');
+    }
+    expect(dbMock.update).toHaveBeenCalledTimes(2);
+    expect(dbMock.insert).toHaveBeenCalledTimes(2);
+  });
+
   it('rejects replay, expired token and mismatched email', async () => {
     const token = 'timed-token';
     const expiredToken = 'expired-token';
@@ -295,6 +376,7 @@ describe('site invite security regressions', () => {
         acceptedAt: new Date('2026-01-01T00:00:00Z'),
       }),
     ]);
+    dbState.updateCalls.rows.push([]);
     await expect(
       siteInviteService.acceptInvite({
         token,
@@ -324,6 +406,7 @@ describe('site invite security regressions', () => {
       message: 'Invite has expired',
       code: 'BAD_REQUEST',
     });
+    dbState.updateCalls.rows.push([]);
 
     dbState.selectCalls.rows.push([
       makeInviteRow({
@@ -344,6 +427,6 @@ describe('site invite security regressions', () => {
     });
 
     expect(dbMock.insert).not.toHaveBeenCalled();
-    expect(dbMock.update).not.toHaveBeenCalled();
+    expect(dbMock.update).toHaveBeenCalledTimes(3);
   });
 });
