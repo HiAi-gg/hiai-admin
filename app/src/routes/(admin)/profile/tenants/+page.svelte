@@ -1,12 +1,5 @@
 <script lang="ts">
 import { invalidateAll } from '$app/navigation';
-import {
-  SelectRoot,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@hiai/ui/components/ui/select/index';
 import type { PageData } from './$types';
 
 let { data }: { data: PageData } = $props();
@@ -14,58 +7,10 @@ let { data }: { data: PageData } = $props();
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 const tenants = $derived(data.tenants ?? []);
 
-let slug = $state('');
-let role = $state<'viewer' | 'editor' | 'tenant_admin' | 'super_admin'>('viewer');
-// biome-ignore lint/correctness/noUnusedVariables: used in template
-let joining = $state(false);
-// biome-ignore lint/correctness/noUnusedVariables: used in template
-let joiningError = $state('');
-let joiningSuccess = $state('');
-
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 let leavingId = $state<string | null>(null);
 // biome-ignore lint/correctness/noUnusedVariables: used in template
 let leaveError = $state('');
-
-// biome-ignore lint/correctness/noUnusedVariables: form submit handler
-async function joinTenant(event: Event) {
-  event.preventDefault();
-  joiningError = '';
-  joiningSuccess = '';
-  if (!slug.trim()) {
-    joiningError = 'Tenant slug is required';
-    return;
-  }
-  joining = true;
-  try {
-    const res = await fetch('/api/profile/tenants/join', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slug: slug.trim(), role }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      throw new Error(body.error ?? 'Failed to join tenant');
-    }
-    const status = body?.data?.status;
-    if (status === 'joined') {
-      joiningSuccess = `Joined ${body.data.name}`;
-    } else if (status === 'already_member') {
-      joiningError = 'You are already a member of this tenant';
-    } else if (status === 'not_found') {
-      joiningError = 'No tenant with that slug exists';
-    } else {
-      joiningSuccess = 'Request completed';
-    }
-    slug = '';
-    await invalidateAll();
-    setTimeout(() => (joiningSuccess = ''), 3000);
-  } catch (err) {
-    joiningError = err instanceof Error ? err.message : 'Failed to join tenant';
-  } finally {
-    joining = false;
-  }
-}
 
 // biome-ignore lint/correctness/noUnusedVariables: button onclick handler
 async function leaveTenant(tenantId: string, name: string) {
@@ -101,63 +46,9 @@ async function leaveTenant(tenantId: string, name: string) {
   <header>
     <h1 class="text-2xl font-bold">Your tenants</h1>
     <p class="text-muted-foreground">
-      Tenants you have access to. Join an existing tenant by its slug.
+      Tenants you have access to.
     </p>
   </header>
-
-  <section class="rounded-lg border bg-card">
-    <header class="border-b p-4">
-      <h2 class="text-lg font-semibold">Join a tenant</h2>
-      <p class="text-xs text-muted-foreground">
-        Enter the tenant's slug (a super admin or site admin can share it with you).
-      </p>
-    </header>
-    <form onsubmit={joinTenant} class="space-y-4 p-4">
-      <div class="grid gap-4 sm:grid-cols-3">
-        <div class="space-y-1.5 sm:col-span-2">
-          <label for="join-slug" class="block text-sm font-medium">Tenant slug</label>
-          <input
-            id="join-slug"
-            type="text"
-            bind:value={slug}
-            placeholder="acme"
-            pattern="[a-z0-9-]+"
-            required
-            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          />
-        </div>
-        <div class="space-y-1.5">
-          <label for="join-role" class="block text-sm font-medium">Role on tenant</label>
-          <SelectRoot type="single" bind:value={role} >
-            <SelectTrigger class="w-full" id="join-role">
-              <SelectValue placeholder="Select role" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="viewer">Viewer</SelectItem>
-              <SelectItem value="editor">Editor</SelectItem>
-              <SelectItem value="tenant_admin">Tenant admin</SelectItem>
-              <SelectItem value="super_admin">Super admin</SelectItem>
-            </SelectContent>
-          </SelectRoot>
-        </div>
-      </div>
-      {#if joiningError}
-        <p class="text-xs text-destructive">{joiningError}</p>
-      {/if}
-      {#if joiningSuccess}
-        <p class="text-xs text-success">{joiningSuccess}</p>
-      {/if}
-      <div class="flex justify-end">
-        <button
-          type="submit"
-          disabled={joining}
-          class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-        >
-          {joining ? 'Joining…' : 'Join tenant'}
-        </button>
-      </div>
-    </form>
-  </section>
 
   <section class="rounded-lg border bg-card">
     <header class="border-b p-4">

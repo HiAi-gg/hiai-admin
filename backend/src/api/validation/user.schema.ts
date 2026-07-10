@@ -31,7 +31,6 @@ export const joinTenantSchema = z.object({
     .max(100)
     .regex(/^[a-z0-9-]+$/, 'Slug must contain only lowercase letters, numbers, and hyphens'),
   inviteCode: z.string().min(1).max(200).optional(),
-  role: z.enum(['super_admin', 'tenant_admin', 'editor', 'viewer']).default('viewer'),
 });
 
 export const updateProfileSchema = z.object({

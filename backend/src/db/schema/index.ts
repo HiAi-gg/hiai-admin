@@ -18,6 +18,7 @@ export * from './tenant.js';
 export * from './user.js';
 export * from './user-tenant-access.js';
 export { siteMemberships } from './site-membership.js';
+export * from './site-invite.js';
 
 // Webhooks
 export * from './webhook.js';
@@ -29,6 +30,7 @@ import { permissions, rolePermissions, roles, userRoles } from './role.js';
 import { integrations } from './setting.js';
 import { invoices, subscriptions } from './subscription.js';
 import { siteAdapters } from './site-adapter.js';
+import { siteInvites } from './site-invite.js';
 import { siteMemberships } from './site-membership.js';
 import { tenants } from './tenant.js';
 import { users } from './user.js';
@@ -46,6 +48,14 @@ export const tenantsRelations = relations(tenants, ({ many }) => ({
 export const siteAdaptersRelations = relations(siteAdapters, ({ many, one }) => ({
   tenant: one(tenants, { fields: [siteAdapters.tenantId], references: [tenants.id] }),
   memberships: many(siteMemberships),
+}));
+
+export const siteInvitesRelations = relations(siteInvites, ({ one }) => ({
+  tenant: one(tenants, { fields: [siteInvites.tenantId], references: [tenants.id] }),
+  siteAdapter: one(siteAdapters, {
+    fields: [siteInvites.siteAdapterId],
+    references: [siteAdapters.id],
+  }),
 }));
 
 export const siteMembershipsRelations = relations(siteMemberships, ({ one }) => ({

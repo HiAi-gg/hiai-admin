@@ -5,7 +5,7 @@ import { authMiddleware } from '../middleware/auth.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
 import { auditMiddleware } from '../middleware/audit.js';
 import { userService } from '../../modules/user/user.service.js';
-import { joinTenantSchema, updateProfileSchema } from '../validation/user.schema.js';
+import { updateProfileSchema } from '../validation/user.schema.js';
 import { auditService } from '../../modules/audit/audit.service.js';
 import { AppError, ErrorCode } from '../../lib/errors.js';
 import {
@@ -226,53 +226,16 @@ export const profileRoutes = new Elysia({ prefix: '/api/profile' })
   .post(
     '/tenants/join',
     async (ctx: any) => {
-      const parsed = joinTenantSchema.safeParse(ctx.body);
-      if (!parsed.success) {
-        ctx.set.status = 400;
-        return { error: 'Validation failed', details: parsed.error.flatten() };
-      }
-      try {
-        const { profile, session } = await resolvePlatformUser(ctx);
-        const result = await userService.joinTenant(profile.id, parsed.data.slug, {
-          role: parsed.data.role,
-        });
-        if (result.status === 'not_found') {
-          ctx.set.status = 404;
-          return { error: 'Tenant not found' };
-        }
-        // Audit explicitly — join is a sensitive membership change. The generic
-        // CUD middleware records this too, but its action label is derived from
-        // the resource path and won't capture which user actually joined.
-        try {
-          await auditService.record({
-            actorId: profile.id,
-            actorEmail: session.user.email,
-            action: result.status === 'joined' ? 'profile:join-tenant' : 'profile:join-tenant:noop',
-            resource: 'user_tenant_access',
-            resourceId: result.tenantId,
-            newValue: { slug: parsed.data.slug, status: result.status },
-          });
-        } catch {
-          // Audit is best-effort here — the generic middleware also records the CUD.
-        }
-        return { data: result };
-      } catch (err) {
-        return handleError(err, ctx.set);
-      }
+      ctx.set.status = 410;
+      return {
+        error: 'INVITE_REQUIRED',
+        code: 'INVITE_REQUIRED',
+      };
     },
     {
       requireAuth: true,
       body: t.Object({
-        slug: t.String({ minLength: 1, maxLength: 100, pattern: '^[a-z0-9-]+$' }),
-        inviteCode: t.Optional(t.String({ minLength: 1, maxLength: 200 })),
-        role: t.Optional(
-          t.Union([
-            t.Literal('super_admin'),
-            t.Literal('tenant_admin'),
-            t.Literal('editor'),
-            t.Literal('viewer'),
-          ]),
-        ),
+        slug: t.Optional(t.String({ minLength: 1, maxLength: 100, pattern: '^[a-z0-9-]+$' })),
       }),
     },
   )

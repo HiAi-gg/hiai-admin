@@ -26,6 +26,7 @@ import { rbacRoutes } from './routes/rbac.js';
 import { settingsRoutes } from './routes/settings.js';
 import { siteAdaptersRoutes } from './routes/site-adapters.js';
 import { siteAccessRoutes } from './routes/site-access.js';
+import { siteInvitesRoutes } from './routes/site-invites.js';
 import { siteProxyRoutes } from './routes/site-proxy.js';
 import { tenantRoutes } from './routes/tenants.js';
 import { userRoutes } from './routes/users.js';
@@ -75,6 +76,7 @@ const app = new Elysia()
   })
   .use(authMiddleware)
   .use(rbacMiddleware)
+  .use(siteInvitesRoutes)
   .use(auditMiddleware)
   .use(healthRoutes)
   .use(tenantRoutes)
