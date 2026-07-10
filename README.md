@@ -163,6 +163,14 @@ REDIS_URL=redis://localhost:6382
 # Auth
 BETTER_AUTH_SECRET=change-me-min-32-characters-long
 BETTER_AUTH_URL=http://localhost:50200
+AUTH_SIGNUP_MODE=public
+AUTH_TRUSTED_CLIENT_SECRET=
+AUTH_COOKIE_DOMAIN=
+AUTH_EVENT_WEBHOOK_URL=
+AUTH_EVENT_WEBHOOK_SECRET=
+AUTH_EVENT_WEBHOOK_AUDIENCE=hiai-admin
+AUTH_EVENT_WEBHOOK_ISSUER=hiai-admin
+AUTH_EVENT_WEBHOOK_SECRET can be unset in local dev if webhook delivery is not used.
 
 # Stripe (use sk_test_ for development)
 STRIPE_SECRET_KEY=sk_test_...

@@ -127,6 +127,25 @@ export const envSchema = z
     SESSION_EXPIRES_IN_SEC: sec(60 * 60 * 24 * 7),
     SESSION_UPDATE_AGE_SEC: sec(60 * 60 * 24),
     SESSION_COOKIE_CACHE_MAX_AGE_SEC: sec(60 * 5),
+    AUTH_COOKIE_DOMAIN: z.string().optional(),
+    AUTH_SIGNUP_MODE: z.enum(['disabled', 'public', 'trusted-client']).default('public'),
+    AUTH_TRUSTED_CLIENT_SECRET: z.string().optional(),
+    AUTH_EVENT_WEBHOOK_URL: z.string().url().optional(),
+    AUTH_EVENT_WEBHOOK_SECRET: z
+      .string()
+      .optional()
+      .transform((value) => value ?? '')
+      .refine(
+        (value) =>
+          value.length === 0 ||
+          !/(^|[:\s])(change[-_]?me|your[-_]?secret|placeholder|example|dummy)/i.test(value),
+        {
+          message:
+            'AUTH_EVENT_WEBHOOK_SECRET must be a real secret, not a placeholder like "change-me"',
+        },
+      ),
+    AUTH_EVENT_WEBHOOK_AUDIENCE: z.string().default('hiai-admin'),
+    AUTH_EVENT_WEBHOOK_ISSUER: z.string().default('hiai-admin'),
 
     // Backend (cross-service) JWT TTL used by the admin -> site adapter SSO
     // flow in app/src/lib/server/backend-token.ts. Default 1h matches the

@@ -4,6 +4,33 @@ import { eq, like, and, count, inArray } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 
 export const userService = {
+  /**
+   * Ensure a platform profile exists for the authenticated Better Auth identity.
+   *
+   * The helper is idempotent and must be called from the Better Auth
+   * `user.create.after` hook so every auth signup has a matching platform user.
+   */
+  async ensurePlatformProfile(input: { email: string; name?: string | null }) {
+    const normalizedEmail = input.email.trim().toLowerCase();
+    const base = {
+      id: randomUUID(),
+      email: normalizedEmail,
+      name: input.name,
+      role: 'viewer',
+    };
+
+    const [inserted] = await db
+      .insert(users)
+      .values(base)
+      .onConflictDoNothing({ target: users.email })
+      .returning();
+
+    if (inserted) return inserted;
+
+    const [existing] = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1);
+    return existing;
+  },
+
   async create(data: { id?: string; email: string; name: string; role?: string }) {
     const [user] = await db
       .insert(users)
@@ -90,7 +117,8 @@ export const userService = {
   },
 
   async getByEmail(email: string) {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
+    const normalizedEmail = email.trim().toLowerCase();
+    const [user] = await db.select().from(users).where(eq(users.email, normalizedEmail));
     return user;
   },
 
@@ -184,10 +212,16 @@ export const userService = {
       .where(and(eq(userTenantAccess.userId, userId), eq(userTenantAccess.tenantId, tenant.id)));
     if (existing) return { status: 'already_member', tenantId: tenant.id };
 
+    const requestedRole = options.role;
+    const safeRole =
+      requestedRole && (requestedRole === 'super_admin' || requestedRole === 'tenant_admin')
+        ? 'viewer'
+        : requestedRole ?? 'viewer';
+
     await db.insert(userTenantAccess).values({
       userId,
       tenantId: tenant.id,
-      role: options.role ?? 'viewer',
+      role: safeRole,
       permissions: [],
     });
     return { status: 'joined', tenantId: tenant.id, slug: tenant.slug, name: tenant.name };
