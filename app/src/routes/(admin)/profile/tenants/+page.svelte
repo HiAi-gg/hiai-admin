@@ -1,5 +1,12 @@
 <script lang="ts">
 import { invalidateAll } from '$app/navigation';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 import type { PageData } from './$types';
 
 let { data }: { data: PageData } = $props();
@@ -121,16 +128,17 @@ async function leaveTenant(tenantId: string, name: string) {
         </div>
         <div class="space-y-1.5">
           <label for="join-role" class="block text-sm font-medium">Role on tenant</label>
-          <select
-            id="join-role"
-            bind:value={role}
-            class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="viewer">Viewer</option>
-            <option value="editor">Editor</option>
-            <option value="tenant_admin">Tenant admin</option>
-            <option value="super_admin">Super admin</option>
-          </select>
+          <SelectRoot type="single" bind:value={role} >
+            <SelectTrigger class="w-full" id="join-role">
+              <SelectValue placeholder="Select role" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="viewer">Viewer</SelectItem>
+              <SelectItem value="editor">Editor</SelectItem>
+              <SelectItem value="tenant_admin">Tenant admin</SelectItem>
+              <SelectItem value="super_admin">Super admin</SelectItem>
+            </SelectContent>
+          </SelectRoot>
         </div>
       </div>
       {#if joiningError}

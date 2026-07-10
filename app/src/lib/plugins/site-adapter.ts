@@ -1,4 +1,5 @@
-import { FileText, Globe, Home, Mail, Sparkles, Coffee } from 'lucide-svelte';
+import { Coffee, FileText, Globe, Home, Mail, Sparkles } from 'lucide-svelte';
+import { type AdapterManifest, adapterManifestSchema } from '$lib/contracts/index.js';
 import type { NavGroup, NavIcon, SiteAdapter, SiteModule } from './types.js';
 
 /** Shape of a site adapter as delivered by the backend `/api/site-adapters` (secrets stripped). */
@@ -10,6 +11,12 @@ export interface SiteAdapterRow {
   backendUrl: string;
   auth?: 'jwt' | 'api-key';
   modules: string[];
+  adapterManifestVersion?: string;
+  connectorType?: string;
+  connectorConfig?: Record<string, unknown>;
+  capabilities?: string[];
+  externalSiteReference?: string;
+  secretRefs?: Record<string, string>;
   enabled?: boolean;
 }
 
@@ -51,6 +58,15 @@ export function buildSiteAdapterPlugins(rows: SiteAdapterRow[]): SiteAdapter[] {
         })),
       ];
       const navGroups: NavGroup[] = [{ label: row.name, items }];
+      const manifest: AdapterManifest = adapterManifestSchema.parse({
+        adapterManifestVersion: row.adapterManifestVersion ?? '1.0.0',
+        connectorType: row.connectorType ?? 'http',
+        connectorConfig: row.connectorConfig ?? {},
+        capabilities: row.capabilities ?? [],
+        modules,
+        externalSiteReference: row.externalSiteReference,
+        secretRefs: row.secretRefs ?? {},
+      });
 
       return {
         kind: 'site',
@@ -62,6 +78,8 @@ export function buildSiteAdapterPlugins(rows: SiteAdapterRow[]): SiteAdapter[] {
         description: `Site adapter for ${row.name}`,
         navGroups,
         modules,
+        manifest,
+        connectorType: row.connectorType ?? 'http',
         proxy: {
           prefix: `/api/${row.slug}`,
           target: row.backendUrl,

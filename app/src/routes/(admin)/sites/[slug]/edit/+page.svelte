@@ -3,6 +3,13 @@ import { enhance } from '$app/forms';
 import { untrack } from 'svelte';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@hiai/ui/components/ui/tabs/index';
 import { Switch } from '@hiai/ui/components/ui/switch/index';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 type SocialLink = { platform: string; url: string };
 
@@ -15,6 +22,11 @@ let activeTab = $state('general');
 
 // Echo of form values on error, otherwise the loaded site data.
 const source = $derived((form?.values as Record<string, unknown> | undefined) ?? data.site);
+
+// Select state — initialized from source so form errors pre-select the correct value.
+let statusVal = $state((source?.status as string) ?? 'active');
+let langVal = $state((source?.defaultLanguage as string) ?? 'en');
+let themeVal = $state((source?.theme as string) ?? 'default');
 
 // Text fields — captured once from initial data via untrack to avoid
 // `state_referenced_locally` warnings.
@@ -138,27 +150,31 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
               </label>
               <label class="space-y-1">
                 <span class="text-sm font-medium">Status</span>
-                <select
-                  name="status"
-                  value={(source?.status as string) ?? 'active'}
-                  class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-                >
-                  {#each data.statuses as s (s)}
-                    <option value={s}>{s}</option>
-                  {/each}
-                </select>
+                <SelectRoot type="single" bind:value={statusVal}>
+                  <SelectTrigger class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {#each data.statuses as s (s)}
+                      <SelectItem value={s}>{s}</SelectItem>
+                    {/each}
+                  </SelectContent>
+                </SelectRoot>
+                <input type="hidden" name="status" value={statusVal} />
               </label>
               <label class="space-y-1">
                 <span class="text-sm font-medium">Default Language</span>
-                <select
-                  name="defaultLanguage"
-                  value={(source?.defaultLanguage as string) ?? 'en'}
-                  class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-                >
-                  {#each data.languages as l (l)}
-                    <option value={l}>{l}</option>
-                  {/each}
-                </select>
+                <SelectRoot type="single" bind:value={langVal}>
+                  <SelectTrigger class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {#each data.languages as l (l)}
+                      <SelectItem value={l}>{l}</SelectItem>
+                    {/each}
+                  </SelectContent>
+                </SelectRoot>
+                <input type="hidden" name="defaultLanguage" value={langVal} />
               </label>
             </div>
 
@@ -226,15 +242,17 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
           <div class="space-y-4 rounded-md border bg-muted/40 p-4">
             <label class="block space-y-1">
               <span class="text-sm font-medium">Theme Preset</span>
-              <select
-                name="theme"
-                value={(source?.theme as string) ?? 'default'}
-                class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-              >
-                {#each data.themes as t (t)}
-                  <option value={t}>{t}</option>
-                {/each}
-              </select>
+              <SelectRoot type="single" bind:value={themeVal}>
+                <SelectTrigger class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {#each data.themes as t (t)}
+                    <SelectItem value={t}>{t}</SelectItem>
+                  {/each}
+                </SelectContent>
+              </SelectRoot>
+              <input type="hidden" name="theme" value={themeVal} />
             </label>
 
             <div class="grid gap-4 sm:grid-cols-2">
@@ -366,14 +384,16 @@ const socialLinksJson = $derived(JSON.stringify(socialLinks));
               <div class="space-y-2">
                 {#each socialLinks as link, i (i)}
                   <div class="flex items-center gap-2">
-                    <select
-                      bind:value={link.platform}
-                      class="flex h-9 w-40 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-                    >
-                      {#each data.socialPlatforms as p (p)}
-                        <option value={p}>{p}</option>
-                      {/each}
-                    </select>
+                    <SelectRoot type="single" bind:value={link.platform}>
+                      <SelectTrigger class="flex h-9 w-40 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm">
+                        <SelectValue placeholder="Platform" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {#each data.socialPlatforms as p (p)}
+                          <SelectItem value={p}>{p}</SelectItem>
+                        {/each}
+                      </SelectContent>
+                    </SelectRoot>
                     <input
                       type="url"
                       bind:value={link.url}

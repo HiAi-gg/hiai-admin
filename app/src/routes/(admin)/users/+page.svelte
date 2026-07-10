@@ -1,6 +1,13 @@
 <script lang="ts">
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 let { data } = $props();
 
@@ -89,17 +96,18 @@ const pagination = {
       <label for="user-role" class="block text-xs font-medium text-muted-foreground mb-1">
         Role
       </label>
-      <select
-        id="user-role"
-        bind:value={role}
-        class="w-full px-3 py-2 border rounded-lg text-sm bg-background"
-      >
-        <option value="">All</option>
-        <option value="super_admin">Super Admin</option>
-        <option value="tenant_admin">Tenant Admin</option>
-        <option value="editor">Editor</option>
-        <option value="viewer">Viewer</option>
-      </select>
+      <SelectRoot type="single" bind:value={role}>
+        <SelectTrigger class="w-full" id="user-role">
+          <SelectValue placeholder="All roles" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">All</SelectItem>
+          <SelectItem value="super_admin">Super Admin</SelectItem>
+          <SelectItem value="tenant_admin">Tenant Admin</SelectItem>
+          <SelectItem value="editor">Editor</SelectItem>
+          <SelectItem value="viewer">Viewer</SelectItem>
+        </SelectContent>
+      </SelectRoot>
     </div>
     <div class="flex gap-2">
       <button

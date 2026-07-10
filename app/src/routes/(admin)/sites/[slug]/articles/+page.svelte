@@ -2,6 +2,13 @@
 import { enhance } from '$app/forms';
 import { STATUS_OPTIONS, statusLabel, type Article } from '$lib/sites/articles.js';
 import { Eye } from 'lucide-svelte';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 let { data, form } = $props();
 
@@ -135,15 +142,16 @@ const statusClasses: Record<string, string> = {
         {/each}
         <label class="flex items-center gap-2">
           Set status
-          <select
-            name="status"
-            bind:value={bulkStatus}
-            class="h-8 rounded-md border border-input bg-background px-2 text-sm"
-          >
-            {#each STATUS_OPTIONS as s (s)}
-              <option value={s}>{statusLabel(s)}</option>
-            {/each}
-          </select>
+          <SelectRoot type="single" bind:value={bulkStatus}>
+            <SelectTrigger class="w-40">
+              <SelectValue placeholder="Change status" />
+            </SelectTrigger>
+            <SelectContent>
+              {#each STATUS_OPTIONS as s (s)}
+                <SelectItem value={s}>{statusLabel(s)}</SelectItem>
+              {/each}
+            </SelectContent>
+          </SelectRoot>
         </label>
         <button
           type="submit"

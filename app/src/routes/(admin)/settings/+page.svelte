@@ -1,5 +1,12 @@
 <script lang="ts">
 import { invalidateAll } from '$app/navigation';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 let { data } = $props();
 // biome-ignore lint/correctness/noUnusedVariables: used in template
@@ -278,16 +285,21 @@ function handleToggle(key: string, current: boolean) {
                   ></span>
                 </button>
               {:else if setting.type === 'select'}
-                <select
+                <SelectRoot
+                  type="single"
                   value={setting.value}
-                  onchange={(e) => saveSetting(setting.key, (e.target as HTMLSelectElement).value)}
-                  class="rounded-md border border-input bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  onValueChange={(val) => saveSetting(setting.key, val)}
                   disabled={saving}
                 >
-                  {#each setting.options || [] as opt}
-                    <option value={opt} selected={opt === setting.value}>{opt}</option>
-                  {/each}
-                </select>
+                  <SelectTrigger class="w-32">
+                    <SelectValue placeholder="Select" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {#each setting.options || [] as opt}
+                      <SelectItem value={opt}>{opt}</SelectItem>
+                    {/each}
+                  </SelectContent>
+                </SelectRoot>
               {:else}
                 <input
                   type={setting.type}

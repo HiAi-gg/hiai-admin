@@ -5,6 +5,7 @@ import { siteAdapterService } from '../../modules/site-adapter/site-adapter.serv
 import { authMiddleware } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
+import { authorizeSiteAdmin } from '../middleware/site-access.js';
 import { substitutePathPlaceholders } from '../validation/site-adapter.schema.js';
 
 const log = logger.child({ module: 'site-proxy' });
@@ -106,17 +107,18 @@ export const siteProxyRoutes = new Elysia({ prefix: '/api/site-proxy' })
         set.status = 401;
         return { error: 'Unauthorized' };
       }
-      if (user.role !== 'super_admin') {
-        set.status = 403;
-        return { error: 'Forbidden — super admin required' };
-      }
-
       const url = new URL(request.url);
       const rest = url.pathname.replace(/^\/api\/site-proxy\//, '');
       const first = pickTopLevel(rest);
       if (!first) {
         set.status = 400;
         return { error: 'site-proxy path required' };
+      }
+
+      const access = await authorizeSiteAdmin(user, first.key);
+      if (access.status !== 200) {
+        set.status = access.status;
+        return { error: access.status === 401 ? 'Unauthorized' : 'Forbidden' };
       }
 
       const adapter = await siteAdapterService.getBySlug(first.key);
@@ -203,5 +205,5 @@ export const siteProxyRoutes = new Elysia({ prefix: '/api/site-proxy' })
         return { error: err instanceof Error ? err.message : 'site-proxy backend unavailable' };
       }
     },
-    { requireSuperAdmin: true },
+    { requireAuth: true },
   );

@@ -1,4 +1,12 @@
 <script lang="ts">
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
+
 let { data } = $props();
 
 let name = $state(data.tenant?.name ?? '');
@@ -93,20 +101,30 @@ async function handleSubmit(event: Event) {
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label for="plan" class="block text-sm font-medium mb-1">Plan</label>
-        <select id="plan" bind:value={plan} class="w-full px-3 py-2 border rounded-lg">
-          <option value="free">Free</option>
-          <option value="pro">Pro</option>
-          <option value="enterprise">Enterprise</option>
-        </select>
+        <SelectRoot type="single" bind:value={plan} >
+          <SelectTrigger class="w-full" id="plan">
+            <SelectValue placeholder="Select plan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="free">Free</SelectItem>
+            <SelectItem value="pro">Pro</SelectItem>
+            <SelectItem value="enterprise">Enterprise</SelectItem>
+          </SelectContent>
+        </SelectRoot>
       </div>
 
       <div>
         <label for="status" class="block text-sm font-medium mb-1">Status</label>
-        <select id="status" bind:value={status} class="w-full px-3 py-2 border rounded-lg">
-          <option value="active">Active</option>
-          <option value="pending">Pending</option>
-          <option value="suspended">Suspended</option>
-        </select>
+        <SelectRoot type="single" bind:value={status} >
+          <SelectTrigger class="w-full" id="status">
+            <SelectValue placeholder="Select status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="suspended">Suspended</SelectItem>
+          </SelectContent>
+        </SelectRoot>
       </div>
     </div>
 

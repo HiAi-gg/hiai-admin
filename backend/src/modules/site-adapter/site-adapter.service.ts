@@ -27,6 +27,12 @@ export interface SiteAdapterDTO {
   auth: 'jwt' | 'api-key';
   modules: string[];
   pathMap: Record<string, unknown>;
+  adapterManifestVersion: string;
+  connectorType: 'http' | 'drizzle';
+  connectorConfig: Record<string, unknown>;
+  capabilities: string[];
+  externalSiteReference?: string;
+  secretRefs: Record<string, string>;
   enabled: boolean;
 }
 
@@ -46,6 +52,12 @@ function toDTO(row: SiteAdapterRow): SiteAdapterDTO {
     auth: row.auth === 'api-key' ? 'api-key' : 'jwt',
     modules: row.modules ?? [],
     pathMap: (row.pathMap ?? {}) as Record<string, unknown>,
+    adapterManifestVersion: row.adapterManifestVersion ?? '1.0.0',
+    connectorType: row.connectorType === 'drizzle' ? 'drizzle' : 'http',
+    connectorConfig: (row.connectorConfig ?? {}) as Record<string, unknown>,
+    capabilities: row.capabilities ?? [],
+    externalSiteReference: row.externalSiteReference ?? undefined,
+    secretRefs: (row.secretRefs ?? {}) as Record<string, string>,
     enabled: row.enabled,
   };
 }
@@ -93,6 +105,12 @@ export const siteAdapterService = {
         jwtSecretEncrypted: input.jwtSecret ? encrypt(input.jwtSecret) : null,
         modules: input.modules,
         pathMap: input.pathMap ?? {},
+        adapterManifestVersion: input.adapterManifestVersion,
+        connectorType: input.connectorType,
+        connectorConfig: input.connectorConfig ?? {},
+        capabilities: input.capabilities ?? [],
+        externalSiteReference: input.externalSiteReference ?? null,
+        secretRefs: input.secretRefs ?? {},
       })
       .returning();
     return toDTO(row);
@@ -113,6 +131,16 @@ export const siteAdapterService = {
         ...(input.publicSlug !== undefined ? { publicSlug: input.publicSlug } : {}),
         ...(input.adapterSlug !== undefined ? { adapterSlug: input.adapterSlug } : {}),
         ...(input.pathMap !== undefined ? { pathMap: input.pathMap } : {}),
+        ...(input.adapterManifestVersion !== undefined
+          ? { adapterManifestVersion: input.adapterManifestVersion }
+          : {}),
+        ...(input.connectorType !== undefined ? { connectorType: input.connectorType } : {}),
+        ...(input.connectorConfig !== undefined ? { connectorConfig: input.connectorConfig } : {}),
+        ...(input.capabilities !== undefined ? { capabilities: input.capabilities } : {}),
+        ...(input.externalSiteReference !== undefined
+          ? { externalSiteReference: input.externalSiteReference }
+          : {}),
+        ...(input.secretRefs !== undefined ? { secretRefs: input.secretRefs } : {}),
         ...(input.jwtSecret !== undefined ? { jwtSecretEncrypted: encrypt(input.jwtSecret) } : {}),
         updatedAt: new Date(),
       })

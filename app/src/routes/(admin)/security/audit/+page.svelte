@@ -2,6 +2,13 @@
 import { goto } from '$app/navigation';
 import { page } from '$app/state';
 import { Download } from 'lucide-svelte';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 // biome-ignore lint/correctness/noUnusedVariables: typed but unused in this view
 let { data } = $props();
@@ -46,24 +53,34 @@ function exportCSV() {
   <div class="flex flex-wrap gap-3 items-end">
     <div>
       <label class="text-xs text-muted-foreground mb-1 block">Action</label>
-      <select bind:value={actionFilter} class="px-3 py-1.5 border rounded text-sm bg-background">
-        <option value="">All actions</option>
-        <option value="create">Create</option>
-        <option value="update">Update</option>
-        <option value="delete">Delete</option>
-        <option value="login">Login</option>
-        <option value="suspend">Suspend</option>
-      </select>
+      <SelectRoot type="single" bind:value={actionFilter}>
+        <SelectTrigger class="w-40">
+          <SelectValue placeholder="All actions" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">All actions</SelectItem>
+          <SelectItem value="create">Create</SelectItem>
+          <SelectItem value="update">Update</SelectItem>
+          <SelectItem value="delete">Delete</SelectItem>
+          <SelectItem value="login">Login</SelectItem>
+          <SelectItem value="suspend">Suspend</SelectItem>
+        </SelectContent>
+      </SelectRoot>
     </div>
     <div>
       <label class="text-xs text-muted-foreground mb-1 block">Resource</label>
-      <select bind:value={resourceFilter} class="px-3 py-1.5 border rounded text-sm bg-background">
-        <option value="">All resources</option>
-        <option value="tenant">Tenant</option>
-        <option value="user">User</option>
-        <option value="billing">Billing</option>
-        <option value="settings">Settings</option>
-      </select>
+      <SelectRoot type="single" bind:value={resourceFilter}>
+        <SelectTrigger class="w-40">
+          <SelectValue placeholder="All resources" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">All resources</SelectItem>
+          <SelectItem value="tenant">Tenant</SelectItem>
+          <SelectItem value="user">User</SelectItem>
+          <SelectItem value="billing">Billing</SelectItem>
+          <SelectItem value="settings">Settings</SelectItem>
+        </SelectContent>
+      </SelectRoot>
     </div>
     <div>
       <label class="text-xs text-muted-foreground mb-1 block">From</label>

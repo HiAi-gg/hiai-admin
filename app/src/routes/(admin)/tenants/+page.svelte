@@ -6,6 +6,13 @@ import DataTable from '$lib/components/DataTable.svelte';
 // biome-ignore lint/correctness/noUnusedImports: used in template
 import StatusBadge from '$lib/components/StatusBadge.svelte';
 import { page } from '$app/state';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 let { data } = $props();
 
@@ -87,16 +94,17 @@ const columns = [
       <label for="tenant-status" class="block text-xs font-medium text-muted-foreground mb-1">
         Status
       </label>
-      <select
-        id="tenant-status"
-        bind:value={statusFilter}
-        class="w-full px-3 py-2 border rounded-lg text-sm bg-background"
-      >
-        <option value="">All statuses</option>
-        <option value="active">Active</option>
-        <option value="pending">Pending</option>
-        <option value="suspended">Suspended</option>
-      </select>
+      <SelectRoot type="single" bind:value={statusFilter}>
+        <SelectTrigger class="w-full" id="tenant-status">
+          <SelectValue placeholder="All statuses" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">All statuses</SelectItem>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="pending">Pending</SelectItem>
+          <SelectItem value="suspended">Suspended</SelectItem>
+        </SelectContent>
+      </SelectRoot>
     </div>
     <div class="flex gap-2">
       <button

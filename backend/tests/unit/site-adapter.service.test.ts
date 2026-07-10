@@ -65,6 +65,12 @@ const dbRow = {
   jwtSecretEncrypted: 'enc(s3cr3t)',
   modules: ['articles', 'kofi'],
   pathMap: {},
+  adapterManifestVersion: '1.0.0',
+  connectorType: 'http',
+  connectorConfig: { healthPath: '/healthz' },
+  capabilities: ['articles:read', 'homepage:write'],
+  externalSiteReference: 'webs-site-id-1',
+  secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_WEBS_CROCO' },
   enabled: true,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -95,6 +101,12 @@ describe('siteAdapterService', () => {
         auth: 'jwt',
         modules: ['articles', 'kofi'],
         pathMap: {},
+        adapterManifestVersion: '1.0.0',
+        connectorType: 'http',
+        connectorConfig: { healthPath: '/healthz' },
+        capabilities: ['articles:read', 'homepage:write'],
+        externalSiteReference: 'webs-site-id-1',
+        secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_WEBS_CROCO' },
         enabled: true,
       });
       expect(dto).not.toHaveProperty('jwtSecretEncrypted');
@@ -111,6 +123,40 @@ describe('siteAdapterService', () => {
   });
 
   describe('create', () => {
+    it('persists manifest metadata and secret references to DB', async () => {
+      const chain = createChain([dbRow]);
+      dbMock.insert.mockReturnValue(chain);
+
+      await siteAdapterService.create({
+        tenantId: 't1',
+        slug: 'webs-croco',
+        name: 'Croco',
+        backendUrl: 'http://api:3001',
+        apiBase: '/api/v1',
+        auth: 'jwt',
+        jwtSecret: 's3cr3t',
+        modules: ['articles', 'kofi'],
+        adapterManifestVersion: '1.1.0',
+        connectorType: 'drizzle',
+        connectorConfig: { schema: 'tenant_site' },
+        capabilities: ['articles:read'],
+        externalSiteReference: 'external-42',
+        secretRefs: { jwtSecret: 'WEBS_CROCO_SECRET_REF' },
+        pathMap: {},
+      });
+
+      expect(chain.values).toHaveBeenCalledWith(
+        expect.objectContaining({
+          adapterManifestVersion: '1.1.0',
+          connectorType: 'drizzle',
+          connectorConfig: { schema: 'tenant_site' },
+          capabilities: ['articles:read'],
+          externalSiteReference: 'external-42',
+          secretRefs: { jwtSecret: 'WEBS_CROCO_SECRET_REF' },
+        }),
+      );
+    });
+
     it('encrypts the jwt secret at rest and returns a secret-free DTO', async () => {
       const chain = createChain([dbRow]);
       dbMock.insert.mockReturnValue(chain);
@@ -124,6 +170,12 @@ describe('siteAdapterService', () => {
         auth: 'jwt',
         jwtSecret: 's3cr3t',
         modules: ['articles', 'kofi'],
+        adapterManifestVersion: '1.0.0',
+        connectorType: 'http',
+        connectorConfig: {},
+        capabilities: ['articles:read'],
+        externalSiteReference: 'webs-site-id-1',
+        secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_WEBS_CROCO' },
         pathMap: {},
       });
 
@@ -145,6 +197,11 @@ describe('siteAdapterService', () => {
         apiBase: '/api/v1',
         auth: 'jwt',
         modules: [],
+        adapterManifestVersion: '1.0.0',
+        connectorType: 'http',
+        connectorConfig: {},
+        capabilities: ['articles:read'],
+        secretRefs: {},
         pathMap: {},
       });
 

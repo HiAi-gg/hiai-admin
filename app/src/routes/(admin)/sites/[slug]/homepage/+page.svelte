@@ -10,6 +10,13 @@ import { newBlock, reorder, type BlockType, type HomepageBlock } from '$lib/site
 import { BLOCKS_WITH_META, getBlockMeta } from '$lib/sites/block-meta.js';
 // biome-ignore lint/correctness/noUnusedImports: used in template
 import BlockPreview from '$lib/components/BlockPreview.svelte';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 const SOCIAL_PLATFORMS = [
   'Instagram',
@@ -525,16 +532,16 @@ function handleSubmit() {
                 {/if}
                 {#each links as link, linkIdx (linkIdx)}
                   <div class="grid gap-2 sm:grid-cols-[10rem_1fr_auto]">
-                    <select
-                      value={link.platform}
-                      onchange={(e) =>
-                        updateSocialLink(block.id, linkIdx, 'platform', e.currentTarget.value)}
-                      class="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                    >
-                      {#each SOCIAL_PLATFORMS as platform (platform)}
-                        <option value={platform}>{platform}</option>
-                      {/each}
-                    </select>
+                    <SelectRoot type="single" value={link.platform} onValueChange={(v) => updateSocialLink(block.id, linkIdx, 'platform', v)}>
+                      <SelectTrigger class="h-8 rounded-md border border-input bg-background px-2 text-xs">
+                        <SelectValue placeholder="Platform" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {#each SOCIAL_PLATFORMS as platform (platform)}
+                          <SelectItem value={platform}>{platform}</SelectItem>
+                        {/each}
+                      </SelectContent>
+                    </SelectRoot>
                     <input
                       type="url"
                       value={link.url}

@@ -1,8 +1,17 @@
 <script lang="ts">
 import { enhance } from '$app/forms';
 import type { PageData, ActionData } from './$types';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 let { data, form }: { data: PageData; form: ActionData } = $props();
+
+let tenantIdVal = $state(form?.values?.tenantId ?? '');
 
 const MODULES: { id: string; label: string }[] = [
   { id: 'articles', label: 'Articles' },
@@ -67,18 +76,17 @@ async function testConnection() {
   >
     <div class="space-y-1.5">
       <label for="tenantId" class="text-sm font-medium text-foreground">Tenant</label>
-      <select
-        id="tenantId"
-        name="tenantId"
-        required
-        value={form?.values?.tenantId ?? ''}
-        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-      >
-        <option value="" disabled>Select a tenant…</option>
-        {#each data.tenants as tenant (tenant.id)}
-          <option value={tenant.id}>{tenant.name} ({tenant.slug})</option>
-        {/each}
-      </select>
+      <SelectRoot type="single" bind:value={tenantIdVal}>
+        <SelectTrigger class="w-full" id="tenantId">
+          <SelectValue placeholder="Select a tenant…" />
+        </SelectTrigger>
+        <SelectContent>
+          {#each data.tenants as tenant (tenant.id)}
+            <SelectItem value={tenant.id}>{tenant.name} ({tenant.slug})</SelectItem>
+          {/each}
+        </SelectContent>
+      </SelectRoot>
+      <input type="hidden" name="tenantId" value={tenantIdVal} />
     </div>
 
     <div class="space-y-1.5">
@@ -141,15 +149,16 @@ async function testConnection() {
 
     <div class="space-y-1.5">
       <label for="auth" class="text-sm font-medium text-foreground">Auth mode</label>
-      <select
-        id="auth"
-        name="auth"
-        bind:value={auth}
-        class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-      >
-        <option value="jwt">Backend JWT (SSO)</option>
-        <option value="api-key">API key</option>
-      </select>
+      <SelectRoot type="single" bind:value={auth}>
+        <SelectTrigger class="w-full" id="auth">
+          <SelectValue placeholder="Select auth mode" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="jwt">Backend JWT (SSO)</SelectItem>
+          <SelectItem value="api-key">API key</SelectItem>
+        </SelectContent>
+      </SelectRoot>
+      <input type="hidden" name="auth" value={auth} />
     </div>
 
     {#if auth === 'jwt'}

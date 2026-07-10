@@ -31,6 +31,8 @@ import {
   Redo,
 } from 'lucide-svelte';
 import LinkDialog from './LinkDialog.svelte';
+import * as DropdownMenu from '@hiai/ui/components/ui/dropdown-menu/index';
+import * as Popover from '@hiai/ui/components/ui/popover/index';
 
 const {
   editor = null,
@@ -82,23 +84,14 @@ const EMOJIS = [
 
 type TextAlignValue = 'left' | 'center' | 'right' | 'justify';
 
-// Dropdown open flags + popover roots.
+// Open state for controlled popovers (highlight, emoji, table).
 let linkDialogOpen = $state(false);
 let highlightPickerOpen = $state(false);
-let highlightPickerRoot = $state<HTMLDivElement | null>(null);
 let emojiPickerOpen = $state(false);
-let emojiPickerRoot = $state<HTMLDivElement | null>(null);
 let tablePickerOpen = $state(false);
-let tablePickerRoot = $state<HTMLDivElement | null>(null);
 // Hovered cell extent in the table size-picker grid (1-based; 0 = none).
 let tableHoverRows = $state(0);
 let tableHoverCols = $state(0);
-let headingDropdownOpen = $state(false);
-let headingDropdownRoot = $state<HTMLDivElement | null>(null);
-let listDropdownOpen = $state(false);
-let listDropdownRoot = $state<HTMLDivElement | null>(null);
-let alignDropdownOpen = $state(false);
-let alignDropdownRoot = $state<HTMLDivElement | null>(null);
 
 // TipTap mutates its internal state during transactions but doesn't bump
 // Svelte's reactive graph, so template calls to `editor.isActive(...)` would
@@ -180,10 +173,6 @@ function isDisabled(): boolean {
   return !editor.isEditable;
 }
 
-function toggleHighlightPicker() {
-  highlightPickerOpen = !highlightPickerOpen;
-}
-
 function applyHighlight(color: HighlightColor) {
   if (!editor) return;
   editor.chain().focus().toggleHighlight({ color }).run();
@@ -196,10 +185,6 @@ function clearHighlight() {
   highlightPickerOpen = false;
 }
 
-function toggleEmojiPicker() {
-  emojiPickerOpen = !emojiPickerOpen;
-}
-
 function insertEmoji(emoji: string) {
   if (!editor) return;
   editor.chain().focus().insertContent(emoji).run();
@@ -208,20 +193,10 @@ function insertEmoji(emoji: string) {
 
 const TABLE_GRID_MAX = 8;
 
-function toggleTablePicker() {
-  tablePickerOpen = !tablePickerOpen;
-  tableHoverRows = 0;
-  tableHoverCols = 0;
-}
-
 function insertTable(rows: number, cols: number) {
   if (!editor) return;
   editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
   tablePickerOpen = false;
-}
-
-function toggleHeadingDropdown() {
-  headingDropdownOpen = !headingDropdownOpen;
 }
 
 function applyHeading(level: 1 | 2 | 3 | null) {
@@ -231,11 +206,6 @@ function applyHeading(level: 1 | 2 | 3 | null) {
   } else {
     editor.chain().focus().toggleHeading({ level }).run();
   }
-  headingDropdownOpen = false;
-}
-
-function toggleListDropdown() {
-  listDropdownOpen = !listDropdownOpen;
 }
 
 function applyList(kind: 'bullet' | 'ordered' | 'task') {
@@ -247,7 +217,6 @@ function applyList(kind: 'bullet' | 'ordered' | 'task') {
   } else {
     editor.chain().focus().toggleTaskList().run();
   }
-  listDropdownOpen = false;
 }
 
 function toggleBlockquote() {
@@ -260,14 +229,9 @@ function insertHorizontalRule() {
   editor.chain().focus().setHorizontalRule().run();
 }
 
-function toggleAlignDropdown() {
-  alignDropdownOpen = !alignDropdownOpen;
-}
-
 function applyAlignment(value: TextAlignValue) {
   if (!editor) return;
   editor.chain().focus().setTextAlign(value).run();
-  alignDropdownOpen = false;
 }
 
 function undo() {
@@ -339,76 +303,6 @@ async function handleImageSelected(event: Event) {
     imageUploading = false;
   }
 }
-
-// Close all popovers/dropdowns when clicking outside their root element.
-$effect(() => {
-  if (
-    !highlightPickerOpen &&
-    !emojiPickerOpen &&
-    !tablePickerOpen &&
-    !headingDropdownOpen &&
-    !listDropdownOpen &&
-    !alignDropdownOpen
-  ) {
-    return;
-  }
-  function onDocPointer(e: PointerEvent) {
-    const target = e.target as Node | null;
-    if (!target) return;
-    if (highlightPickerOpen) {
-      const root = highlightPickerRoot;
-      if (root && !root.contains(target)) {
-        highlightPickerOpen = false;
-      }
-    }
-    if (emojiPickerOpen) {
-      const root = emojiPickerRoot;
-      if (root && !root.contains(target)) {
-        emojiPickerOpen = false;
-      }
-    }
-    if (tablePickerOpen) {
-      const root = tablePickerRoot;
-      if (root && !root.contains(target)) {
-        tablePickerOpen = false;
-      }
-    }
-    if (headingDropdownOpen) {
-      const root = headingDropdownRoot;
-      if (root && !root.contains(target)) {
-        headingDropdownOpen = false;
-      }
-    }
-    if (listDropdownOpen) {
-      const root = listDropdownRoot;
-      if (root && !root.contains(target)) {
-        listDropdownOpen = false;
-      }
-    }
-    if (alignDropdownOpen) {
-      const root = alignDropdownRoot;
-      if (root && !root.contains(target)) {
-        alignDropdownOpen = false;
-      }
-    }
-  }
-  function onKey(e: KeyboardEvent) {
-    if (e.key === 'Escape') {
-      highlightPickerOpen = false;
-      emojiPickerOpen = false;
-      tablePickerOpen = false;
-      headingDropdownOpen = false;
-      listDropdownOpen = false;
-      alignDropdownOpen = false;
-    }
-  }
-  document.addEventListener('pointerdown', onDocPointer);
-  document.addEventListener('keydown', onKey);
-  return () => {
-    document.removeEventListener('pointerdown', onDocPointer);
-    document.removeEventListener('keydown', onKey);
-  };
-});
 </script>
 
 {#if editor}
@@ -478,126 +372,82 @@ $effect(() => {
 		<div class="toolbar-divider" aria-hidden="true"></div>
 
 		<!-- Heading dropdown -->
-		<div class="dropdown" bind:this={headingDropdownRoot}>
-			<button
-				class="toolbar-btn dropdown-trigger"
-				class:active={activeHeadingLevel !== null}
-				disabled={isDisabled()}
-				onclick={toggleHeadingDropdown}
-				title="Heading"
-				aria-label="Heading"
-				aria-haspopup="true"
-				aria-expanded={headingDropdownOpen}
-				type="button"
-			>
-				{#if activeHeadingLevel !== null}
-					<Heading1 size={16} />
-				{:else}
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger>
+				{#snippet child(triggerProps)}
+					<button
+						{...triggerProps.props}
+						class="toolbar-btn dropdown-trigger"
+						class:active={activeHeadingLevel !== null}
+						disabled={isDisabled()}
+						title="Heading"
+						aria-label="Heading"
+						type="button"
+					>
+						{#if activeHeadingLevel !== null}
+							<Heading1 size={16} />
+						{:else}
+							<Type size={16} />
+						{/if}
+						<ChevronDown size={14} class="dropdown-chevron" />
+					</button>
+				{/snippet}
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="start">
+				<DropdownMenu.Item onclick={() => applyHeading(null)}>
 					<Type size={16} />
-				{/if}
-				<ChevronDown size={14} class="dropdown-chevron" />
-			</button>
-
-			{#if headingDropdownOpen}
-				<div class="dropdown-popover" role="menu" aria-label="Heading">
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeHeadingLevel === null}
-						role="menuitem"
-						onclick={() => applyHeading(null)}
-					>
-						<Type size={16} />
-						<span>Paragraph</span>
-					</button>
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeHeadingLevel === 1}
-						role="menuitem"
-						onclick={() => applyHeading(1)}
-					>
-						<Heading1 size={16} />
-						<span>Heading 1</span>
-					</button>
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeHeadingLevel === 2}
-						role="menuitem"
-						onclick={() => applyHeading(2)}
-					>
-						<Heading2 size={16} />
-						<span>Heading 2</span>
-					</button>
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeHeadingLevel === 3}
-						role="menuitem"
-						onclick={() => applyHeading(3)}
-					>
-						<Heading3 size={16} />
-						<span>Heading 3</span>
-					</button>
-				</div>
-			{/if}
-		</div>
+					<span>Paragraph</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => applyHeading(1)}>
+					<Heading1 size={16} />
+					<span>Heading 1</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => applyHeading(2)}>
+					<Heading2 size={16} />
+					<span>Heading 2</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => applyHeading(3)}>
+					<Heading3 size={16} />
+					<span>Heading 3</span>
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
 
 		<div class="toolbar-divider" aria-hidden="true"></div>
 
 		<!-- List dropdown -->
-		<div class="dropdown" bind:this={listDropdownRoot}>
-			<button
-				class="toolbar-btn dropdown-trigger"
-				class:active={(activeStates.bulletList ?? false) || (activeStates.orderedList ?? false)}
-				disabled={isDisabled()}
-				onclick={toggleListDropdown}
-				title="List"
-				aria-label="List"
-				aria-haspopup="true"
-				aria-expanded={listDropdownOpen}
-				type="button"
-			>
-				<List size={16} />
-				<ChevronDown size={14} class="dropdown-chevron" />
-			</button>
-
-			{#if listDropdownOpen}
-				<div class="dropdown-popover" role="menu" aria-label="List">
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger>
+				{#snippet child(triggerProps)}
 					<button
+						{...triggerProps.props}
+						class="toolbar-btn dropdown-trigger"
+						class:active={(activeStates.bulletList ?? false) || (activeStates.orderedList ?? false)}
+						disabled={isDisabled()}
+						title="List"
+						aria-label="List"
 						type="button"
-						class="dropdown-item"
-						class:selected={activeStates.bulletList ?? false}
-						role="menuitem"
-						onclick={() => applyList("bullet")}
 					>
 						<List size={16} />
-						<span>Bullet list</span>
+						<ChevronDown size={14} class="dropdown-chevron" />
 					</button>
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeStates.orderedList ?? false}
-						role="menuitem"
-						onclick={() => applyList("ordered")}
-					>
-						<ListOrdered size={16} />
-						<span>Ordered list</span>
-					</button>
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeStates.taskList ?? false}
-						role="menuitem"
-						onclick={() => applyList("task")}
-					>
-						<ListChecks size={16} />
-						<span>Task list</span>
-					</button>
-				</div>
-			{/if}
-		</div>
+				{/snippet}
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="start">
+				<DropdownMenu.Item onclick={() => applyList("bullet")}>
+					<List size={16} />
+					<span>Bullet list</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => applyList("ordered")}>
+					<ListOrdered size={16} />
+					<span>Ordered list</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => applyList("task")}>
+					<ListChecks size={16} />
+					<span>Task list</span>
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
 
 		<div class="toolbar-divider" aria-hidden="true"></div>
 
@@ -652,130 +502,101 @@ $effect(() => {
 		<div class="toolbar-divider" aria-hidden="true"></div>
 
 		<!-- Highlight color picker -->
-		<div class="highlight-picker" bind:this={highlightPickerRoot}>
-			<button
-				class="toolbar-btn highlight-btn"
-				class:active={activeStates.highlight ?? false}
-				disabled={isDisabled()}
-				onclick={toggleHighlightPicker}
-				title="Highlight"
-				aria-label="Highlight"
-				aria-pressed={activeStates.highlight ?? false}
-				aria-haspopup="true"
-				aria-expanded={highlightPickerOpen}
-				type="button"
-			>
-				<Highlighter size={16} />
-				<span
-					class="highlight-dot"
-					class:visible={activeHighlightColor !== null}
-					style:background-color={activeHighlightColor ?? "transparent"}
-					aria-hidden="true"
-				></span>
-			</button>
-
-			{#if highlightPickerOpen}
-				<div class="highlight-popover" role="menu" aria-label="Highlight">
-					<div class="highlight-swatch-grid">
-						{#each HIGHLIGHT_COLORS as color (color.value)}
-							<button
-								type="button"
-								class="highlight-swatch"
-								class:selected={activeHighlightColor === color.value}
-								style:background-color={color.value}
-								title={color.name}
-								aria-label={color.name}
-								role="menuitem"
-								onclick={() => applyHighlight(color.value)}
-							></button>
-						{/each}
-					</div>
-					{#if activeHighlightColor !== null}
+		<Popover.Root bind:open={highlightPickerOpen}>
+			<Popover.Trigger>
+				{#snippet child(triggerProps)}
+					<button
+						{...triggerProps.props}
+						class="toolbar-btn highlight-btn"
+						class:active={activeStates.highlight ?? false}
+						disabled={isDisabled()}
+						title="Highlight"
+						aria-label="Highlight"
+						type="button"
+					>
+						<Highlighter size={16} />
+						<span
+							class="highlight-dot"
+							class:visible={activeHighlightColor !== null}
+							style:background-color={activeHighlightColor ?? "transparent"}
+							aria-hidden="true"
+						></span>
+					</button>
+				{/snippet}
+			</Popover.Trigger>
+			<Popover.Content class="min-w-[180px] p-2" align="start">
+				<div class="highlight-swatch-grid">
+					{#each HIGHLIGHT_COLORS as color (color.value)}
 						<button
 							type="button"
-							class="highlight-clear"
-							role="menuitem"
-							onclick={clearHighlight}
-						>
-							Clear
-						</button>
-					{/if}
+							class="highlight-swatch"
+							class:selected={activeHighlightColor === color.value}
+							style:background-color={color.value}
+							title={color.name}
+							aria-label={color.name}
+							onclick={() => applyHighlight(color.value)}
+						></button>
+					{/each}
 				</div>
-			{/if}
-		</div>
+				{#if activeHighlightColor !== null}
+					<button
+						type="button"
+						class="highlight-clear"
+						onclick={clearHighlight}
+					>
+						Clear
+					</button>
+				{/if}
+			</Popover.Content>
+		</Popover.Root>
 
 		<div class="toolbar-divider" aria-hidden="true"></div>
 
 		<!-- Align dropdown -->
-		<div class="dropdown" bind:this={alignDropdownRoot}>
-			<button
-				class="toolbar-btn dropdown-trigger"
-				class:active={activeAlignment !== "left"}
-				disabled={isDisabled()}
-				onclick={toggleAlignDropdown}
-				title="Align"
-				aria-label="Align"
-				aria-haspopup="true"
-				aria-expanded={alignDropdownOpen}
-				type="button"
-			>
-				{#if activeAlignment === "center"}
-					<AlignCenter size={16} />
-				{:else if activeAlignment === "right"}
-					<AlignRight size={16} />
-				{:else if activeAlignment === "justify"}
-					<AlignJustify size={16} />
-				{:else}
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger>
+				{#snippet child(triggerProps)}
+					<button
+						{...triggerProps.props}
+						class="toolbar-btn dropdown-trigger"
+						class:active={activeAlignment !== "left"}
+						disabled={isDisabled()}
+						title="Align"
+						aria-label="Align"
+						type="button"
+					>
+						{#if activeAlignment === "center"}
+							<AlignCenter size={16} />
+						{:else if activeAlignment === "right"}
+							<AlignRight size={16} />
+						{:else if activeAlignment === "justify"}
+							<AlignJustify size={16} />
+						{:else}
+							<AlignLeft size={16} />
+						{/if}
+						<ChevronDown size={14} class="dropdown-chevron" />
+					</button>
+				{/snippet}
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="start">
+				<DropdownMenu.Item onclick={() => applyAlignment("left")}>
 					<AlignLeft size={16} />
-				{/if}
-				<ChevronDown size={14} class="dropdown-chevron" />
-			</button>
-
-			{#if alignDropdownOpen}
-				<div class="dropdown-popover" role="menu" aria-label="Align">
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeAlignment === "left"}
-						role="menuitem"
-						onclick={() => applyAlignment("left")}
-					>
-						<AlignLeft size={16} />
-						<span>Align left</span>
-					</button>
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeAlignment === "center"}
-						role="menuitem"
-						onclick={() => applyAlignment("center")}
-					>
-						<AlignCenter size={16} />
-						<span>Align center</span>
-					</button>
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeAlignment === "right"}
-						role="menuitem"
-						onclick={() => applyAlignment("right")}
-					>
-						<AlignRight size={16} />
-						<span>Align right</span>
-					</button>
-					<button
-						type="button"
-						class="dropdown-item"
-						class:selected={activeAlignment === "justify"}
-						role="menuitem"
-						onclick={() => applyAlignment("justify")}
-					>
-						<AlignJustify size={16} />
-						<span>Justify</span>
-					</button>
-				</div>
-			{/if}
-		</div>
+					<span>Align left</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => applyAlignment("center")}>
+					<AlignCenter size={16} />
+					<span>Align center</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => applyAlignment("right")}>
+					<AlignRight size={16} />
+					<span>Align right</span>
+				</DropdownMenu.Item>
+				<DropdownMenu.Item onclick={() => applyAlignment("justify")}>
+					<AlignJustify size={16} />
+					<span>Justify</span>
+				</DropdownMenu.Item>
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
 
 		<div class="toolbar-divider" aria-hidden="true"></div>
 
@@ -807,87 +628,84 @@ $effect(() => {
 		<div class="toolbar-divider" aria-hidden="true"></div>
 
 		<!-- Emoji picker -->
-		<div class="emoji-picker" bind:this={emojiPickerRoot}>
-			<button
-				class="toolbar-btn"
-				disabled={isDisabled()}
-				onclick={toggleEmojiPicker}
-				title="Emoji"
-				aria-label="Emoji"
-				aria-haspopup="true"
-				aria-expanded={emojiPickerOpen}
-				type="button"
-			>
-				<Smile size={16} />
-			</button>
-
-			{#if emojiPickerOpen}
-				<div class="emoji-popover" role="menu" aria-label="Emoji">
-					<div class="emoji-grid">
-						{#each EMOJIS as emoji (emoji)}
-							<button
-								type="button"
-								class="emoji-button"
-								role="menuitem"
-								onclick={() => insertEmoji(emoji)}
-								aria-label={emoji}
-							>
-								{emoji}
-							</button>
-						{/each}
-					</div>
+		<Popover.Root bind:open={emojiPickerOpen}>
+			<Popover.Trigger>
+				{#snippet child(triggerProps)}
+					<button
+						{...triggerProps.props}
+						class="toolbar-btn"
+						disabled={isDisabled()}
+						title="Emoji"
+						aria-label="Emoji"
+						type="button"
+					>
+						<Smile size={16} />
+					</button>
+				{/snippet}
+			</Popover.Trigger>
+			<Popover.Content class="min-w-[220px] p-2" align="start">
+				<div class="emoji-grid">
+					{#each EMOJIS as emoji (emoji)}
+						<button
+							type="button"
+							class="emoji-button"
+							onclick={() => insertEmoji(emoji)}
+							aria-label={emoji}
+						>
+							{emoji}
+						</button>
+					{/each}
 				</div>
-			{/if}
-		</div>
+			</Popover.Content>
+		</Popover.Root>
 
 		<div class="toolbar-divider" aria-hidden="true"></div>
 
 		<!-- Table insert -->
-		<div class="table-picker" bind:this={tablePickerRoot}>
-			<button
-				class="toolbar-btn"
-				disabled={isDisabled()}
-				onclick={toggleTablePicker}
-				title="Insert table"
-				aria-label="Insert table"
-				aria-haspopup="true"
-				aria-expanded={tablePickerOpen}
-				type="button"
-			>
-				<TableIcon size={16} />
-			</button>
-
-			{#if tablePickerOpen}
-				<div class="table-popover" role="menu" aria-label="Insert table">
-					<div class="table-grid" role="presentation">
-						{#each Array(TABLE_GRID_MAX) as _, r}
-							{#each Array(TABLE_GRID_MAX) as _, c}
-								<button
-									type="button"
-									class="table-cell"
-									class:active={r < tableHoverRows && c < tableHoverCols}
-									onmouseenter={() => {
-										tableHoverRows = r + 1;
-										tableHoverCols = c + 1;
-									}}
-									onfocus={() => {
-										tableHoverRows = r + 1;
-										tableHoverCols = c + 1;
-									}}
-									onclick={() => insertTable(r + 1, c + 1)}
-									aria-label={`${r + 1} × ${c + 1}`}
-								></button>
-							{/each}
+		<Popover.Root bind:open={tablePickerOpen}>
+			<Popover.Trigger>
+				{#snippet child(triggerProps)}
+					<button
+						{...triggerProps.props}
+						class="toolbar-btn"
+						disabled={isDisabled()}
+						title="Insert table"
+						aria-label="Insert table"
+						type="button"
+					>
+						<TableIcon size={16} />
+					</button>
+				{/snippet}
+			</Popover.Trigger>
+			<Popover.Content class="p-2" align="start">
+				<div class="table-grid" role="presentation">
+					{#each Array(TABLE_GRID_MAX) as _, r}
+						{#each Array(TABLE_GRID_MAX) as _, c}
+							<button
+								type="button"
+								class="table-cell"
+								class:active={r < tableHoverRows && c < tableHoverCols}
+								onmouseenter={() => {
+									tableHoverRows = r + 1;
+									tableHoverCols = c + 1;
+								}}
+								onfocus={() => {
+									tableHoverRows = r + 1;
+									tableHoverCols = c + 1;
+								}}
+								onclick={() => insertTable(r + 1, c + 1)}
+								aria-label={`${r + 1} × ${c + 1}`}
+							></button>
 						{/each}
-					</div>
-					<div class="table-grid-label">
-						{tableHoverRows > 0
-							? `${tableHoverRows} × ${tableHoverCols}`
-							: "Insert table"}
-					</div>
+					{/each}
 				</div>
-			{/if}
-		</div>
+				<div class="table-grid-label">
+					{tableHoverRows > 0
+						? `${tableHoverRows} × ${tableHoverCols}`
+						: "Insert table"}
+				</div>
+			</Popover.Content>
+		</Popover.Root>
 	</div>
 
 	{#if imageError}
@@ -957,13 +775,6 @@ $effect(() => {
 		cursor: not-allowed;
 	}
 
-	.dropdown {
-		position: relative;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-	}
-
 	.dropdown-trigger {
 		gap: 2px;
 		padding: 0 6px;
@@ -971,56 +782,6 @@ $effect(() => {
 
 	:global(.dropdown-chevron) {
 		opacity: 0.6;
-	}
-
-	.dropdown-popover {
-		position: absolute;
-		top: calc(100% + 6px);
-		left: 0;
-		z-index: 50;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-		padding: 6px;
-		background: var(--popover);
-		color: var(--popover-foreground);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		min-width: 180px;
-	}
-
-	.dropdown-item {
-		display: inline-flex;
-		align-items: center;
-		gap: 10px;
-		padding: 6px 10px;
-		min-height: 32px;
-		font-size: 0.875rem;
-		background: transparent;
-		border: none;
-		border-radius: 4px;
-		color: var(--popover-foreground);
-		cursor: pointer;
-		text-align: left;
-		transition: background 0.1s ease;
-	}
-
-	.dropdown-item:hover {
-		background: var(--accent);
-		color: var(--accent-foreground);
-	}
-
-	.dropdown-item.selected {
-		background: color-mix(in srgb, var(--primary) 18%, transparent);
-		color: var(--foreground);
-	}
-
-	.highlight-picker {
-		position: relative;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
 	}
 
 	.highlight-btn {
@@ -1044,23 +805,6 @@ $effect(() => {
 	.highlight-dot.visible {
 		opacity: 1;
 		transform: scale(1);
-	}
-
-	.highlight-popover {
-		position: absolute;
-		top: calc(100% + 6px);
-		left: 0;
-		z-index: 50;
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		padding: 8px;
-		background: var(--popover);
-		color: var(--popover-foreground);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		min-width: 180px;
 	}
 
 	.highlight-swatch-grid {
@@ -1093,6 +837,7 @@ $effect(() => {
 		align-items: center;
 		justify-content: center;
 		padding: 4px 8px;
+		margin-top: 6px;
 		font-size: 0.75rem;
 		color: var(--muted-foreground);
 		background: transparent;
@@ -1128,12 +873,8 @@ $effect(() => {
 	}
 
 	@keyframes spin {
-		from {
-			transform: rotate(0deg);
-		}
-		to {
-			transform: rotate(360deg);
-		}
+		from { transform: rotate(0deg); }
+		to { transform: rotate(360deg); }
 	}
 
 	.image-btn :global(.animate-spin) {
@@ -1160,27 +901,6 @@ $effect(() => {
 		font-size: 16px;
 		line-height: 1;
 		padding: 0 4px;
-	}
-
-	.emoji-picker {
-		position: relative;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.emoji-popover {
-		position: absolute;
-		top: calc(100% + 6px);
-		left: 0;
-		z-index: 70;
-		padding: 8px;
-		background: var(--popover);
-		color: var(--popover-foreground);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-		min-width: 220px;
 	}
 
 	.emoji-grid {
@@ -1213,26 +933,6 @@ $effect(() => {
 	.emoji-button:focus-visible {
 		outline: 2px solid var(--ring);
 		outline-offset: 1px;
-	}
-
-	.table-picker {
-		position: relative;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.table-popover {
-		position: absolute;
-		top: calc(100% + 6px);
-		left: 0;
-		z-index: 70;
-		padding: 8px;
-		background: var(--popover);
-		color: var(--popover-foreground);
-		border: 1px solid var(--border);
-		border-radius: 8px;
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 	}
 
 	.table-grid {

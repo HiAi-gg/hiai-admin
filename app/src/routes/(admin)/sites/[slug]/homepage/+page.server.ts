@@ -8,6 +8,7 @@ import {
   diffDeletedIds,
   type HomepageBlock,
 } from '$lib/sites/homepage.js';
+import { getSiteDataProvider } from '$lib/server/providers/runtime.js';
 
 // Homepage blocks editor (Block B / B2.2). Loads the ordered list of blocks
 // from the site backend by slug and handles reorder/save actions.
@@ -17,6 +18,12 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   let error: string | undefined;
 
   try {
+    const provider = await getSiteDataProvider(slug);
+    if (provider) {
+      blocks = extractBlocks(await provider.listHomepageBlocks());
+      return { slug, blocks, error };
+    }
+
     // Use slug-based endpoint to fetch blocks from site backend
     const res = await fetch(`/api/${slug}/homepage-blocks/admin/site-by-slug/${slug}`);
     if (res.ok) {
@@ -42,6 +49,26 @@ export const actions: Actions = {
       blocks = JSON.parse(blocksJson);
     } catch {
       return fail(400, { error: 'Invalid blocks JSON' });
+    }
+
+    try {
+      const provider = await getSiteDataProvider(slug);
+      if (provider) {
+        const saved = await provider.saveHomepageBlocks(
+          blocks.map((block, order) => ({
+            id: block.id,
+            type: block.type,
+            order,
+            data: block.data,
+          })),
+        );
+        return { success: true, updated: saved.length };
+      }
+    } catch (error) {
+      return fail(502, {
+        error: error instanceof Error ? error.message : 'Provider save failed',
+        blocks,
+      });
     }
 
     // Validate all blocks before save.

@@ -37,6 +37,14 @@ export const SITE_MODULES = [
  * through as-is (the consumer backend may read it from query / body).
  */
 export const pathMapSchema = z.record(z.string(), z.unknown()).default({});
+export const connectorTypeSchema = z.enum(['http', 'drizzle']);
+export const adapterManifestVersionSchema = z
+  .string()
+  .regex(/^\d+\.\d+\.\d+$/, 'adapterManifestVersion must use semantic version format')
+  .default('1.0.0');
+export const connectorConfigSchema = z.record(z.string(), z.unknown()).default({});
+export const capabilitiesSchema = z.array(z.string()).default([]);
+export const secretRefsSchema = z.record(z.string().min(1), z.string().min(1)).default({});
 
 export const createSiteAdapterSchema = z.object({
   tenantId: z.string().uuid('tenantId must be a UUID'),
@@ -51,6 +59,12 @@ export const createSiteAdapterSchema = z.object({
   auth: z.enum(['jwt', 'api-key']).default('jwt'),
   jwtSecret: z.string().min(1).max(512).optional(),
   modules: z.array(z.enum(SITE_MODULES)).default([]),
+  adapterManifestVersion: adapterManifestVersionSchema,
+  connectorType: connectorTypeSchema.default('http'),
+  connectorConfig: connectorConfigSchema,
+  capabilities: capabilitiesSchema,
+  externalSiteReference: z.string().min(1).max(255).optional(),
+  secretRefs: secretRefsSchema,
   // Phase 3 pathMap-driven proxy (all optional, all back-compat).
   siteId: z.string().min(1).max(100).optional(),
   publicSlug: z

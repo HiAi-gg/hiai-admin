@@ -7,6 +7,10 @@ import {
   getPlugins,
   getProxyConfig,
   getProxyConfigs,
+  createProviderRegistry,
+  createWebsProviderStub,
+  UnsupportedCapabilityError,
+  UnsupportedConnectorError,
   registerPlugin,
   resetRegistry,
 } from '../../src/lib/plugins/registry';
@@ -225,5 +229,58 @@ describe('plugin registry — resetRegistry', () => {
 
   it('is safe to call when the registry is already empty', () => {
     expect(() => resetRegistry()).not.toThrow();
+  });
+});
+
+describe('provider registry — connector and capability resolution', () => {
+  it('resolves a provider by connector type and passes its context', () => {
+    const provider = { capabilities: [] };
+    const factory = vi.fn(() => provider);
+    const registry = createProviderRegistry({ http: factory });
+
+    expect(
+      registry.resolve({
+        connectorType: 'http',
+        config: { baseUrl: 'https://example.test' },
+      }),
+    ).toBe(provider);
+    expect(factory).toHaveBeenCalledWith({
+      connectorType: 'http',
+      config: { baseUrl: 'https://example.test' },
+      requestedCapabilities: [],
+    });
+  });
+
+  it('throws an explicit error for an unsupported connector', () => {
+    expect(() => createProviderRegistry().resolve('webs')).toThrow(UnsupportedConnectorError);
+    expect(() => createProviderRegistry().resolve('webs')).toThrow(
+      'No data provider is registered for connector type "webs"',
+    );
+  });
+
+  it('rejects capabilities that are not both declared and implemented', () => {
+    const registry = createProviderRegistry({ http: () => ({ capabilities: [] }) });
+
+    expect(() => registry.resolve({ connectorType: 'http', capabilities: ['articles'] })).toThrow(
+      UnsupportedCapabilityError,
+    );
+  });
+
+  it('resolves declared capabilities only when the matching module exists', () => {
+    const articles = {
+      list: vi.fn(),
+      get: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+      delete: vi.fn(),
+    };
+    const provider = { capabilities: ['articles'] as const, articles };
+    const registry = createProviderRegistry({ http: () => provider });
+
+    expect(registry.resolve({ connectorType: 'http', capabilities: ['articles'] })).toBe(provider);
+  });
+
+  it('keeps Webs behind the generic provider interface until implemented', () => {
+    expect(createWebsProviderStub()).toEqual({ capabilities: [] });
   });
 });

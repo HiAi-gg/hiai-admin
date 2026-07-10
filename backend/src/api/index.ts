@@ -25,6 +25,7 @@ import { proxyStoreRoutes } from './routes/proxy-store.js';
 import { rbacRoutes } from './routes/rbac.js';
 import { settingsRoutes } from './routes/settings.js';
 import { siteAdaptersRoutes } from './routes/site-adapters.js';
+import { siteAccessRoutes } from './routes/site-access.js';
 import { siteProxyRoutes } from './routes/site-proxy.js';
 import { tenantRoutes } from './routes/tenants.js';
 import { userRoutes } from './routes/users.js';
@@ -86,6 +87,7 @@ const app = new Elysia()
   .use(auditRoutes)
   .use(integrationsRoutes)
   .use(siteAdaptersRoutes)
+  .use(siteAccessRoutes)
   .use(siteProxyRoutes)
   .use(webhooksStripeRoutes)
   .use(proxyPostRoutes)

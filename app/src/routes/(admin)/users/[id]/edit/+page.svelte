@@ -1,4 +1,12 @@
 <script lang="ts">
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
+
 let { data } = $props();
 
 let name = $state(data.user?.name ?? '');
@@ -77,12 +85,17 @@ async function handleSubmit(event: Event) {
 
     <div>
       <label for="role" class="block text-sm font-medium mb-1">Role</label>
-      <select id="role" bind:value={role} class="w-full px-3 py-2 border rounded-lg">
-        <option value="viewer">Viewer</option>
-        <option value="editor">Editor</option>
-        <option value="tenant_admin">Tenant Admin</option>
-        <option value="super_admin">Super Admin</option>
-      </select>
+      <SelectRoot type="single" bind:value={role} >
+        <SelectTrigger class="w-full" id="role">
+          <SelectValue placeholder="Select role" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="viewer">Viewer</SelectItem>
+          <SelectItem value="editor">Editor</SelectItem>
+          <SelectItem value="tenant_admin">Tenant Admin</SelectItem>
+          <SelectItem value="super_admin">Super Admin</SelectItem>
+        </SelectContent>
+      </SelectRoot>
       <p class="text-xs text-muted-foreground mt-1">Super Admin grants full platform access.</p>
     </div>
 

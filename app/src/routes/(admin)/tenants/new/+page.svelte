@@ -1,4 +1,12 @@
 <script lang="ts">
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
+
 let name = $state('');
 let slug = $state('');
 let email = $state('');
@@ -41,7 +49,18 @@ async function handleSubmit(event: Event) {
     <div><label class="block text-sm font-medium mb-1">Name</label><input type="text" bind:value={name} required class="w-full px-3 py-2 border rounded-lg" /></div>
     <div><label class="block text-sm font-medium mb-1">Slug</label><input type="text" bind:value={slug} required pattern="[a-z0-9-]+" class="w-full px-3 py-2 border rounded-lg" /></div>
     <div><label class="block text-sm font-medium mb-1">Owner Email</label><input type="email" bind:value={email} required class="w-full px-3 py-2 border rounded-lg" /></div>
-    <div><label class="block text-sm font-medium mb-1">Plan</label><select bind:value={plan} class="w-full px-3 py-2 border rounded-lg"><option value="free">Free</option><option value="pro">Pro ($29/mo)</option><option value="enterprise">Enterprise ($99/mo)</option></select></div>
+    <div><label class="block text-sm font-medium mb-1">Plan</label>
+      <SelectRoot type="single" bind:value={plan} >
+        <SelectTrigger class="w-full">
+          <SelectValue placeholder="Select plan" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="free">Free</SelectItem>
+          <SelectItem value="pro">Pro ($29/mo)</SelectItem>
+          <SelectItem value="enterprise">Enterprise ($99/mo)</SelectItem>
+        </SelectContent>
+      </SelectRoot>
+    </div>
     <button type="submit" disabled={loading} class="bg-primary text-primary-foreground px-6 py-2 rounded-lg disabled:opacity-50">{loading ? 'Creating...' : 'Create Tenant'}</button>
   </form>
 </div>

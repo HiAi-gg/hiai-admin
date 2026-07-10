@@ -6,6 +6,13 @@ import HiAiEditor from '$lib/components/editor/HiAiEditor.svelte';
 import MarkdownToggle from '$lib/components/editor/MarkdownToggle.svelte';
 import { STATUS_OPTIONS, statusLabel } from '$lib/sites/articles.js';
 import type { EditorOutput } from '$lib/components/editor/HiAiEditor.svelte';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 
 let { data, form } = $props();
 
@@ -217,15 +224,17 @@ function formattedSavedAt(): string {
         </label>
         <label class="space-y-1">
           <span class="text-sm font-medium">Status</span>
-          <select
-            name="status"
-            bind:value={status}
-            class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm"
-          >
-            {#each STATUS_OPTIONS as s (s)}
-              <option value={s}>{statusLabel(s)}</option>
-            {/each}
-          </select>
+          <SelectRoot type="single" bind:value={status}>
+            <SelectTrigger class="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm">
+              <SelectValue placeholder="Select status" />
+            </SelectTrigger>
+            <SelectContent>
+              {#each STATUS_OPTIONS as s (s)}
+                <SelectItem value={s}>{statusLabel(s)}</SelectItem>
+              {/each}
+            </SelectContent>
+          </SelectRoot>
+          <input type="hidden" name="status" value={status} />
         </label>
         <label class="space-y-1">
           <span class="text-sm font-medium">Language</span>

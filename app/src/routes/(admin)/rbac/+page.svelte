@@ -1,6 +1,12 @@
 <script lang="ts">
-// biome-ignore lint/correctness/noUnusedImports: used in template
 import { invalidateAll } from '$app/navigation';
+import {
+  SelectRoot,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@hiai/ui/components/ui/select/index';
 // biome-ignore lint/correctness/noUnusedImports: used in template
 import DataTable from '$lib/components/DataTable.svelte';
 // biome-ignore lint/correctness/noUnusedImports: used in template
@@ -751,16 +757,16 @@ const tabs: { id: Tab; label: string; icon: string }[] = [
       </p>
       <div class="mt-4">
         <label for="assign-user-role" class="text-sm font-medium">Role</label>
-        <select
-          id="assign-user-role"
-          bind:value={assignUserRole}
-          class="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <option value="">— select role —</option>
-          {#each roles.filter((r) => !showAssignUser?.roleIds.includes(r.id)) as r}
-            <option value={r.id}>{r.name}</option>
-          {/each}
-        </select>
+        <SelectRoot type="single" bind:value={assignUserRole} >
+          <SelectTrigger class="mt-1 w-full" id="assign-user-role">
+            <SelectValue placeholder="\u2014 select role \u2014" />
+          </SelectTrigger>
+          <SelectContent>
+            {#each roles.filter((r) => !showAssignUser?.roleIds.includes(r.id)) as r}
+              <SelectItem value={r.id}>{r.name}</SelectItem>
+            {/each}
+          </SelectContent>
+        </SelectRoot>
       </div>
       <div class="mt-6 flex justify-end gap-3">
         <button

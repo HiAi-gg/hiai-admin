@@ -1,5 +1,6 @@
-import type { Component } from 'svelte';
 import type { NavGroup, NavItem } from '@hiai/ui';
+import type { Component } from 'svelte';
+import type { AdapterManifest } from '$lib/contracts/index.js';
 
 // Local icon contract for plugin manifests. The fresh @hiai/ui NavItem.icon
 // is typed as `string` (AdminSidebar renders it as text), but the plugins
@@ -59,4 +60,6 @@ export interface SiteAdapter extends HiAiPlugin {
   kind: 'site';
   tenantId: string;
   modules: SiteModule[];
+  manifest: AdapterManifest;
+  connectorType: AdapterManifest['connectorType'];
 }

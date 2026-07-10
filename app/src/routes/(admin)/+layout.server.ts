@@ -64,6 +64,12 @@ export const load: LayoutServerLoad = async ({ locals }) => {
       auth: dto.auth,
       modules: dto.modules,
       enabled: dto.enabled,
+      adapterManifestVersion: dto.adapterManifestVersion,
+      connectorType: dto.connectorType,
+      connectorConfig: dto.connectorConfig,
+      capabilities: dto.capabilities,
+      externalSiteReference: dto.externalSiteReference,
+      secretRefs: dto.secretRefs,
     }));
     for (const plugin of buildSiteAdapterPlugins(adapters)) registerPlugin(plugin);
   } catch {
