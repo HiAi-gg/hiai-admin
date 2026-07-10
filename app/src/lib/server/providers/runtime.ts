@@ -1,9 +1,6 @@
 import postgres from 'postgres';
 import { siteAdapterService } from '../../../../../backend/src/modules/site-adapter/site-adapter.service.js';
-import {
-  createWebsDrizzleProvider,
-  type WebsDrizzleDatabase,
-} from './webs-drizzle.js';
+import { createWebsDrizzleProvider, type WebsDrizzleDatabase } from './webs-drizzle.js';
 import type { DataProvider } from '$lib/providers/index.js';
 
 const clients = new Map<string, postgres.Sql>();
@@ -44,9 +41,7 @@ export async function getSiteDataProvider(slug: string): Promise<DataProvider | 
     siteId,
     schema: typeof connectorConfig.schema === 'string' ? connectorConfig.schema : undefined,
     settingsTable:
-      typeof connectorConfig.settingsTable === 'string'
-        ? connectorConfig.settingsTable
-        : undefined,
+      typeof connectorConfig.settingsTable === 'string' ? connectorConfig.settingsTable : undefined,
     homepageBlocksTable:
       typeof connectorConfig.homepageBlocksTable === 'string'
         ? connectorConfig.homepageBlocksTable

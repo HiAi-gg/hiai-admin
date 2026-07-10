@@ -1,8 +1,5 @@
 import type { HiAiPlugin, NavGroup, PluginPage, ProxyConfig } from './types.js';
-import type {
-  DataProvider,
-  DataProviderCapability,
-} from './contracts/index.js';
+import type { DataProvider, DataProviderCapability } from './contracts/index.js';
 
 const plugins = new Map<string, HiAiPlugin>();
 
@@ -38,10 +35,12 @@ export function hasProviderCapability(
   provider: DataProvider,
   capability: DataProviderCapability,
 ): boolean {
-  return provider.capabilities.includes(capability) &&
+  return (
+    provider.capabilities.includes(capability) &&
     ((capability === 'articles' && provider.articles !== undefined) ||
       (capability === 'homepage' && provider.homepage !== undefined) ||
-      (capability === 'settings' && provider.settings !== undefined));
+      (capability === 'settings' && provider.settings !== undefined))
+  );
 }
 
 export function createWebsProviderStub(): DataProvider {

@@ -1,9 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  adapterManifestSchema,
-  articleSchema,
-  homepageBlockSchema,
-} from '$lib/contracts/index.js';
+import { adapterManifestSchema, articleSchema, homepageBlockSchema } from '$lib/contracts/index.js';
 import {
   createWebsDrizzleProvider,
   websDrizzleConfigFromEnv,
@@ -25,10 +21,12 @@ describe('Wave 2A provider foundation', () => {
   it('resolves providers by generic connectorType', () => {
     const provider = { connectorType: 'http' } as never;
     const resolver = createProviderResolver({ http: () => provider });
-    expect(resolver.resolve({ adapterManifestVersion: '0.0.6', connectorType: 'http' })).toBe(provider);
-    expect(() => resolver.resolve({ adapterManifestVersion: '0.0.6', connectorType: 'drizzle' })).toThrow(
-      UnknownConnectorTypeError,
+    expect(resolver.resolve({ adapterManifestVersion: '0.0.6', connectorType: 'http' })).toBe(
+      provider,
     );
+    expect(() =>
+      resolver.resolve({ adapterManifestVersion: '0.0.6', connectorType: 'drizzle' }),
+    ).toThrow(UnknownConnectorTypeError);
   });
 
   it('reads Webs blocks through the injected server-side database', async () => {
