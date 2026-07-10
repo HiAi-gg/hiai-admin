@@ -59,7 +59,11 @@ Concurrency Safety Fix (important finding from reviewer)
     - `Invite role is not allowed`
 - Added a focused race/concurrency regression test in `backend/tests/integration/site-invites.test.ts`:
   - `only allows one concurrent acceptance attempt for a single-use invite`
-  - Exercises two parallel `acceptInvite()` calls with the same invite token and asserts one success plus one `Invite has already been accepted` rejection.
+  - Exercises two parallel `acceptInvite()` calls with a deterministic in-memory race harness:
+    - both calls wait at a barrier before `UPDATE ... RETURNING`
+    - only one claim can return a single `RETURNING` row
+    - the loser falls back to `SELECT` and returns `Invite has already been accepted`
+  - Note: the repo’s current integration harness is DB-mocked in this module. I documented and preserved a deterministic fallback seam here because local PostgreSQL access could not be established safely in this environment.
 - Result: single-use guarantee now enforced at service/repository boundary and compatible with existing error behavior.
 
 Concerns

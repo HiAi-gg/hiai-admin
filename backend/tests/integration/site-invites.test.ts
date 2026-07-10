@@ -75,6 +75,73 @@ function nextChain(rows: unknown[]) {
   return chain;
 }
 
+type InviteRow = ReturnType<typeof makeInviteRow>;
+
+function createConcurrentAtomicClaimHarness(seedInvite: InviteRow, participantCount = 2) {
+  const claimState = {
+    invite: { ...seedInvite },
+    updateCalls: 0,
+    selectCalls: 0,
+    returningRows: [] as Array<unknown[]>,
+  };
+
+  let arrived = 0;
+  let release = (): void => {};
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  const waitForRendezvous = async () => {
+    arrived += 1;
+    if (arrived >= participantCount) {
+      release();
+      return;
+    }
+    await gate;
+  };
+
+  function makeUpdateChain() {
+    const chain: any = {};
+    chain.set = vi.fn(() => chain);
+    chain.where = vi.fn(() => chain);
+    chain.returning = vi.fn(async () => {
+      await waitForRendezvous();
+
+      claimState.updateCalls += 1;
+
+      if (claimState.invite.acceptedAt != null) {
+        const empty: unknown[] = [];
+        claimState.returningRows.push(empty);
+        return empty;
+      }
+
+      claimState.invite.acceptedAt = new Date();
+      const row = { ...claimState.invite };
+      claimState.returningRows.push([row]);
+      return [row];
+    });
+    return chain;
+  }
+
+  function makeSelectChain() {
+    const chain: any = {};
+    chain.from = vi.fn(() => chain);
+    chain.where = vi.fn(() => chain);
+    chain.limit = vi.fn(() => chain);
+    chain.then = (resolve: (value: unknown) => void) => {
+      claimState.selectCalls += 1;
+      resolve([{ ...claimState.invite }]);
+    };
+    return chain;
+  }
+
+  return {
+    claimState,
+    makeUpdateChain,
+    makeSelectChain,
+  };
+}
+
 const dbMock = {
   select: vi.fn(() => nextChain(dbState.selectCalls.rows.shift() ?? [])),
   insert: vi.fn(() => nextChain(dbState.insertCalls.rows.shift() ?? [])),
@@ -168,9 +235,9 @@ function makeInviteRow(overrides: Partial<{
 beforeEach(() => {
   sessions.clear();
   authMock.api.getSession.mockClear();
-  dbMock.select.mockClear();
-  dbMock.insert.mockClear();
-  dbMock.update.mockClear();
+  dbMock.select.mockClear().mockImplementation(() => nextChain(dbState.selectCalls.rows.shift() ?? []));
+  dbMock.insert.mockClear().mockImplementation(() => nextChain(dbState.insertCalls.rows.shift() ?? []));
+  dbMock.update.mockClear().mockImplementation(() => nextChain(dbState.updateCalls.rows.shift() ?? []));
   dbMock.delete.mockClear();
   dbState.selectCalls.rows = [];
   dbState.insertCalls.rows = [];
@@ -286,33 +353,18 @@ describe('site invite security regressions', () => {
   it('only allows one concurrent acceptance attempt for a single-use invite', async () => {
     const token = 'race-token';
 
-    dbState.updateCalls.rows.push(
-      [
-        {
-          id: 'invite-1',
-          tenantId: 'tenant-1',
-          siteAdapterId: 'adapter-1',
-          email: 'member@hiai.local',
-          role: 'viewer',
-          permissions: ['articles:read'],
-          acceptedAt: new Date(),
-          expiresAt: new Date(Date.now() + 3600_000),
-        },
-      ],
-      [],
-    );
-    dbState.selectCalls.rows.push([
-      {
-        id: 'invite-1',
-        tenantId: 'tenant-1',
-        siteAdapterId: 'adapter-1',
-        email: 'member@hiai.local',
-        role: 'viewer',
-        permissions: ['articles:read'],
-        acceptedAt: new Date(),
-        expiresAt: new Date(Date.now() + 3600_000),
-      },
-    ]);
+    const harnessInvite = makeInviteRow({
+      tokenHash: hashInviteToken(token),
+      role: 'viewer',
+      permissions: ['articles:read'],
+      acceptedAt: null,
+      expiresAt: new Date(Date.now() + 3600_000),
+    });
+    const concurrentHarness = createConcurrentAtomicClaimHarness(harnessInvite);
+
+    dbMock.update.mockImplementation(() => concurrentHarness.makeUpdateChain());
+    dbMock.select.mockImplementation(() => concurrentHarness.makeSelectChain());
+
     dbState.insertCalls.rows.push([
       { userId: 'user-1', tenantId: 'tenant-1', role: 'viewer', permissions: ['articles:read'] },
     ]);
@@ -342,27 +394,36 @@ describe('site invite security regressions', () => {
       }),
     ]);
 
-    if (firstResult.status === 'fulfilled') {
-      expect(firstResult.value).toMatchObject({
+    const settledAttempts = [firstResult, secondResult];
+    const successAttempts = settledAttempts.filter((attempt) => attempt.status === 'fulfilled');
+    const failedAttempts = settledAttempts.filter((attempt) => attempt.status === 'rejected');
+
+    expect(successAttempts).toHaveLength(1);
+    expect(failedAttempts).toHaveLength(1);
+
+    expect(successAttempts[0]).toMatchObject({
+      status: 'fulfilled',
+      value: {
         status: 'accepted',
         tenantId: 'tenant-1',
         siteAdapterId: 'adapter-1',
         role: 'viewer',
-      });
-    } else {
-      throw new Error('First accept should have succeeded');
-    }
-
-    if (secondResult.status === 'rejected') {
-      expect(secondResult.reason).toMatchObject({
+      },
+    });
+    expect(failedAttempts[0]).toMatchObject({
+      status: 'rejected',
+      reason: {
         message: 'Invite has already been accepted',
         code: 'BAD_REQUEST',
-      });
-    } else {
-      throw new Error('Second accept should have been rejected');
-    }
-    expect(dbMock.update).toHaveBeenCalledTimes(2);
-    expect(dbMock.insert).toHaveBeenCalledTimes(2);
+      },
+    });
+
+    expect(concurrentHarness.claimState.updateCalls).toBe(2);
+    expect(concurrentHarness.claimState.returningRows).toEqual([
+      [{ ...harnessInvite, acceptedAt: expect.any(Date) }],
+      [],
+    ]);
+    expect(concurrentHarness.claimState.selectCalls).toBe(1);
   });
 
   it('rejects replay, expired token and mismatched email', async () => {
