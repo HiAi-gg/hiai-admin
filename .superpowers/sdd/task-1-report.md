@@ -60,3 +60,30 @@ Concerns / residuals
 - `bun run typecheck` failure:
   - `src/api/routes/site-invites.ts` and `src/modules/site-membership/site-invite.service.ts`
   - not introduced by Task 1 files.
+
+Fixes applied for Important findings
+- Added actual auth-route enforcement for `AUTH_SIGNUP_MODE` in `backend/src/api/index.ts`
+  using `getAuthSignupPolicyError` before Better Auth routes are mounted:
+  - `disabled` now blocks `/sign-up/email` and password-reset request routes
+  - `trusted-client` now requires constant-time `X-Auth-Trusted-Client` header on signup + password-reset request routes
+  - `public` permits standard behavior
+- Added route-aware fallback checks in `backend/src/auth/index.ts`:
+  - matches `POST /api/auth/sign-up/email`, `POST /api/auth/forget-password`, and `POST /api/auth/request-password-reset`
+- Added per-attempt webhook request timeout in `backend/src/modules/auth-events/auth-event.service.ts`:
+  - each attempt uses `AbortController` with `10_000`ms timeout (`DEFAULT_WEBHOOK_TIMEOUT_MS`)
+  - timeout maps to retriable errors and preserves retry budget
+- Added focused regression tests:
+  - `backend/tests/unit/auth-signup-policy.test.ts`
+  - timeout coverage in `backend/tests/unit/auth-event.service.test.ts`
+
+Validation after fixes
+- `cd backend && bunx vitest run tests/integration/account-bootstrap.test.ts tests/unit/auth-event.service.test.ts`
+  - PASS (`2 passed`, `10 tests`).
+- `cd backend && bunx vitest run tests/unit/auth-signup-policy.test.ts tests/unit/auth-event.service.test.ts`
+  - PASS (`2 passed`, `12 tests`).
+- `cd backend && bun run typecheck`
+  - PASS (`tsc --noEmit`).
+
+Residuals after fix
+- Existing full-suite and environment issues remain unchanged:
+  - `bun run test` (pre-existing failures listed above)

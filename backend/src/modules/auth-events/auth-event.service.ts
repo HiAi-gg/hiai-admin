@@ -7,6 +7,7 @@ const log = createChildLogger('auth-events');
 
 const placeholderPattern = /(^|[:\s])(change[-_]?me|your[-_]?secret|placeholder|example|dummy)/i;
 const RETRY_DELAYS_MS = [250, 1_000, 3_000];
+const DEFAULT_WEBHOOK_TIMEOUT_MS = 10_000;
 
 export interface AuthActionEventPayload {
   type: AuthActionEvent['type'];
@@ -28,6 +29,7 @@ export interface AuthEventDependencies {
   webhookAudience?: string;
   webhookIssuer?: string;
   maxRetries?: number;
+  webhookTimeoutMs?: number;
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
   doFetch?: (url: string, init: RequestInit) => Promise<Response>;
@@ -92,6 +94,7 @@ export function createAuthEventService(deps: AuthEventDependencies = {}) {
   const webhookAudience = deps.webhookAudience ?? env.AUTH_EVENT_WEBHOOK_AUDIENCE;
   const webhookIssuer = deps.webhookIssuer ?? env.AUTH_EVENT_WEBHOOK_ISSUER;
   const maxRetries = deps.maxRetries ?? 3;
+  const webhookTimeoutMs = deps.webhookTimeoutMs ?? DEFAULT_WEBHOOK_TIMEOUT_MS;
   const now = deps.now ?? (() => Math.floor(Date.now() / 1000));
   const sleep = deps.sleep ?? ((ms: number) => new Promise((resolve) => setTimeout(resolve, ms)));
   const doFetch = deps.doFetch ?? ((url: string, init: RequestInit) => fetch(url, init));
@@ -130,9 +133,15 @@ export function createAuthEventService(deps: AuthEventDependencies = {}) {
         if (delay) await sleep(delay);
       }
 
+      const controller = new AbortController();
+      const timer = setTimeout(() => {
+        controller.abort();
+      }, webhookTimeoutMs);
+
       try {
         const response = await doFetch(webhookUrl, {
           method: 'POST',
+          signal: controller.signal,
           headers: {
             'content-type': 'application/json',
             accept: 'application/json',
@@ -174,7 +183,13 @@ export function createAuthEventService(deps: AuthEventDependencies = {}) {
           `Auth event webhook failed with status ${response.status} ${response.statusText}`,
         );
       } catch (err) {
-        lastError = err;
+        if ((err as DOMException | undefined)?.name === 'AbortError') {
+          lastError = new Error(`Auth event webhook request timed out after ${webhookTimeoutMs}ms`);
+        } else {
+          lastError = err;
+        }
+      } finally {
+        clearTimeout(timer);
       }
 
       if (lastStatus && lastStatus >= 400 && lastStatus < 500) {

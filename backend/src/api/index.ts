@@ -1,6 +1,6 @@
 import { cors } from '@elysiajs/cors';
 import { Elysia } from 'elysia';
-import { auth } from '../auth/index.js';
+import { auth, getAuthSignupPolicyError } from '../auth/index.js';
 import { env } from '../lib/config.js';
 import { AppError, ErrorCode, toErrorResponse } from '../lib/errors.js';
 import { logger } from '../lib/logger.js';
@@ -47,6 +47,22 @@ const app = new Elysia()
   .use(cspMiddleware)
   .use(bodyLimitMiddleware)
   .use(csrfMiddleware)
+  .onBeforeHandle(({ request, set }) => {
+    const policy = getAuthSignupPolicyError(
+      new URL(request.url).pathname,
+      request.method,
+      request.headers,
+      env.AUTH_SIGNUP_MODE,
+    );
+    if (!policy) return;
+
+    set.status = policy.status;
+    return {
+      error: policy.message,
+      code: policy.code,
+      mode: env.AUTH_SIGNUP_MODE,
+    };
+  })
   .mount(auth.handler)
   // Auth derive MUST be at the global app level so `user`/`session` is
   // available to every route - including sub-app plugins that don't

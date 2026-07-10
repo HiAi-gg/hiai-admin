@@ -135,6 +135,39 @@ describe('authEventService', () => {
     expect(result.attempts).toBe(4);
   });
 
+  it('times out hanging webhook attempts after the configured timeout', async () => {
+    const abortSignals: AbortSignal[] = [];
+    const service = createAuthEventService({
+      maxRetries: 2,
+      webhookTimeoutMs: 2,
+      doFetch: async (_url, init) =>
+        new Promise((_resolve, reject) => {
+          const signal = init.signal;
+          if (!signal) {
+            reject(new Error('signal must be present'));
+            return;
+          }
+          abortSignals.push(signal);
+          signal.addEventListener('abort', () => {
+            reject(new DOMException('timed out', 'AbortError'));
+          });
+        }),
+      sleep: async () => {},
+    });
+
+    await expect(
+      service.sendPasswordResetRequested({
+        type: 'auth.password_reset_requested',
+        email: 'user@example.com',
+        actionUrl: 'https://admin.local/reset',
+        id: 'timeout-id',
+      }),
+    ).rejects.toThrow(/timed out/);
+
+    expect(abortSignals).toHaveLength(3);
+    expect(abortSignals.every((signal) => signal.aborted)).toBe(true);
+  });
+
   it('rejects placeholder webhook secrets at startup', () => {
     expect(() =>
       createAuthEventService({
@@ -167,4 +200,3 @@ describe('authEventService', () => {
     expect(sleeps).toEqual([250, 1000]);
   });
 });
-

@@ -15,6 +15,10 @@ const log = createChildLogger('auth');
 type HeaderLike = Headers | { get?: (name: string) => string | null } | Record<string, string | string[] | undefined>;
 
 const TRUSTED_CLIENT_HEADER = 'x-auth-trusted-client';
+const SIGNUP_ROUTE_SUFFIX = '/sign-up/email';
+const FORGET_PASSWORD_ROUTE_SUFFIX = '/forget-password';
+const REQUEST_PASSWORD_RESET_ROUTE_SUFFIX = '/request-password-reset';
+const SIGNUP_MODE_DENIED_STATUS = 403;
 
 function readHeader(headers: HeaderLike | undefined, key: string): string | undefined {
   if (!headers) return undefined;
@@ -49,12 +53,69 @@ function hasTrustedClientHeader(requestHeaders: HeaderLike | undefined): boolean
   return constantTimeEquals(provided, expected);
 }
 
-function assertTrustedClientAllowed(route: string, requestHeaders: HeaderLike | undefined) {
-  if (env.AUTH_SIGNUP_MODE === 'disabled') {
+function normalizeAuthPath(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return normalized.replace(/\/\/+/g, '/');
+}
+
+function resolveAuthRequestKind(path: string, method: string): 'signup' | 'password-reset' | null {
+  if (method !== 'POST') return null;
+  const normalizedPath = normalizeAuthPath(path);
+  if (normalizedPath.endsWith(SIGNUP_ROUTE_SUFFIX)) {
+    return 'signup';
+  }
+  if (normalizedPath.endsWith(FORGET_PASSWORD_ROUTE_SUFFIX)) {
+    return 'password-reset';
+  }
+  if (normalizedPath.endsWith(REQUEST_PASSWORD_RESET_ROUTE_SUFFIX)) {
+    return 'password-reset';
+  }
+  return null;
+}
+
+export function getAuthSignupPolicyError(
+  path: string,
+  method: string,
+  requestHeaders: HeaderLike | undefined,
+  mode: 'disabled' | 'public' | 'trusted-client' = env.AUTH_SIGNUP_MODE,
+): { code: string; status: number; message: string } | null {
+  const requestKind = resolveAuthRequestKind(path, method);
+  if (!requestKind) return null;
+
+  if (mode === 'disabled') {
+    return {
+      code: requestKind === 'signup' ? 'AUTH_SIGNUP_DISABLED' : 'AUTH_PASSWORD_RESET_DISABLED',
+      status: SIGNUP_MODE_DENIED_STATUS,
+      message:
+        requestKind === 'signup'
+          ? 'Signup is disabled'
+          : 'Password reset request is disabled',
+    };
+  }
+
+  if (mode === 'trusted-client' && !hasTrustedClientHeader(requestHeaders)) {
+    return {
+      code: requestKind === 'signup'
+        ? 'AUTH_TRUSTED_CLIENT_REQUIRED_FOR_SIGNUP'
+        : 'AUTH_TRUSTED_CLIENT_REQUIRED_FOR_PASSWORD_RESET',
+      status: SIGNUP_MODE_DENIED_STATUS,
+      message: `Missing or invalid ${TRUSTED_CLIENT_HEADER} header`,
+    };
+  }
+
+  return null;
+}
+
+function assertTrustedClientAllowed(
+  route: string,
+  requestHeaders: HeaderLike | undefined,
+  mode: 'disabled' | 'public' | 'trusted-client' = env.AUTH_SIGNUP_MODE,
+) {
+  if (mode === 'disabled') {
     throw new Error(`Auth action is disabled for ${route}`);
   }
 
-  if (env.AUTH_SIGNUP_MODE !== 'trusted-client') return;
+  if (mode !== 'trusted-client') return;
 
   if (!hasTrustedClientHeader(requestHeaders)) {
     throw new Error(`Missing or invalid ${TRUSTED_CLIENT_HEADER} header`);
