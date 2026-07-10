@@ -96,7 +96,7 @@ async function testConnection() {
         name="name"
         required
         value={form?.values?.name ?? ''}
-        placeholder="Croco"
+        placeholder="Example"
         class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
       />
     </div>
@@ -108,7 +108,7 @@ async function testConnection() {
         name="slug"
         required
         value={form?.values?.slug ?? ''}
-        placeholder="webs-croco"
+        placeholder="example-site"
         pattern="[a-z0-9-]+"
         class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
       />

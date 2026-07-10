@@ -41,7 +41,7 @@ describe('mintBackendToken', () => {
     expect(payload.exp).toBe(Math.floor(NOW / 1000) + 60);
   });
 
-  describe('role mapping (mirrors webs createBackendToken)', () => {
+  describe('role mapping (consumer adapter roles)', () => {
     it.each([
       ['super_admin', 'super_admin'],
       ['admin', 'admin'],

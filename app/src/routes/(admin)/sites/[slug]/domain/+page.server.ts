@@ -10,8 +10,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   let error: string | undefined;
 
   try {
-    // Send site slug to webs backend to filter domains to this site only
-    const res = await fetch(`/api/${slug}/domains?site=${encodeURIComponent(slug)}`);
+    const res = await fetch(`/api/${slug}/domains`);
     if (res.ok) {
       domains = normalizeDomains(await res.json());
     } else {
@@ -36,14 +35,10 @@ export const actions: Actions = {
       return fail(400, { error: 'Domain is required' });
     }
 
-    // webs backend expects site_id in the request body
-    // For now, we don't have a direct way to get site_id from slug in this context.
-    // The webs backend may also accept filtering by slug (additive feature).
-    // Send both domain and slug; backend can use slug to infer site_id or create new filter.
     const res = await fetch(`/api/${slug}/domains`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ domain, site: slug }),
+      body: JSON.stringify({ domain }),
     });
 
     if (!res.ok) {
@@ -57,7 +52,6 @@ export const actions: Actions = {
   verify: async ({ request, params, fetch }) => {
     const { slug } = params;
     const formData = await request.formData();
-    // Use numeric id instead of domain name (matches webs contract: POST /domains/:id/verify)
     const domainId = String(formData.get('domainId') ?? '').trim();
     const domainName = String(formData.get('domain') ?? '').trim();
 
@@ -65,7 +59,6 @@ export const actions: Actions = {
       return fail(400, { error: 'Domain ID is required' });
     }
 
-    // Call the numeric id endpoint per webs contract
     const res = await fetch(`/api/${slug}/domains/${domainId}/verify`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },

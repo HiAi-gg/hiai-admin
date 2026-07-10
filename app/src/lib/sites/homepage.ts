@@ -34,13 +34,12 @@ function isBlockType(v: unknown): v is BlockType {
 /** Map an arbitrary backend block into a stable {@link HomepageBlock}, applying safe fallbacks. */
 export function normalizeBlock(raw: RawBlock): HomepageBlock {
   const typeRaw = raw.type;
-  // webs uses `order_index`; generic backends may use `order`.
+  // Accept both canonical camelCase and common snake_case transport fields.
   const orderRaw = raw.order ?? raw.order_index;
-  // webs stores block fields in a `content` jsonb column; generic backends use `data`.
   const dataRaw = raw.data ?? raw.content;
   const data: Record<string, unknown> =
     dataRaw && typeof dataRaw === 'object' ? { ...(dataRaw as Record<string, unknown>) } : {};
-  // webs keeps `title` as a separate column — fold it into data for the editor.
+  // Some adapters expose title separately; fold it into data for the editor.
   if (typeof raw.title === 'string' && raw.title !== '' && data.title === undefined) {
     data.title = raw.title;
   }
@@ -202,54 +201,11 @@ export function reorder(
 }
 
 /**
- * Build the payload for `POST /homepage-blocks/reorder`: array of blocks with order_index.
- * Converts hiai's generic HomepageBlock (with `order` field) to webs' shape ([{id, order_index}]).
+ * Build the canonical homepage reorder payload.
  */
-export function buildReorderBody(
-  blocks: HomepageBlock[],
-): Array<{ id: string; order_index: number }> {
+export function buildReorderBody(blocks: HomepageBlock[]): Array<{ id: string; order: number }> {
   return blocks.map((b) => ({
     id: b.id,
-    order_index: b.order,
+    order: b.order,
   }));
-}
-
-/**
- * Whether a block id refers to an already-persisted backend block (numeric, e.g. webs)
- * vs a new client-side block created in the editor (a generated UUID).
- */
-export function isPersistedId(id: string): boolean {
-  return /^\d+$/.test(id);
-}
-
-export interface WebsBlockPayload {
-  type: BlockType;
-  title: string;
-  content: Record<string, unknown>;
-  order_index: number;
-  visible: boolean;
-}
-
-/**
- * Map a generic {@link HomepageBlock} to the webs create/update payload shape
- * ({type, title, content, order_index, visible}). `title` is lifted out of `data`
- * (webs stores it in a dedicated column); the full `data` object becomes `content`.
- */
-export function toWebsBlock(block: HomepageBlock, orderIndex: number): WebsBlockPayload {
-  const title = typeof block.data.title === 'string' ? block.data.title : '';
-  return { type: block.type, title, content: block.data, order_index: orderIndex, visible: true };
-}
-
-/**
- * Compute which persisted (numeric-id) blocks are no longer present in the submitted set.
- * Returns a list of persisted ids (use `isPersistedId` predicate) that exist in `current`
- * but are absent from `submitted`. Client-side blocks (UUIDs) are never returned.
- *
- * @param current The persisted blocks from the backend (including numeric ids)
- * @param submitted The blocks submitted by the editor (after user removals)
- * @returns Array of persisted ids (numeric strings) to be deleted
- */
-export function diffDeletedIds(current: HomepageBlock[], submitted: HomepageBlock[]): string[] {
-  const submittedIds = new Set(submitted.map((b) => b.id));
-  return current.filter((b) => isPersistedId(b.id) && !submittedIds.has(b.id)).map((b) => b.id);
 }

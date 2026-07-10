@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "site_memberships_user_adapter_unique" ON "site_memberships" USING btree ("user_id","site_adapter_id");

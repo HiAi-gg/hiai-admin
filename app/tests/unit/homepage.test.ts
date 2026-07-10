@@ -7,7 +7,6 @@ import {
   validateBlock,
   reorder,
   buildReorderBody,
-  diffDeletedIds,
   type RawBlock,
   type HomepageBlock,
 } from '$lib/sites/homepage.js';
@@ -444,7 +443,7 @@ describe('reorder', () => {
 });
 
 describe('buildReorderBody', () => {
-  it('builds the reorder payload with id and order_index', () => {
+  it('builds the canonical reorder payload', () => {
     const blocks: HomepageBlock[] = [
       { id: 'hero-1', type: 'hero', order: 0, data: {} },
       { id: 'text-2', type: 'text', order: 1, data: {} },
@@ -453,66 +452,13 @@ describe('buildReorderBody', () => {
 
     const body = buildReorderBody(blocks);
     expect(body).toEqual([
-      { id: 'hero-1', order_index: 0 },
-      { id: 'text-2', order_index: 1 },
-      { id: 'cta-3', order_index: 2 },
+      { id: 'hero-1', order: 0 },
+      { id: 'text-2', order: 1 },
+      { id: 'cta-3', order: 2 },
     ]);
   });
 
   it('works with empty array', () => {
     expect(buildReorderBody([])).toEqual([]);
-  });
-});
-
-describe('diffDeletedIds', () => {
-  it('returns a removed persisted block', () => {
-    const current: HomepageBlock[] = [
-      { id: '1', type: 'hero', order: 0, data: {} },
-      { id: '2', type: 'text', order: 1, data: {} },
-    ];
-    const submitted: HomepageBlock[] = [{ id: '1', type: 'hero', order: 0, data: {} }];
-
-    const deleted = diffDeletedIds(current, submitted);
-    expect(deleted).toEqual(['2']);
-  });
-
-  it('never returns new client-UUID blocks', () => {
-    const clientId = '550e8400-e29b-41d4-a716-446655440000';
-    const current: HomepageBlock[] = [
-      { id: '1', type: 'hero', order: 0, data: {} },
-      { id: clientId, type: 'text', order: 1, data: {} },
-    ];
-    const submitted: HomepageBlock[] = [{ id: '1', type: 'hero', order: 0, data: {} }];
-
-    const deleted = diffDeletedIds(current, submitted);
-    expect(deleted).toEqual([]); // UUID never deleted, only numeric ids
-  });
-
-  it('does not return unchanged blocks', () => {
-    const current: HomepageBlock[] = [
-      { id: '1', type: 'hero', order: 0, data: {} },
-      { id: '2', type: 'text', order: 1, data: {} },
-      { id: '3', type: 'cta', order: 2, data: {} },
-    ];
-    const submitted: HomepageBlock[] = [
-      { id: '1', type: 'hero', order: 0, data: { title: 'Updated' } },
-      { id: '2', type: 'text', order: 1, data: {} },
-      { id: '3', type: 'cta', order: 2, data: {} },
-    ];
-
-    const deleted = diffDeletedIds(current, submitted);
-    expect(deleted).toEqual([]);
-  });
-
-  it('returns all current persisted ids when submitted is empty', () => {
-    const current: HomepageBlock[] = [
-      { id: '1', type: 'hero', order: 0, data: {} },
-      { id: '2', type: 'text', order: 1, data: {} },
-      { id: '3', type: 'cta', order: 2, data: {} },
-    ];
-    const submitted: HomepageBlock[] = [];
-
-    const deleted = diffDeletedIds(current, submitted);
-    expect(deleted).toEqual(['1', '2', '3']);
   });
 });

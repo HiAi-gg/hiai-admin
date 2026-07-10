@@ -1,16 +1,8 @@
 import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
-// Site metadata editor (parity with the legacy webs admin `/sites/[slug]/edit`).
-// Edits the site's own fields via the webs `GET/PUT /sites/:slug` contract. `slug`
-// is the immutable key; `plan` is tenant-level (not a site column) so it's not edited here.
-//
-// The webs backend stores settings as a mix of top-level columns (name, status,
-// theme, colors, logo_url, default_language, dark_mode_enabled, ...) and a
-// `config` JSONB column for boolean toggles and nested objects (kofi, socialLinks,
-// articlesPageVisible, scrollToTopEnabled, contactEmail{,Enabled}). This module
-// extracts all of those safely with typeof checks and fallbacks (same pattern
-// as `sites/[slug]/+page.server.ts` and the legacy webs admin).
+// Canonical Site adapter contract: GET/PUT /site-settings. The slug is the
+// immutable adapter key; tenant billing fields are intentionally out of scope.
 const STATUSES = ['active', 'inactive', 'draft', 'suspended'] as const;
 const THEMES = ['default', 'minimal', 'modern', 'classic', 'bold'] as const;
 const LANGUAGES = [
@@ -109,50 +101,49 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   let error: string | undefined;
 
   try {
-    const res = await fetch(`/api/${slug}/sites/${slug}`);
+    const res = await fetch(`/api/${slug}/site-settings`);
     if (res.ok) {
       const body = await res.json();
-      const s = (body && typeof body === 'object' && body.site ? body.site : body) as Record<
-        string,
-        unknown
-      >;
-      const config =
-        s && typeof s.config === 'object' && s.config !== null && !Array.isArray(s.config)
-          ? (s.config as Record<string, unknown>)
+      const s = (
+        body && typeof body === 'object' && body.settings ? body.settings : body
+      ) as Record<string, unknown>;
+      const metadata =
+        s && typeof s.metadata === 'object' && s.metadata !== null && !Array.isArray(s.metadata)
+          ? (s.metadata as Record<string, unknown>)
           : {};
       const kofi =
-        config.kofi && typeof config.kofi === 'object' && !Array.isArray(config.kofi)
-          ? (config.kofi as Record<string, unknown>)
+        metadata.kofi && typeof metadata.kofi === 'object' && !Array.isArray(metadata.kofi)
+          ? (metadata.kofi as Record<string, unknown>)
           : {};
 
       site = {
         // General
-        name: str(s.name),
+        name: str(s.title ?? s.name),
         slug: str(s.slug, slug),
         description: str(s.description),
-        status: str(s.status, 'active'),
-        defaultLanguage: str(s.default_language ?? config.defaultLanguage, 'en'),
-        // Profile (config-first, top-level fallback)
-        avatarUrl: str(config.avatarUrl ?? s.avatar_url),
-        displayName: str(config.displayName ?? s.display_name),
-        bio: str(config.bio ?? s.bio),
+        status: str(metadata.status, 'active'),
+        defaultLanguage: str(s.locale ?? metadata.defaultLanguage, 'en'),
+        // Profile
+        avatarUrl: str(metadata.avatarUrl),
+        displayName: str(metadata.displayName),
+        bio: str(metadata.bio),
         // Theme
-        theme: str(s.theme, 'default'),
-        primaryColor: str(s.primary_color, '#000000'),
-        secondaryColor: str(s.secondary_color, '#ffffff'),
-        accentColor: str(s.accent_color, '#3b82f6'),
-        backgroundColor: str(s.background_color, '#ffffff'),
-        darkModeEnabled: bool(s.dark_mode_enabled ?? config.darkModeEnabled),
-        logoUrl: str(s.logo_url ?? config.logoUrl),
+        theme: str(metadata.theme, 'default'),
+        primaryColor: str(metadata.primaryColor, '#000000'),
+        secondaryColor: str(metadata.secondaryColor, '#ffffff'),
+        accentColor: str(metadata.accentColor, '#3b82f6'),
+        backgroundColor: str(metadata.backgroundColor, '#ffffff'),
+        darkModeEnabled: bool(metadata.darkModeEnabled),
+        logoUrl: str(s.logoUrl),
         // Social
-        socialLinks: readSocialLinks(config.socialLinks ?? s.social_links),
+        socialLinks: readSocialLinks(metadata.socialLinks),
         // Features
-        articlesPageVisible: bool(config.articlesPageVisible),
-        scrollToTopEnabled: bool(config.scrollToTopEnabled),
-        contactEmailEnabled: bool(config.contactEmailEnabled),
-        contactEmail: str(config.contactEmail),
-        kofiEnabled: bool(kofi.enabled ?? config.kofiEnabled),
-        kofiUrl: str(kofi.url ?? config.kofiUrl),
+        articlesPageVisible: bool(metadata.articlesPageVisible),
+        scrollToTopEnabled: bool(metadata.scrollToTopEnabled),
+        contactEmailEnabled: bool(metadata.contactEmailEnabled),
+        contactEmail: str(metadata.contactEmail),
+        kofiEnabled: bool(kofi.enabled ?? metadata.kofiEnabled),
+        kofiUrl: str(kofi.url ?? metadata.kofiUrl),
       };
     } else {
       error = `Site backend returned ${res.status}`;
@@ -247,21 +238,24 @@ export const actions: Actions = {
     };
 
     const updatePayload: Record<string, unknown> = {
-      name,
+      slug,
+      title: name,
       description,
-      status,
-      theme,
-      default_language: defaultLanguage,
-      primary_color: primaryColor,
-      secondary_color: secondaryColor,
-      accent_color: accentColor,
-      background_color: backgroundColor,
-      dark_mode_enabled: darkModeEnabled,
-      logo_url: logoUrl,
-      config,
+      locale: defaultLanguage,
+      logoUrl: logoUrl || null,
+      metadata: {
+        ...config,
+        status,
+        theme,
+        primaryColor,
+        secondaryColor,
+        accentColor,
+        backgroundColor,
+        darkModeEnabled,
+      },
     };
 
-    const res = await fetch(`/api/${slug}/sites/${slug}`, {
+    const res = await fetch(`/api/${slug}/site-settings`, {
       method: 'PUT',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(updatePayload),

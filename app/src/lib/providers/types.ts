@@ -3,6 +3,8 @@ import type {
   ArticleDTO,
   ArticleInput,
   HomepageBlockDTO,
+  HomepageBlockInput,
+  HomepageBlockReorderInput,
   SiteSettingsDTO,
   SiteSettingsInput,
 } from '$lib/contracts/index.js';
@@ -12,6 +14,10 @@ export interface DataProvider {
   getSiteSettings(): Promise<SiteSettingsDTO>;
   updateSiteSettings(input: SiteSettingsInput): Promise<SiteSettingsDTO>;
   listHomepageBlocks(): Promise<HomepageBlockDTO[]>;
+  createHomepageBlock(input: HomepageBlockInput): Promise<HomepageBlockDTO>;
+  updateHomepageBlock(id: string, input: HomepageBlockInput): Promise<HomepageBlockDTO>;
+  deleteHomepageBlock(id: string): Promise<void>;
+  reorderHomepageBlocks(order: HomepageBlockReorderInput): Promise<void>;
   saveHomepageBlocks(blocks: HomepageBlockDTO[]): Promise<HomepageBlockDTO[]>;
   listArticles(): Promise<ArticleDTO[]>;
   getArticle(id: string): Promise<ArticleDTO | null>;

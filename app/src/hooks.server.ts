@@ -14,9 +14,9 @@ export const handle: Handle = async ({ event, resolve }) => {
   const data = await auth.api.getSession({ headers: event.request.headers });
   let user: App.Locals['user'] = data?.user ?? null;
 
-  // Enrich with platform role + accessible tenant ids if authenticated. These drive
-  // the (admin) shell guard (role) and per-tenant scoping of nav + proxy authorization
-  // (tenantIds), so a site admin only sees/reaches sites of tenants they have access to.
+  // Enrich with platform role + accessible tenant ids if authenticated. The role
+  // drives the shell guard; tenant ids remain available for tenant-level modules.
+  // Site adapter authorization is enforced separately through site_memberships.
   if (user) {
     try {
       const baUser = user as any;

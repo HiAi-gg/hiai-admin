@@ -73,7 +73,7 @@ describe('normalizeDomain', () => {
     });
   });
 
-  it('maps webs status values to stable DomainStatus', () => {
+  it('maps provider lifecycle values to stable DomainStatus', () => {
     const testCases = [
       { input: 'active', expected: 'verified' },
       { input: 'ssl_issued', expected: 'verified' },
@@ -158,7 +158,7 @@ describe('normalizeDomain', () => {
     const raw: RawDomain = {
       id: 8,
       domain: 'example.com',
-      status: 'active', // webs sends this
+      status: 'active', // common lifecycle value
       dnsStatus: 'error', // but also send explicit status
       sslStatus: 'error',
     };

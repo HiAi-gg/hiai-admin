@@ -54,11 +54,11 @@ const { siteAdapterService } = await import(
 const dbRow = {
   id: 'a1',
   tenantId: 't1',
-  slug: 'webs-croco',
-  adapterSlug: 'webs-croco',
-  publicSlug: 'croco',
-  siteId: 'site-croco',
-  name: 'Croco',
+  slug: 'example-site',
+  adapterSlug: 'example-site',
+  publicSlug: 'example',
+  siteId: 'site-example',
+  name: 'Example',
   backendUrl: 'http://api:3001',
   apiBase: '/api/v1',
   auth: 'jwt',
@@ -69,8 +69,8 @@ const dbRow = {
   connectorType: 'http',
   connectorConfig: { healthPath: '/healthz' },
   capabilities: ['articles:read', 'homepage:write'],
-  externalSiteReference: 'webs-site-id-1',
-  secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_WEBS_CROCO' },
+  externalSiteReference: 'external-site-id-1',
+  secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_EXAMPLE_SITE' },
   enabled: true,
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -91,11 +91,11 @@ describe('siteAdapterService', () => {
       expect(dto).toEqual({
         id: 'a1',
         tenantId: 't1',
-        slug: 'webs-croco',
-        adapterSlug: 'webs-croco',
-        publicSlug: 'croco',
-        siteId: 'site-croco',
-        name: 'Croco',
+        slug: 'example-site',
+        adapterSlug: 'example-site',
+        publicSlug: 'example',
+        siteId: 'site-example',
+        name: 'Example',
         backendUrl: 'http://api:3001',
         apiBase: '/api/v1',
         auth: 'jwt',
@@ -105,8 +105,8 @@ describe('siteAdapterService', () => {
         connectorType: 'http',
         connectorConfig: { healthPath: '/healthz' },
         capabilities: ['articles:read', 'homepage:write'],
-        externalSiteReference: 'webs-site-id-1',
-        secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_WEBS_CROCO' },
+        externalSiteReference: 'external-site-id-1',
+        secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_EXAMPLE_SITE' },
         enabled: true,
       });
       expect(dto).not.toHaveProperty('jwtSecretEncrypted');
@@ -129,8 +129,8 @@ describe('siteAdapterService', () => {
 
       await siteAdapterService.create({
         tenantId: 't1',
-        slug: 'webs-croco',
-        name: 'Croco',
+        slug: 'example-site',
+        name: 'Example',
         backendUrl: 'http://api:3001',
         apiBase: '/api/v1',
         auth: 'jwt',
@@ -141,7 +141,7 @@ describe('siteAdapterService', () => {
         connectorConfig: { schema: 'tenant_site' },
         capabilities: ['articles:read'],
         externalSiteReference: 'external-42',
-        secretRefs: { jwtSecret: 'WEBS_CROCO_SECRET_REF' },
+        secretRefs: { jwtSecret: 'EXAMPLE_SITE_SECRET_REF' },
         pathMap: {},
       });
 
@@ -152,7 +152,7 @@ describe('siteAdapterService', () => {
           connectorConfig: { schema: 'tenant_site' },
           capabilities: ['articles:read'],
           externalSiteReference: 'external-42',
-          secretRefs: { jwtSecret: 'WEBS_CROCO_SECRET_REF' },
+          secretRefs: { jwtSecret: 'EXAMPLE_SITE_SECRET_REF' },
         }),
       );
     });
@@ -163,8 +163,8 @@ describe('siteAdapterService', () => {
 
       const dto = await siteAdapterService.create({
         tenantId: 't1',
-        slug: 'webs-croco',
-        name: 'Croco',
+        slug: 'example-site',
+        name: 'Example',
         backendUrl: 'http://api:3001',
         apiBase: '/api/v1',
         auth: 'jwt',
@@ -174,8 +174,8 @@ describe('siteAdapterService', () => {
         connectorType: 'http',
         connectorConfig: {},
         capabilities: ['articles:read'],
-        externalSiteReference: 'webs-site-id-1',
-        secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_WEBS_CROCO' },
+        externalSiteReference: 'external-site-id-1',
+        secretRefs: { jwtSecret: 'SITE_ADAPTER_JWT_SECRET_EXAMPLE_SITE' },
         pathMap: {},
       });
 
@@ -191,7 +191,7 @@ describe('siteAdapterService', () => {
 
       await siteAdapterService.create({
         tenantId: 't1',
-        slug: 'webs-x',
+        slug: 'custom-x',
         name: 'X',
         backendUrl: 'http://api:3001',
         apiBase: '/api/v1',
@@ -215,13 +215,13 @@ describe('siteAdapterService', () => {
     it('returns the decrypted secret for an adapter that has one', async () => {
       dbMock.select.mockReturnValue(createChain([{ secret: 'enc(s3cr3t)' }]));
 
-      expect(await siteAdapterService.getSigningSecret('webs-croco')).toBe('s3cr3t');
+      expect(await siteAdapterService.getSigningSecret('example-site')).toBe('s3cr3t');
     });
 
     it('returns null when the adapter has no stored secret', async () => {
       dbMock.select.mockReturnValue(createChain([{ secret: null }]));
 
-      expect(await siteAdapterService.getSigningSecret('webs-croco')).toBeNull();
+      expect(await siteAdapterService.getSigningSecret('example-site')).toBeNull();
     });
 
     it('returns null when no adapter matches the slug', async () => {

@@ -6,9 +6,9 @@ import { siteAdapterService } from '../../../../backend/src/modules/site-adapter
 
 /**
  * The DB is the source of truth (what the connect wizard stores). Falls back to
- * env for ops/seed deployments where the secret is provisioned out-of-band
- * (e.g. the webs copy's `.env.webs`): `SITE_ADAPTER_JWT_SECRET_<SLUG>` →
- * `WEBS_BACKEND_JWT_SECRET`.
+ * env for deployments where the secret is provisioned out-of-band as
+ * `SITE_ADAPTER_JWT_SECRET_<SLUG>` or the generic fallback
+ * `SITE_ADAPTER_JWT_SECRET`.
  */
 export async function resolveAdapterSecret(pluginId: string): Promise<string | undefined> {
   try {
@@ -18,5 +18,5 @@ export async function resolveAdapterSecret(pluginId: string): Promise<string | u
     // A DB hiccup must not break the proxy — fall through to env.
   }
   const key = `SITE_ADAPTER_JWT_SECRET_${pluginId.replace(/-/g, '_').toUpperCase()}`;
-  return process.env[key] ?? process.env.WEBS_BACKEND_JWT_SECRET;
+  return process.env[key] ?? process.env.SITE_ADAPTER_JWT_SECRET;
 }

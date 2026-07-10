@@ -2,7 +2,6 @@
 // Pure, framework-agnostic logic shared by the ko-fi config + donations pages. The site
 // backend contract is intentionally loose: we normalize whatever shape a tenant backend
 // returns (camelCase, snake_case, common alt keys) into stable `KofiConfig` and `Donation` types.
-// No webs-specifics live here — webs is just one tenant whose adapter enables the `kofi` module.
 
 export interface KofiConfig {
   webhookUrl: string;
@@ -26,9 +25,7 @@ function isBoolean(v: unknown): v is boolean {
   return typeof v === 'boolean';
 }
 
-/** Map an arbitrary backend config into a stable {@link KofiConfig}, applying safe fallbacks.
- *  Handles webs schema (kofi_enabled, kofi_url) and other common alternatives.
- */
+/** Map an arbitrary backend config into a stable {@link KofiConfig}. */
 export function normalizeKofiConfig(payload: unknown): KofiConfig {
   if (!payload || typeof payload !== 'object') {
     return { webhookUrl: '', verificationToken: '', enabled: false };

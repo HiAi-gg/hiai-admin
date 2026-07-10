@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.7] - 2026-07-10
+
+### Added
+
+- **Canonical Site adapter contract**: Site settings, articles, homepage blocks, domains, and Ko-fi use product-neutral HTTP module contracts that consuming projects can implement or translate.
+- **Exact site authorization**: Provider resolution and site routes now enforce the authenticated user's site membership, while `super_admin` retains platform-wide access. Unauthorized sites return `403 Forbidden` instead of falling through to another data path.
+- **Site membership API**: Super admins can list, assign, update, and revoke exact user-to-site memberships through the site adapter API; duplicate assignments are prevented by a database constraint.
+- **Audit coverage**: Mutating Site adapter proxy requests now record an audit attempt before forwarding and a success/failure result afterward, preventing unaudited writes when the audit database is unavailable.
+- **Route wiring**: Site settings, homepage, article list/editor, domains, and Ko-fi now use the canonical adapter module endpoints.
+- **Provider tests**: Added coverage for generic provider contracts, exact authorization outcomes, and audit behavior.
+
+## [0.0.6] - 2026-07-10
+
+### Added
+
+- **Site adapter foundation**: Added adapter contracts, manifests, schemas, registry, resolver, and runtime provider types for connected site administration.
+- **Provider extension points**: Added product-neutral contracts, manifests, schemas, registry, resolver, and runtime provider types for downstream integrations.
+- **Site authorization**: Added site membership data, access middleware, and tenant-scoped adapter resolution for connected sites.
+- **Admin integration**: Wired connected site routes and the site switcher to the adapter/provider architecture while retaining the generic proxy path for unsupported adapters.
+- **Database migrations and tests**: Added the site adapter and membership schema/migrations plus unit coverage for contracts, registry behavior, provider configuration, and membership/access services.
+
 ## [0.0.5] - 2026-07-09
 
 ### Added
@@ -50,7 +71,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Session/TTL/DB connection now fully env-configurable (SESSION_EXPIRES_IN_SEC, SESSION_UPDATE_AGE_SEC, SESSION_COOKIE_CACHE_MAX_AGE_SEC, BACKEND_TOKEN_EXPIRES_IN_SEC, split DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME).
 - Redis connection now retries forever (REDIS_MAX_RETRIES/REDIS_RETRY_MAX_DELAY_MS) so the API can start before Redis is healthy.
 - Stripe is optional at startup; billing endpoints return 503 when STRIPE_SECRET_KEY is unset.
-- Site adapter schema extended with apiBase/siteId/publicSlug/adapterSlug/pathMap and a pathMap-driven proxy; backend SSO tokens mapped to webs-compatible roles (viewer/editor/admin/super_admin).
+- Site adapter schema extended with apiBase/siteId/publicSlug/adapterSlug/pathMap and a pathMap-driven proxy; backend SSO tokens use the public adapter roles (viewer/editor/admin/super_admin).
 - Idempotent seed (ON CONFLICT DO NOTHING / DO UPDATE) safe to re-run.
 - `drizzle-kit push` gated behind DB_AUTO_PUSH=true (db:push now aliases the gated auto-push).
 - Frontend build no longer needs fake backend env placeholders (lazy config).
@@ -86,7 +107,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Initial release
 
-[Unreleased]: https://github.com/HiAi-gg/hiai-admin/compare/v0.0.5...HEAD
+[Unreleased]: https://github.com/HiAi-gg/hiai-admin/compare/v0.0.7...HEAD
+[0.0.7]: https://github.com/HiAi-gg/hiai-admin/compare/v0.0.6...v0.0.7
+[0.0.6]: https://github.com/HiAi-gg/hiai-admin/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/HiAi-gg/hiai-admin/releases/tag/v0.0.5
 [0.0.4]: https://github.com/HiAi-gg/hiai-admin/releases/tag/v0.0.4
 [0.0.3]: https://github.com/HiAi-gg/hiai-admin/releases/tag/v0.0.3

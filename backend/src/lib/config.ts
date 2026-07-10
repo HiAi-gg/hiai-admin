@@ -60,7 +60,7 @@ function num(defaultValue: number) {
 
 /**
  * Build a Postgres connection URL from split DB_* variables when DATABASE_URL
- * is not provided. This lets downstream consumers (e.g. webs docker-compose)
+ * is not provided. This lets downstream consumers
  * pass plain `DB_HOST=...`, `DB_PASSWORD=...` instead of having to URL-encode
  * special characters into the URL themselves.
  *
@@ -85,7 +85,6 @@ function buildDatabaseUrl(parts: {
 export const envSchema = z
   .object({
     DATABASE_URL: z.string().url().optional(),
-
     // Split-form DB connection parts. When DATABASE_URL is absent, the API
     // assembles it from these. Useful in docker-compose where we do not want
     // to ship a hardcoded, percent-encoded password in plain text.

@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { siteAdapterService } from '../../../../../backend/src/modules/site-adapter/site-adapter.service.js';
-import { userService } from '../../../../../backend/src/modules/user/user.service.js';
+import { filterAccessibleSiteAdapters } from '$lib/server/site-access.js';
 
 export interface SiteAdapterRow {
   slug: string;
@@ -18,14 +18,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   let error: string | undefined;
 
   try {
-    let dtos = await siteAdapterService.list();
-    // Site admins (non-super_admin) only see sites for tenants they have access to.
-    if (locals.user && locals.user.role !== 'super_admin') {
-      const profile = await userService.getByEmail(locals.user.email);
-      const tenantIds = profile ? await userService.getAccessibleTenantIds(profile.id) : [];
-      const allowed = new Set(tenantIds);
-      dtos = dtos.filter((d: { tenantId: string }) => allowed.has(d.tenantId));
-    }
+    const dtos = await filterAccessibleSiteAdapters(await siteAdapterService.list(), locals.user);
     adapters = dtos.map((dto: any) => ({
       tenantId: dto.tenantId,
       slug: dto.slug,

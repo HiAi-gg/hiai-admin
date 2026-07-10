@@ -31,7 +31,7 @@ function buildAuth(): AuthInstance {
     database: drizzleAdapter(db, { provider: 'pg', schema }),
     session: {
       // All session lifecycle knobs are env-driven so downstream consumers
-      // (e.g. webs docker-compose) can pick their own TTL without forking
+      // downstream deployments can pick their own TTL without forking
       // the Dockerfile. Defaults match the previous hardcoded values:
       //   expiresIn         = 7 days
       //   updateAge         = 1 day  (sliding refresh window)

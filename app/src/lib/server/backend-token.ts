@@ -18,7 +18,7 @@ import { createHmac } from 'node:crypto';
  *
  * Internal hiai-admin roles (super_admin, admin, editor, viewer, tenant_admin,
  * …) are mapped to the public set the consumer site understands. `tenant_admin`
- * is the historical name inside the admin platform; webs / hiai-store see
+ * is the historical name inside the admin platform; consumer adapters see
  * `admin` instead. `site_admin` is kept as an alias from an earlier iteration.
  *
  * Unmapped roles pass through unchanged so future additions don`t need a
@@ -56,7 +56,7 @@ function base64url(input: string): string {
  * 1. Explicit `opts.expiresInSec` wins (tests, ad-hoc overrides).
  * 2. Otherwise BACKEND_TOKEN_EXPIRES_IN_SEC from the runtime config — set by
  *    operators in their docker-compose / .env to scale beyond the legacy
- *    1h default (e.g. webs composes pass 86400 for 24h).
+ *    1h default.
  * 3. Falling back to 3600s if neither is set.
  */
 function resolveExpiresInSec(opts: MintOptions): number {

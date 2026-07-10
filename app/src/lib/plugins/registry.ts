@@ -43,10 +43,6 @@ export function hasProviderCapability(
   );
 }
 
-export function createWebsProviderStub(): DataProvider {
-  return { capabilities: [] };
-}
-
 export class ProviderRegistry {
   private readonly factories = new Map<string, ProviderFactory>();
 

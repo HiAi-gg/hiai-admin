@@ -2,10 +2,7 @@ import { fail } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { extractArticles, buildBulkStatusBody, type Article } from '$lib/sites/articles.js';
 
-// Article list for a connected site (Block B / B1.1). Proxies to the site backend
-// through the generic catch-all `/api/{slug}/...`. Calls webs's real admin contract
-// (`/articles/admin/list?site=<slug>` → `{articles,pagination}`); `extractArticles`
-// unwraps the `articles` envelope. The adapter `backendUrl` carries the `/api/v1` base.
+// Canonical Site adapter contract: GET /articles and POST /articles/bulk-status.
 export const load: PageServerLoad = async ({ params, fetch }) => {
   const { slug } = params;
   let articles: Article[] = [];
@@ -13,26 +10,15 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   let draftCount: number | null = null;
 
   try {
-    const res = await fetch(`/api/${slug}/articles/admin/list?site=${encodeURIComponent(slug)}`);
+    const res = await fetch(`/api/${slug}/articles`);
     if (res.ok) {
       articles = extractArticles(await res.json());
+      draftCount = articles.filter((article) => article.status === 'draft').length;
     } else {
       error = `Site backend returned ${res.status}`;
     }
   } catch (e) {
     error = e instanceof Error ? e.message : 'Failed to reach the site backend';
-  }
-
-  // Draft count is best-effort; a backend without the endpoint must not break the page.
-  try {
-    const res = await fetch(`/api/${slug}/articles/drafts/count?site=${encodeURIComponent(slug)}`);
-    if (res.ok) {
-      const body = await res.json();
-      const n = typeof body === 'number' ? body : (body.draftCount ?? body.count);
-      if (typeof n === 'number') draftCount = n;
-    }
-  } catch {
-    // ignore — draft count is optional
   }
 
   return { slug, articles, error, draftCount };
@@ -52,11 +38,10 @@ export const actions: Actions = {
       return fail(400, { error: e instanceof Error ? e.message : 'Invalid request' });
     }
 
-    // webs bulk-status expects numeric `articleIds` (article ids are numeric in webs).
     const res = await fetch(`/api/${slug}/articles/bulk-status`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ articleIds: body.ids.map(Number), status: body.status }),
+      body: JSON.stringify({ ids: body.ids, status: body.status }),
     });
 
     if (!res.ok) {

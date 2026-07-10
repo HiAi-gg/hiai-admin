@@ -37,7 +37,12 @@ export const SITE_MODULES = [
  * through as-is (the consumer backend may read it from query / body).
  */
 export const pathMapSchema = z.record(z.string(), z.unknown()).default({});
-export const connectorTypeSchema = z.enum(['http', 'drizzle']);
+export const connectorTypeSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(100)
+  .regex(/^[a-z0-9-]+$/, 'connectorType must use lowercase letters, numbers, and hyphens');
 export const adapterManifestVersionSchema = z
   .string()
   .regex(/^\d+\.\d+\.\d+$/, 'adapterManifestVersion must use semantic version format')
@@ -88,9 +93,16 @@ export const checkHealthSchema = z.object({
   backendUrl: z.string().url('backendUrl must be a valid URL'),
 });
 
+export const assignSiteMembershipSchema = z.object({
+  userId: z.string().min(1).max(255),
+  globalRole: z.string().min(1).max(100).default('viewer'),
+  role: z.string().min(1).max(100).default('admin'),
+  permissions: z.array(z.string().min(1).max(200)).default([]),
+});
+
 /**
  * Placeholder substitution: `/articles/admin/{id}?site={publicSlug}` with
- * `{ id: '42', publicSlug: 'croco' }` -> `/articles/admin/42?site=croco`.
+ * `{ id: '42', publicSlug: 'example' }` -> `/articles/admin/42?site=example`.
  * Unknown `{key}` placeholders are left in place — they may be intended for
  * downstream consumers.
  */

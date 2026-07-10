@@ -8,9 +8,9 @@ describe('site-adapter validation', () => {
   it('applies manifest defaults for create payloads', () => {
     const parsed = createSiteAdapterSchema.parse({
       tenantId: '11111111-2222-3333-4444-555555555555',
-      slug: 'webs-croco',
-      name: 'Croco',
-      backendUrl: 'https://api.webs.local',
+      slug: 'example-site',
+      name: 'Example',
+      backendUrl: 'https://api.example.test',
       auth: 'jwt',
       modules: ['articles'],
       pathMap: {},
@@ -26,9 +26,9 @@ describe('site-adapter validation', () => {
   it('accepts explicit connector manifest fields', () => {
     const parsed = createSiteAdapterSchema.parse({
       tenantId: '11111111-2222-3333-4444-555555555555',
-      slug: 'webs-croco',
-      name: 'Croco',
-      backendUrl: 'https://api.webs.local',
+      slug: 'example-site',
+      name: 'Example',
+      backendUrl: 'https://api.example.test',
       auth: 'api-key',
       modules: ['articles'],
       pathMap: {},
@@ -48,13 +48,25 @@ describe('site-adapter validation', () => {
     expect(parsed.secretRefs).toEqual({ jwtSecret: 'WEB_SITE_ADAPTER_SECRET' });
   });
 
+  it('accepts downstream connector extension identifiers', () => {
+    const parsed = createSiteAdapterSchema.parse({
+      tenantId: '11111111-2222-3333-4444-555555555555',
+      slug: 'example-site',
+      name: 'Example',
+      backendUrl: 'https://api.example.test',
+      connectorType: 'product-connector',
+    });
+
+    expect(parsed.connectorType).toBe('product-connector');
+  });
+
   it('rejects invalid manifest versions', () => {
     expect(() =>
       createSiteAdapterSchema.parse({
         tenantId: '11111111-2222-3333-4444-555555555555',
-        slug: 'webs-croco',
-        name: 'Croco',
-        backendUrl: 'https://api.webs.local',
+        slug: 'example-site',
+        name: 'Example',
+        backendUrl: 'https://api.example.test',
         auth: 'jwt',
         modules: ['articles'],
         pathMap: {},

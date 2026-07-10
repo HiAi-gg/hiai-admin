@@ -9,10 +9,10 @@ import { umamiPlugin } from '$lib/plugins/umami.js';
 import { hiaiObservePlugin } from '$lib/plugins/hiai-observe.js';
 import { buildSiteAdapterPlugins, type SiteAdapterRow } from '$lib/plugins/site-adapter.js';
 import { siteAdapterService } from '../../../../backend/src/modules/site-adapter/site-adapter.service.js';
-import { userService } from '../../../../backend/src/modules/user/user.service.js';
+import { filterAccessibleSiteAdapters } from '$lib/server/site-access.js';
 
 // Roles allowed into the admin shell. super_admin = global (all sites + platform);
-// admin/editor = site admin (scoped to their tenant's site adapters).
+// admin/editor = site admin (scoped by exact site membership).
 const SHELL_ROLES = ['super_admin', 'admin', 'editor'];
 
 // Register static vertical plugins
@@ -28,11 +28,9 @@ export const load: LayoutServerLoad = async ({ locals }) => {
   if (!SHELL_ROLES.includes(role)) {
     throw redirect(302, '/unauthorized');
   }
-  const isSuperAdmin = role === 'super_admin';
-
   // Clear any stale adapters accumulated from prior requests in this process.
   // The registry is a module-level Map shared across requests — without this
-  // reset, deleted/disabled adapters and cross-tenant adapters would leak into
+  // reset, deleted/disabled adapters and cross-request adapters would leak into
   // super_admin's nav. (HIAI_ADMIN_DIFFS §3.3 / S1.5)
   resetRegistry();
 
@@ -44,18 +42,11 @@ export const load: LayoutServerLoad = async ({ locals }) => {
   registerPlugin(umamiPlugin);
   registerPlugin(hiaiObservePlugin);
 
-  // Dynamic Site adapters: registered from per-tenant DB config (HIAI_ADMIN_DIFFS §3.3).
-  // Fetched in-process from the backend service. super_admin sees all sites; a site
-  // admin (admin/editor) sees only adapters for tenants they have explicit access to.
+  // Dynamic Site adapters are fetched in-process. super_admin sees all sites;
+  // admin/editor sees only adapters with an exact active site membership.
   let adapters: SiteAdapterRow[] = [];
   try {
-    let dtos = await siteAdapterService.list();
-    if (!isSuperAdmin) {
-      const profile = await userService.getByEmail(locals.user.email);
-      const tenantIds = profile ? await userService.getAccessibleTenantIds(profile.id) : [];
-      const allowed = new Set(tenantIds);
-      dtos = dtos.filter((d: { tenantId: string }) => allowed.has(d.tenantId));
-    }
+    const dtos = await filterAccessibleSiteAdapters(await siteAdapterService.list(), locals.user);
     adapters = dtos.map((dto: any) => ({
       tenantId: dto.tenantId,
       slug: dto.slug,

@@ -14,7 +14,7 @@ const log = logger.child({ module: 'site-proxy' });
  * pathMap-driven proxy (Phase 3 P1.6).
  *
  * Each registered site adapter carries a JSON `pathMap` describing how to
- * rewrite admin-facing URLs into consumer-side URLs. Example for webs:
+ * rewrite admin-facing URLs into consumer-side URLs. Example:
  *
  *   {
  *     articles:        { list: '/articles/admin/list?site={publicSlug}' },
@@ -25,10 +25,10 @@ const log = logger.child({ module: 'site-proxy' });
  * Routes look like:
  *
  *   GET /api/site-proxy/:adapterSlug/articles
- *     -> pathMapKey='articles', subKey='' -> '/articles/admin/list?site=croco'
+ *     -> pathMapKey='articles', subKey='' -> '/content/articles?site=example'
  *
  *   GET /api/site-proxy/:adapterSlug/homepage-blocks
- *     -> pathMapKey='homepageBlocks', subKey='' -> '/homepage-blocks/admin/site-by-slug/croco'
+ *     -> pathMapKey='homepageBlocks', subKey='' -> '/content/homepage/example'
  *
  *   GET /api/site-proxy/:adapterSlug/domains/example.com
  *     -> pathMapKey='domains', subKey='example.com' -> '/domains/example.com/admin/verify'
@@ -92,7 +92,7 @@ async function resolveAdapterSecret(slug: string): Promise<string | undefined> {
     // A DB hiccup must not break the proxy — fall through to env.
   }
   const key = `SITE_ADAPTER_JWT_SECRET_${slug.replace(/-/g, '_').toUpperCase()}`;
-  return process.env[key] ?? process.env.WEBS_BACKEND_JWT_SECRET;
+  return process.env[key] ?? process.env.SITE_ADAPTER_JWT_SECRET;
 }
 
 export const siteProxyRoutes = new Elysia({ prefix: '/api/site-proxy' })

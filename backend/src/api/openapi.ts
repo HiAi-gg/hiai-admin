@@ -19,6 +19,7 @@ export const openApiSpec = {
     { name: 'Audit', description: 'Audit log' },
     { name: 'Settings', description: 'Platform settings' },
     { name: 'Integrations', description: 'Third-party integrations' },
+    { name: 'Site Adapters', description: 'Product-neutral managed-site connections' },
     { name: 'Analytics', description: 'Platform analytics' },
     { name: 'Events', description: 'Server-Sent Events' },
   ],
@@ -515,6 +516,104 @@ export const openApiSpec = {
         summary: 'Test integration connection',
         security: [{ bearerAuth: [] }],
         responses: { '200': { description: 'Connection test result' } },
+      },
+    },
+    '/api/site-adapters': {
+      get: {
+        tags: ['Site Adapters'],
+        summary: 'List site adapters',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': { description: 'Site adapter list' },
+          '403': { description: 'Forbidden - requires super_admin' },
+        },
+      },
+      post: {
+        tags: ['Site Adapters'],
+        summary: 'Create a site adapter',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '201': { description: 'Site adapter created' },
+          '400': { description: 'Validation or health-check failure' },
+          '403': { description: 'Forbidden - requires super_admin' },
+        },
+      },
+    },
+    '/api/site-adapters/{slug}': {
+      get: {
+        tags: ['Site Adapters'],
+        summary: 'Get a site adapter',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: {
+          '200': { description: 'Site adapter detail' },
+          '404': { description: 'Site adapter not found' },
+        },
+      },
+      put: {
+        tags: ['Site Adapters'],
+        summary: 'Update a site adapter',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { '200': { description: 'Site adapter updated' } },
+      },
+      patch: {
+        tags: ['Site Adapters'],
+        summary: 'Partially update a site adapter',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { '200': { description: 'Site adapter updated' } },
+      },
+    },
+    '/api/site-adapters/{slug}/memberships': {
+      get: {
+        tags: ['Site Adapters'],
+        summary: 'List exact user memberships for a site adapter',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+        responses: { '200': { description: 'Site membership list' } },
+      },
+      post: {
+        tags: ['Site Adapters'],
+        summary: 'Assign or update an exact site membership',
+        security: [{ bearerAuth: [] }],
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['userId'],
+                properties: {
+                  userId: { type: 'string' },
+                  globalRole: { type: 'string', default: 'viewer' },
+                  role: { type: 'string', default: 'admin' },
+                  permissions: { type: 'array', items: { type: 'string' }, default: [] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': { description: 'Site membership assigned' },
+          '404': { description: 'Site adapter not found' },
+        },
+      },
+    },
+    '/api/site-adapters/{slug}/memberships/{userId}': {
+      delete: {
+        tags: ['Site Adapters'],
+        summary: 'Revoke an exact site membership',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'slug', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'userId', in: 'path', required: true, schema: { type: 'string' } },
+        ],
+        responses: {
+          '200': { description: 'Site membership revoked' },
+          '404': { description: 'Site membership not found' },
+        },
       },
     },
     '/api/analytics/overview': {

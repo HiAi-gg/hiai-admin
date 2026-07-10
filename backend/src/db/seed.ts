@@ -21,7 +21,7 @@ import {
  *   - demo tenant                                     -> lookup-or-insert by slug
  *   - user-role assignments for the demo tenant       -> cleared and re-inserted
  *
- * Adding the `admin` role (Phase 3 role-enum compatibility): webs and other
+ * Adding the `admin` role (Phase 3 role-enum compatibility): connected sites and other
  * downstream consumers expect an `admin` role in JWT claims; we expose the
  * same RBAC level under both `admin` and `tenant_admin`, with `admin` being
  * the new public-facing name and `tenant_admin` kept for back-compat.

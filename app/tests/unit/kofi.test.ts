@@ -10,7 +10,7 @@ import {
 } from '$lib/sites/kofi.js';
 
 describe('normalizeKofiConfig', () => {
-  it('normalizes webs schema (kofi_enabled, kofi_url)', () => {
+  it('normalizes snake_case schema (kofi_enabled, kofi_url)', () => {
     const raw = {
       kofi_enabled: true,
       kofi_url: 'https://example.com/webhook',
@@ -95,11 +95,11 @@ describe('normalizeKofiConfig', () => {
 
   it('prioritizes kofi_url over other url variants', () => {
     const cfg = normalizeKofiConfig({
-      kofi_url: 'https://webs.com/webhook',
+      kofi_url: 'https://example.com/webhook',
       webhookUrl: 'https://old.com/webhook',
       webhook_url: 'https://fallback.com/webhook',
     });
-    expect(cfg.webhookUrl).toBe('https://webs.com/webhook');
+    expect(cfg.webhookUrl).toBe('https://example.com/webhook');
   });
 });
 

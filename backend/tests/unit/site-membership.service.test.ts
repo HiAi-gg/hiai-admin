@@ -11,7 +11,17 @@ function chain<T>(terminal: T) {
   return value;
 }
 
-const dbMock = { select: vi.fn() };
+function writeChain<T>(terminal: T) {
+  const value = {
+    values: vi.fn(() => value),
+    onConflictDoUpdate: vi.fn(() => value),
+    where: vi.fn(() => value),
+    returning: vi.fn(async () => terminal),
+  };
+  return value;
+}
+
+const dbMock = { select: vi.fn(), insert: vi.fn(), delete: vi.fn() };
 vi.mock('../../src/lib/db.js', () => ({ db: dbMock }));
 
 const { siteMembershipService } = await import(
@@ -44,5 +54,39 @@ describe('siteMembershipService', () => {
       ),
     ).resolves.toMatchObject({ adapterSlug: 'test', role: 'admin' });
     expect(dbMock.select).toHaveBeenCalledTimes(2);
+  });
+
+  it('assigns or updates one membership per user and adapter', async () => {
+    const write = writeChain([
+      {
+        id: 'membership-1',
+        userId: 'platform-user-1',
+        siteAdapterId: 'adapter-1',
+        role: 'admin',
+        globalRole: 'viewer',
+        permissions: ['articles:write'],
+      },
+    ]);
+    dbMock.select.mockReturnValueOnce(chain([{ id: 'adapter-1' }]));
+    dbMock.insert.mockReturnValueOnce(write);
+
+    await expect(
+      siteMembershipService.assign('test', {
+        userId: 'platform-user-1',
+        role: 'admin',
+        globalRole: 'viewer',
+        permissions: ['articles:write'],
+      }),
+    ).resolves.toMatchObject({ id: 'membership-1', role: 'admin' });
+    expect(write.onConflictDoUpdate).toHaveBeenCalledOnce();
+  });
+
+  it('revokes membership only for the resolved adapter and user', async () => {
+    const write = writeChain([{ id: 'membership-1' }]);
+    dbMock.select.mockReturnValueOnce(chain([{ id: 'adapter-1' }]));
+    dbMock.delete.mockReturnValueOnce(write);
+
+    await expect(siteMembershipService.remove('test', 'platform-user-1')).resolves.toBe(true);
+    expect(write.where).toHaveBeenCalledOnce();
   });
 });

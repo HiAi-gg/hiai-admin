@@ -35,6 +35,15 @@ export const homepageBlockSchema = z.object({
 
 export const homepageBlocksSchema = z.array(homepageBlockSchema);
 export type HomepageBlockDTO = z.infer<typeof homepageBlockSchema>;
+export const homepageBlockInputSchema = homepageBlockSchema.omit({ id: true });
+export type HomepageBlockInput = z.infer<typeof homepageBlockInputSchema>;
+export const homepageBlockReorderInputSchema = z.array(
+  z.object({
+    id: z.string().min(1),
+    order: z.number().int().nonnegative(),
+  }),
+);
+export type HomepageBlockReorderInput = z.infer<typeof homepageBlockReorderInputSchema>;
 
 export const siteSettingsSchema = z.object({
   siteId: z.string().min(1),

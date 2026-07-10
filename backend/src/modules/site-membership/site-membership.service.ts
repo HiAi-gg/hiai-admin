@@ -1,4 +1,4 @@
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { siteAdapters, siteMemberships, users } from '../../db/schema/index.js';
 import { db } from '../../lib/db.js';
 
@@ -25,10 +25,10 @@ export interface ActiveSiteMembership {
  * are separate identifiers, so email is the primary bridge between them.
  */
 async function findPlatformUser(user: AuthenticatedAdmin) {
+  // Better Auth and platform user ids are separate. When email is present it
+  // is the canonical bridge; never OR it with an unrelated session id.
   const identity = user.email
-    ? user.id
-      ? or(eq(users.email, user.email), eq(users.id, user.id))
-      : eq(users.email, user.email)
+    ? eq(users.email, user.email)
     : user.id
       ? eq(users.id, user.id)
       : undefined;
@@ -74,5 +74,72 @@ export const siteMembershipService = {
           permissions: row.permissions ?? [],
         }
       : null;
+  },
+
+  async listForAdapter(adapterSlug: string) {
+    return db
+      .select({
+        id: siteMemberships.id,
+        userId: siteMemberships.userId,
+        userEmail: users.email,
+        userName: users.name,
+        siteAdapterId: siteMemberships.siteAdapterId,
+        adapterSlug: siteAdapters.slug,
+        globalRole: siteMemberships.globalRole,
+        role: siteMemberships.role,
+        permissions: siteMemberships.permissions,
+        createdAt: siteMemberships.createdAt,
+      })
+      .from(siteMemberships)
+      .innerJoin(users, eq(users.id, siteMemberships.userId))
+      .innerJoin(siteAdapters, eq(siteAdapters.id, siteMemberships.siteAdapterId))
+      .where(eq(siteAdapters.slug, adapterSlug));
+  },
+
+  async assign(
+    adapterSlug: string,
+    input: { userId: string; globalRole: string; role: string; permissions: string[] },
+  ) {
+    const [adapter] = await db
+      .select({ id: siteAdapters.id })
+      .from(siteAdapters)
+      .where(eq(siteAdapters.slug, adapterSlug))
+      .limit(1);
+    if (!adapter) return null;
+
+    const [membership] = await db
+      .insert(siteMemberships)
+      .values({
+        userId: input.userId,
+        siteAdapterId: adapter.id,
+        globalRole: input.globalRole,
+        role: input.role,
+        permissions: input.permissions,
+      })
+      .onConflictDoUpdate({
+        target: [siteMemberships.userId, siteMemberships.siteAdapterId],
+        set: {
+          globalRole: input.globalRole,
+          role: input.role,
+          permissions: input.permissions,
+        },
+      })
+      .returning();
+    return membership ?? null;
+  },
+
+  async remove(adapterSlug: string, userId: string): Promise<boolean> {
+    const [adapter] = await db
+      .select({ id: siteAdapters.id })
+      .from(siteAdapters)
+      .where(eq(siteAdapters.slug, adapterSlug))
+      .limit(1);
+    if (!adapter) return false;
+
+    const rows = await db
+      .delete(siteMemberships)
+      .where(and(eq(siteMemberships.siteAdapterId, adapter.id), eq(siteMemberships.userId, userId)))
+      .returning({ id: siteMemberships.id });
+    return rows.length > 0;
   },
 };

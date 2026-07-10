@@ -29,22 +29,17 @@ function firstString(row: RawDomain, keys: string[], fallback = ''): string {
   return fallback;
 }
 
-/**
- * Map webs backend status values to stable DomainStatus.
- * Webs returns: 'pending_verification', 'dns_verified', 'ssl_pending', 'ssl_issued', 'active', 'failed', 'suspended'.
- * We map these to: 'pending', 'verified', or 'error'.
- */
-function mapWebsStatus(websStatus: unknown): DomainStatus {
-  if (typeof websStatus !== 'string') return 'pending';
+/** Map common provider lifecycle values to the canonical domain status. */
+function mapLifecycleStatus(status: unknown): DomainStatus {
+  if (typeof status !== 'string') return 'pending';
 
-  // Map webs status to display status
-  if (websStatus === 'active' || websStatus === 'ssl_issued' || websStatus === 'dns_verified') {
+  if (status === 'active' || status === 'ssl_issued' || status === 'dns_verified') {
     return 'verified';
   }
-  if (websStatus === 'pending_verification' || websStatus === 'ssl_pending') {
+  if (status === 'pending_verification' || status === 'ssl_pending') {
     return 'pending';
   }
-  if (websStatus === 'failed' || websStatus === 'suspended') {
+  if (status === 'failed' || status === 'suspended') {
     return 'error';
   }
   return 'pending'; // fallback
@@ -53,20 +48,17 @@ function mapWebsStatus(websStatus: unknown): DomainStatus {
 /**
  * Map an arbitrary backend domain row into a stable {@link DomainRecord},
  * applying safe fallbacks for status fields.
- * Handles both generic backends and webs's real status values.
+ * Handles both canonical fields and common provider lifecycle values.
  */
 export function normalizeDomain(raw: RawDomain): DomainRecord {
-  // Try to get numeric ID from backend (required for webs verify endpoint)
   const id = typeof raw.id === 'number' ? raw.id : undefined;
 
-  // Check if we have webs-style single 'status' field (not separate dnsStatus/sslStatus)
-  const websStatus = raw.status;
+  const lifecycleStatus = raw.status;
   let dnsStatusRaw = raw.dnsStatus || raw.dns_status;
   let sslStatusRaw = raw.sslStatus || raw.ssl_status;
 
-  // If webs sent a single status field, infer dnsStatus and sslStatus from it
-  if (websStatus && !dnsStatusRaw && !sslStatusRaw) {
-    const mapped = mapWebsStatus(websStatus);
+  if (lifecycleStatus && !dnsStatusRaw && !sslStatusRaw) {
+    const mapped = mapLifecycleStatus(lifecycleStatus);
     dnsStatusRaw = mapped;
     sslStatusRaw = mapped;
   }

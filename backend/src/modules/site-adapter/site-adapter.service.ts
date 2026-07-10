@@ -28,7 +28,7 @@ export interface SiteAdapterDTO {
   modules: string[];
   pathMap: Record<string, unknown>;
   adapterManifestVersion: string;
-  connectorType: 'http' | 'drizzle';
+  connectorType: string;
   connectorConfig: Record<string, unknown>;
   capabilities: string[];
   externalSiteReference?: string;
@@ -53,7 +53,7 @@ function toDTO(row: SiteAdapterRow): SiteAdapterDTO {
     modules: row.modules ?? [],
     pathMap: (row.pathMap ?? {}) as Record<string, unknown>,
     adapterManifestVersion: row.adapterManifestVersion ?? '1.0.0',
-    connectorType: row.connectorType === 'drizzle' ? 'drizzle' : 'http',
+    connectorType: row.connectorType,
     connectorConfig: (row.connectorConfig ?? {}) as Record<string, unknown>,
     capabilities: row.capabilities ?? [],
     externalSiteReference: row.externalSiteReference ?? undefined,
@@ -71,13 +71,13 @@ export const siteAdapterService = {
     return rows.map(toDTO);
   },
 
-  /** Look up by `slug` (admin-internal plugin id, e.g. `webs-croco`). */
+  /** Look up by `slug` (admin-internal plugin id, e.g. `example-site`). */
   async getBySlug(slug: string): Promise<SiteAdapterDTO | null> {
     const [row] = await db.select().from(siteAdapters).where(eq(siteAdapters.slug, slug)).limit(1);
     return row ? toDTO(row) : null;
   },
 
-  /** Look up by `publicSlug` (consumer-facing slug, e.g. `croco`). Used by the
+  /** Look up by `publicSlug` (consumer-facing slug, e.g. `example`). Used by the
    *  pathMap proxy to resolve the backend from a user-supplied publicSlug. */
   async getByPublicSlug(publicSlug: string): Promise<SiteAdapterDTO | null> {
     const [row] = await db

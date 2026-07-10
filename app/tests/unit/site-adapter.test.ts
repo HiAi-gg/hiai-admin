@@ -4,11 +4,11 @@ import {
   type SiteAdapterRow,
 } from '../../src/lib/plugins/site-adapter.js';
 
-const croco: SiteAdapterRow = {
+const example: SiteAdapterRow = {
   id: 'a1',
   tenantId: 't1',
-  slug: 'webs-croco',
-  name: 'Croco',
+  slug: 'example-site',
+  name: 'Example',
   backendUrl: 'http://api:3001',
   auth: 'jwt',
   modules: ['articles', 'homepage', 'domains', 'kofi'],
@@ -17,25 +17,25 @@ const croco: SiteAdapterRow = {
 
 describe('buildSiteAdapterPlugins', () => {
   it('builds one plugin per adapter with id = slug and kind "site"', () => {
-    const [plugin] = buildSiteAdapterPlugins([croco]);
-    expect(plugin.id).toBe('webs-croco');
+    const [plugin] = buildSiteAdapterPlugins([example]);
+    expect(plugin.id).toBe('example-site');
     expect(plugin.kind).toBe('site');
     expect(plugin.tenantId).toBe('t1');
-    expect(plugin.name).toBe('Croco');
+    expect(plugin.name).toBe('Example');
   });
 
   it('sets the proxy target to the adapter backend and prefix to /api/<slug>', () => {
-    const [plugin] = buildSiteAdapterPlugins([croco]);
+    const [plugin] = buildSiteAdapterPlugins([example]);
     expect(plugin.proxy.target).toBe('http://api:3001');
-    expect(plugin.proxy.prefix).toBe('/api/webs-croco');
+    expect(plugin.proxy.prefix).toBe('/api/example-site');
     expect(plugin.proxy.auth).toBe('jwt');
   });
 
   it('creates one nav group with an item per enabled module, in stable order', () => {
-    const [plugin] = buildSiteAdapterPlugins([croco]);
+    const [plugin] = buildSiteAdapterPlugins([example]);
     expect(plugin.navGroups).toHaveLength(1);
     const group = plugin.navGroups[0];
-    expect(group.label).toBe('Croco');
+    expect(group.label).toBe('Example');
     expect(group.items.map((i) => i.label)).toEqual([
       'Overview',
       'Articles',
@@ -44,17 +44,17 @@ describe('buildSiteAdapterPlugins', () => {
       'Ko-fi',
     ]);
     expect(group.items.map((i) => i.href)).toEqual([
-      '/sites/webs-croco',
-      '/sites/webs-croco/articles',
-      '/sites/webs-croco/homepage',
-      '/sites/webs-croco/domain',
-      '/sites/webs-croco/kofi',
+      '/sites/example-site',
+      '/sites/example-site/articles',
+      '/sites/example-site/homepage',
+      '/sites/example-site/domain',
+      '/sites/example-site/kofi',
     ]);
   });
 
   it('orders nav items canonically regardless of input order', () => {
     const [plugin] = buildSiteAdapterPlugins([
-      { ...croco, modules: ['kofi', 'articles', 'domains'] },
+      { ...example, modules: ['kofi', 'articles', 'domains'] },
     ]);
     expect(plugin.navGroups[0].items.map((i) => i.label)).toEqual([
       'Overview',
@@ -65,21 +65,21 @@ describe('buildSiteAdapterPlugins', () => {
   });
 
   it('defaults proxy auth to jwt when not specified', () => {
-    const [plugin] = buildSiteAdapterPlugins([{ ...croco, auth: undefined }]);
+    const [plugin] = buildSiteAdapterPlugins([{ ...example, auth: undefined }]);
     expect(plugin.proxy.auth).toBe('jwt');
   });
 
   it('skips disabled adapters', () => {
     const plugins = buildSiteAdapterPlugins([
-      croco,
-      { ...croco, slug: 'webs-off', name: 'Off', enabled: false },
+      example,
+      { ...example, slug: 'example-off', name: 'Off', enabled: false },
     ]);
-    expect(plugins.map((p) => p.id)).toEqual(['webs-croco']);
+    expect(plugins.map((p) => p.id)).toEqual(['example-site']);
   });
 
   it('ignores unknown module names', () => {
     const [plugin] = buildSiteAdapterPlugins([
-      { ...croco, modules: ['articles', 'bogus', 'kofi'] },
+      { ...example, modules: ['articles', 'bogus', 'kofi'] },
     ]);
     expect(plugin.navGroups[0].items.map((i) => i.label)).toEqual([
       'Overview',

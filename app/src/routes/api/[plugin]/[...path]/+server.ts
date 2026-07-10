@@ -4,6 +4,11 @@ import { getProxyConfig, getPlugin } from '$lib/plugins/registry.js';
 import { resolveTarget } from '$lib/server/proxy-target.js';
 import { mintBackendToken } from '$lib/server/backend-token.js';
 import { resolveAdapterSecret } from '$lib/server/adapter-secret.js';
+import { canAccessSiteAdapter } from '$lib/server/site-access.js';
+import { siteAdapterService } from '../../../../../../backend/src/modules/site-adapter/site-adapter.service.js';
+import { recordSiteMutationAudit, recordSiteMutationFailure } from '$lib/server/site-audit.js';
+
+const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
 async function proxyRequest(
   request: Request,
@@ -14,16 +19,14 @@ async function proxyRequest(
   const config = getProxyConfig(pluginId);
   if (!config) return json({ error: `Plugin "${pluginId}" not found` }, { status: 404 });
 
-  // Authorization: a site admin may only reach sites of tenants they have access to.
-  // super_admin → all. Non-super-admin → site adapters whose tenantId is in user.tenantIds;
-  // platform/static plugins (social/shop/kofi/umami) are super_admin-only.
+  // Authorization: super_admin may reach every plugin. Other users need an
+  // active membership for the exact site adapter; platform/static plugins are
+  // super_admin-only.
   if (!user) return json({ error: 'Unauthorized' }, { status: 401 });
   const plugin = getPlugin(pluginId) as { kind?: string; tenantId?: string } | undefined;
   if (user.role !== 'super_admin') {
-    const allowed =
-      plugin?.kind === 'site' &&
-      !!plugin.tenantId &&
-      (user.tenantIds ?? []).includes(plugin.tenantId);
+    const adapter = plugin?.kind === 'site' ? await siteAdapterService.getBySlug(pluginId) : null;
+    const allowed = adapter ? await canAccessSiteAdapter(adapter, user) : false;
     if (!allowed) return json({ error: 'Forbidden' }, { status: 403 });
   }
 
@@ -57,6 +60,28 @@ async function proxyRequest(
   if (incomingSearch) target.search = incomingSearch;
   const targetUrl = target.toString();
 
+  const mutationAudit = MUTATION_METHODS.has(request.method)
+    ? {
+        user,
+        request,
+        siteSlug: pluginId,
+        action: `site-proxy:${request.method.toLowerCase()}`,
+        resource: 'site-proxy',
+        resourceId: pluginId,
+        details: { path },
+      }
+    : null;
+  if (mutationAudit) {
+    try {
+      await recordSiteMutationAudit({ ...mutationAudit, phase: 'attempt' });
+    } catch (error) {
+      return json(
+        { error: error instanceof Error ? error.message : 'Audit unavailable' },
+        { status: 500 },
+      );
+    }
+  }
+
   const headers = new Headers();
   const contentType = request.headers.get('content-type');
   if (contentType) headers.set('content-type', contentType);
@@ -85,11 +110,33 @@ async function proxyRequest(
   try {
     const res = await fetch(targetUrl, init);
     const body = await res.text();
+    if (mutationAudit) {
+      if (res.ok) {
+        try {
+          await recordSiteMutationAudit({
+            ...mutationAudit,
+            phase: 'success',
+            details: { ...mutationAudit.details, upstreamStatus: res.status },
+          });
+        } catch (error) {
+          return json(
+            { error: error instanceof Error ? error.message : 'Audit finalization failed' },
+            { status: 500 },
+          );
+        }
+      } else {
+        await recordSiteMutationFailure(
+          mutationAudit,
+          new Error(`Upstream mutation failed with status ${res.status}`),
+        );
+      }
+    }
     return new Response(body, {
       status: res.status,
       headers: { 'content-type': res.headers.get('content-type') ?? 'application/json' },
     });
   } catch (err) {
+    if (mutationAudit) await recordSiteMutationFailure(mutationAudit, err);
     return json({ error: err instanceof Error ? err.message : 'Proxy error' }, { status: 502 });
   }
 }

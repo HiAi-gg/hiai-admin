@@ -1,6 +1,11 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
-import { normalizeArticle, validateArticleDraft, STATUS_OPTIONS } from '$lib/sites/articles.js';
+import {
+  normalizeArticle,
+  validateArticleDraft,
+  STATUS_OPTIONS,
+  type ArticleStatus,
+} from '$lib/sites/articles.js';
 
 // Article editor (Block B / B1.2 + B1.4). `id === 'new'` is the create form; any other id
 // loads an existing article from the site backend via the generic proxy.
@@ -51,16 +56,17 @@ export const actions: Actions = {
     if (!(STATUS_OPTIONS as readonly string[]).includes(status)) {
       return fail(400, { error: `Invalid status: ${status}`, values });
     }
+    const typedStatus = status as ArticleStatus;
 
     const isNew = id === 'new';
     const payload = {
       title,
       slug: articleSlug || undefined,
-      status,
+      status: typedStatus,
       language,
       content,
-      ...(isNew && { site: slug }),
     };
+
     const res = await fetch(isNew ? `/api/${slug}/articles` : `/api/${slug}/articles/${id}`, {
       method: isNew ? 'POST' : 'PUT',
       headers: { 'content-type': 'application/json' },

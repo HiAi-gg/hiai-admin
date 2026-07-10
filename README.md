@@ -132,6 +132,8 @@ Core tables managed by Drizzle ORM:
 | `audit_logs` | Complete action trail (actor, action, resource, metadata, IP) |
 | `integrations` | Third-party service credentials (encrypted) |
 | `webhooks` | Registered webhook endpoints |
+| `site_adapters` | Versioned HTTP/Drizzle connections to managed sites |
+| `site_memberships` | Exact user-to-site access, independent from tenant-level access |
 
 ## API Endpoints (overview)
 
@@ -145,6 +147,8 @@ Core tables managed by Drizzle ORM:
 | Settings | `GET/PUT /api/settings` | Super Admin |
 | Audit | `GET /api/audit` | Super Admin |
 | Integrations | `GET/POST/PUT /api/integrations` | Super Admin |
+| Site adapters | `GET/POST/PUT /api/site-adapters` | Super Admin |
+| Site memberships | `GET/POST/DELETE /api/site-adapters/:slug/memberships` | Super Admin |
 | Webhooks | `POST /api/webhooks/stripe` | Stripe signature |
 
 ## Environment Variables
@@ -172,6 +176,16 @@ HIAI_OBSERVE_URL=http://localhost:8001
 API_PORT=50200
 FRONTEND_PORT=50201
 ```
+
+### Site Adapter Contract
+
+Site adapters expose canonical HTTP modules such as `/site-settings`, `/articles`,
+`/homepage-blocks`, `/domains`, and `/kofi`. Product-specific storage schemas and protocol
+translation belong to the consuming project, not to hiai-admin.
+
+Every mutating proxy request records an audit attempt before forwarding and a success/failure
+result afterward. Non-super-admin users require an exact active `site_memberships` row for the
+adapter slug; tenant access alone does not grant access to every site in that tenant.
 
 ### Object Storage (`OBJECT_STORAGE_*`)
 

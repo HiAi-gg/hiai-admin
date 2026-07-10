@@ -1,8 +1,7 @@
 // Generic "articles" CMS module for Site adapters (HIAI_ADMIN_INTEGRATION_PLAN Block B / B1).
 // Pure, framework-agnostic logic shared by the article list + editor pages. The site
 // backend contract is intentionally loose: we normalize whatever shape a tenant backend
-// returns (camelCase, snake_case, common alt keys) into a stable `Article`. No webs-specifics
-// live here — webs is just one tenant whose adapter enables the `articles` module.
+// returns (camelCase, snake_case, common alt keys) into a stable `Article`.
 
 export const STATUS_OPTIONS = ['draft', 'published', 'archived'] as const;
 export type ArticleStatus = (typeof STATUS_OPTIONS)[number];

@@ -8,7 +8,6 @@ import {
   getProxyConfig,
   getProxyConfigs,
   createProviderRegistry,
-  createWebsProviderStub,
   UnsupportedCapabilityError,
   UnsupportedConnectorError,
   registerPlugin,
@@ -252,9 +251,9 @@ describe('provider registry — connector and capability resolution', () => {
   });
 
   it('throws an explicit error for an unsupported connector', () => {
-    expect(() => createProviderRegistry().resolve('webs')).toThrow(UnsupportedConnectorError);
-    expect(() => createProviderRegistry().resolve('webs')).toThrow(
-      'No data provider is registered for connector type "webs"',
+    expect(() => createProviderRegistry().resolve('custom')).toThrow(UnsupportedConnectorError);
+    expect(() => createProviderRegistry().resolve('custom')).toThrow(
+      'No data provider is registered for connector type "custom"',
     );
   });
 
@@ -278,9 +277,5 @@ describe('provider registry — connector and capability resolution', () => {
     const registry = createProviderRegistry({ http: () => provider });
 
     expect(registry.resolve({ connectorType: 'http', capabilities: ['articles'] })).toBe(provider);
-  });
-
-  it('keeps Webs behind the generic provider interface until implemented', () => {
-    expect(createWebsProviderStub()).toEqual({ capabilities: [] });
   });
 });

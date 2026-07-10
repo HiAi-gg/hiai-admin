@@ -75,25 +75,34 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   // Load site settings (best-effort). Extracts the fields the dashboard actually needs.
   if (adapter && !error) {
     try {
-      const res = await fetch(`/api/${slug}/sites/${slug}`);
+      const res = await fetch(`/api/${slug}/site-settings`);
       if (res.ok) {
         const body = await res.json();
         const site =
           body &&
           typeof body === 'object' &&
           !Array.isArray(body) &&
-          (body as { site?: unknown }).site
-            ? (body as { site: Record<string, unknown> }).site
+          (body as { settings?: unknown }).settings
+            ? (body as { settings: Record<string, unknown> }).settings
             : body;
         if (site && typeof site === 'object') {
           const s = site as Record<string, unknown>;
+          const metadata =
+            s.metadata && typeof s.metadata === 'object' && !Array.isArray(s.metadata)
+              ? (s.metadata as Record<string, unknown>)
+              : {};
           settings = {
-            name: typeof s.name === 'string' ? s.name : adapter.name,
+            name:
+              typeof s.title === 'string'
+                ? s.title
+                : typeof s.name === 'string'
+                  ? s.name
+                  : adapter.name,
             slug: typeof s.slug === 'string' ? s.slug : slug,
             description: typeof s.description === 'string' ? s.description : '',
-            status: typeof s.status === 'string' ? s.status : 'active',
-            theme: typeof s.theme === 'string' ? s.theme : 'default',
-            domain: typeof s.domain === 'string' ? s.domain : '',
+            status: typeof metadata.status === 'string' ? metadata.status : 'active',
+            theme: typeof metadata.theme === 'string' ? metadata.theme : 'default',
+            domain: typeof metadata.domain === 'string' ? metadata.domain : '',
           };
         }
       }
@@ -107,18 +116,9 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
   const publicUrl = computePublicUrl(settings.domain, slug);
 
   // Best-effort counts + samples. Each fetch is isolated so a single failure can't break the others.
-  const blocksCount = await safeCount(
-    fetch,
-    `/api/${slug}/homepage-blocks/admin/site-by-slug/${slug}`,
-  );
-  const domainStatus = await safeDomainStatus(
-    fetch,
-    `/api/${slug}/domains?site=${encodeURIComponent(slug)}`,
-  );
-  const articlesPayload = await safeJson(
-    fetch,
-    `/api/${slug}/articles/admin/list?site=${encodeURIComponent(slug)}`,
-  );
+  const blocksCount = await safeCount(fetch, `/api/${slug}/homepage-blocks`);
+  const domainStatus = await safeDomainStatus(fetch, `/api/${slug}/domains`);
+  const articlesPayload = await safeJson(fetch, `/api/${slug}/articles`);
   const recentArticles = articlesPayload ? pickRecentArticles(articlesPayload) : [];
   const articlesCount = articlesPayload
     ? (countFromPayload(articlesPayload) ?? recentArticles.length)
@@ -171,7 +171,7 @@ function countFromPayload(body: unknown): number | null {
     // Some endpoints expose a direct `count` (e.g. drafts/count).
     if (typeof obj.count === 'number') return obj.count;
     if (typeof obj.draftCount === 'number') return obj.draftCount;
-    // Pagination envelopes (webs: { articles, pagination: { total } }).
+    // Common pagination envelopes expose a nested total.
     const pagination = obj.pagination as { total?: unknown } | undefined;
     if (pagination && typeof pagination.total === 'number') return pagination.total;
   }

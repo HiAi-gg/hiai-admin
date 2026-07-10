@@ -74,9 +74,9 @@ describe('normalizeArticle', () => {
     expect(normalizeArticle({ id: '1', status: 'weird' }).status).toBe('draft');
   });
 
-  it('handles webs backend response with numeric id and snake_case fields', () => {
+  it('handles provider response with numeric id and snake_case fields', () => {
     const raw: RawArticle = {
-      id: 12345, // webs likely uses numeric ids
+      id: 12345, // numeric ids are supported
       title: 'Blog Post',
       status: 'published',
       language: 'en',

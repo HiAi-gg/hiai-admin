@@ -3,6 +3,8 @@ export type {
   ArticleDTO,
   ArticleInput,
   HomepageBlockDTO,
+  HomepageBlockInput,
+  HomepageBlockReorderInput,
   SiteSettingsDTO,
   SiteSettingsInput,
 } from './site.js';
@@ -14,6 +16,8 @@ export {
   articleSchema,
   articleStatusSchema,
   articlesSchema,
+  homepageBlockInputSchema,
+  homepageBlockReorderInputSchema,
   homepageBlockSchema,
   homepageBlocksSchema,
   siteModuleSchema,

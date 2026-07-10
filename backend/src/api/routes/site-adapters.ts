@@ -4,12 +4,14 @@ import { siteAdapters } from '../../db/schema/index.js';
 import { db } from '../../lib/db.js';
 import { AppError, ErrorCode } from '../../lib/errors.js';
 import { siteAdapterService } from '../../modules/site-adapter/site-adapter.service.js';
+import { siteMembershipService } from '../../modules/site-membership/site-membership.service.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
 import { rbacMiddleware } from '../middleware/rbac.js';
 import {
   checkHealthSchema,
   createSiteAdapterSchema,
+  assignSiteMembershipSchema,
   updateSiteAdapterSchema,
 } from '../validation/site-adapter.schema.js';
 
@@ -55,6 +57,43 @@ export const siteAdaptersRoutes = new Elysia({ prefix: '/api/site-adapters' })
       const adapter = await siteAdapterService.create(parsed.data);
       set.status = 201;
       return { adapter };
+    },
+    { requireSuperAdmin: true },
+  )
+  .get(
+    '/:slug/memberships',
+    async ({ params }) => ({
+      memberships: await siteMembershipService.listForAdapter(params.slug),
+    }),
+    { requireSuperAdmin: true },
+  )
+  .post(
+    '/:slug/memberships',
+    async ({ params, body, set }) => {
+      const parsed = assignSiteMembershipSchema.safeParse(body);
+      if (!parsed.success) {
+        set.status = 400;
+        return { error: 'Validation failed', details: parsed.error.flatten() };
+      }
+      const membership = await siteMembershipService.assign(params.slug, parsed.data);
+      if (!membership) {
+        set.status = 404;
+        return { error: `No site adapter with slug "${params.slug}"` };
+      }
+      set.status = 201;
+      return { membership };
+    },
+    { requireSuperAdmin: true },
+  )
+  .delete(
+    '/:slug/memberships/:userId',
+    async ({ params, set }) => {
+      const removed = await siteMembershipService.remove(params.slug, params.userId);
+      if (!removed) {
+        set.status = 404;
+        return { error: 'Site membership not found' };
+      }
+      return { success: true };
     },
     { requireSuperAdmin: true },
   )

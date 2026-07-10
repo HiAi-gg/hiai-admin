@@ -25,7 +25,7 @@ export const siteAdapters = pgTable(
     tenantId: uuid('tenant_id')
       .notNull()
       .references(() => tenants.id, { onDelete: 'cascade' }),
-    slug: text('slug').notNull().unique(), // = plugin id, e.g. "webs-croco"
+    slug: text('slug').notNull().unique(), // = plugin id, e.g. "example-site"
     name: text('name').notNull(),
 
     // Backward-compatible connector fields
