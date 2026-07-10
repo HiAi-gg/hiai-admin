@@ -22,22 +22,20 @@ describe('siteMembershipService', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('bridges the authenticated session to users by email and requires an enabled adapter membership', async () => {
-    dbMock.select
-      .mockReturnValueOnce(chain([{ id: 'platform-user-1' }]))
-      .mockReturnValueOnce(
-        chain([
-          {
-            id: 'membership-1',
-            userId: 'platform-user-1',
-            siteAdapterId: 'adapter-1',
-            globalRole: 'viewer',
-            role: 'admin',
-            permissions: ['articles:read'],
-            adapterSlug: 'test',
-            tenantId: 'tenant-1',
-          },
-        ]),
-      );
+    dbMock.select.mockReturnValueOnce(chain([{ id: 'platform-user-1' }])).mockReturnValueOnce(
+      chain([
+        {
+          id: 'membership-1',
+          userId: 'platform-user-1',
+          siteAdapterId: 'adapter-1',
+          globalRole: 'viewer',
+          role: 'admin',
+          permissions: ['articles:read'],
+          adapterSlug: 'test',
+          tenantId: 'tenant-1',
+        },
+      ]),
+    );
 
     await expect(
       siteMembershipService.getActiveMembership(

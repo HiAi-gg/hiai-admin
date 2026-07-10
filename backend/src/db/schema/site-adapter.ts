@@ -38,7 +38,10 @@ export const siteAdapters = pgTable(
     // Manifest-first metadata
     adapterManifestVersion: text('adapter_manifest_version').notNull().default('1.0.0'),
     connectorType: text('connector_type').notNull().default('http'), // 'http' | 'drizzle'
-    connectorConfig: jsonb('connector_config').$type<Record<string, unknown>>().notNull().default({}),
+    connectorConfig: jsonb('connector_config')
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     capabilities: jsonb('capabilities').$type<string[]>().notNull().default([]),
     externalSiteReference: text('external_site_reference'),
     secretRefs: jsonb('secret_refs').$type<Record<string, string>>().notNull().default({}),

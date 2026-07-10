@@ -15,14 +15,18 @@ describe('site membership authorization', () => {
 
   it('does not require the schema-ready global_admin role', async () => {
     membershipLookup.mockResolvedValueOnce({ role: 'member', globalRole: 'viewer' });
-    await expect(authorizeSiteAdmin({ id: 'u1', email: 'u@test.local', role: 'admin' }, 'test')).resolves.toMatchObject({
+    await expect(
+      authorizeSiteAdmin({ id: 'u1', email: 'u@test.local', role: 'admin' }, 'test'),
+    ).resolves.toMatchObject({
       status: 200,
     });
   });
 
   it('denies a member of another adapter', async () => {
     membershipLookup.mockResolvedValueOnce(null);
-    await expect(authorizeSiteAdmin({ id: 'u1', email: 'u@test.local', role: 'admin' }, 'test')).resolves.toEqual({
+    await expect(
+      authorizeSiteAdmin({ id: 'u1', email: 'u@test.local', role: 'admin' }, 'test'),
+    ).resolves.toEqual({
       status: 403,
       membership: null,
     });
