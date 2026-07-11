@@ -19,6 +19,7 @@ export * from './user.js';
 export * from './user-tenant-access.js';
 export { siteMemberships } from './site-membership.js';
 export * from './site-invite.js';
+export * from './integration-operation.js';
 
 // Webhooks
 export * from './webhook.js';

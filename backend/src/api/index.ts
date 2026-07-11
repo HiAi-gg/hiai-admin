@@ -29,6 +29,7 @@ import { siteAccessRoutes } from './routes/site-access.js';
 import { siteInvitesRoutes } from './routes/site-invites.js';
 import { siteProxyRoutes } from './routes/site-proxy.js';
 import { integrationTokenRoutes } from './routes/integration-tokens.js';
+import { integrationSiteAccessRoutes } from './routes/integration-site-access.js';
 import { tenantRoutes } from './routes/tenants.js';
 import { userRoutes } from './routes/users.js';
 import { webhooksStripeRoutes } from './routes/webhooks-stripe.js';
@@ -112,6 +113,7 @@ const app = new Elysia()
   .use(siteAccessRoutes)
   .use(siteProxyRoutes)
   .use(integrationTokenRoutes)
+  .use(integrationSiteAccessRoutes)
   .use(webhooksStripeRoutes)
   .use(proxyPostRoutes)
   .use(proxyStoreRoutes)
