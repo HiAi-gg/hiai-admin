@@ -24,16 +24,6 @@ type BetterAuthUser = {
   emailVerified?: boolean;
 };
 
-type BetterAuthSession = {
-  id?: string;
-  userId?: string;
-  emailVerified?: boolean;
-};
-
-interface RouteContext {
-  [key: string]: unknown;
-}
-
 const INTEGRATION_TOKEN_TTL_SECONDS = 300;
 
 function base64url(input: string): string {

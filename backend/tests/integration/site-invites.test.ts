@@ -133,6 +133,8 @@ function createConcurrentAtomicClaimHarness(seedInvite: InviteRow, participantCo
     chain.from = vi.fn(() => chain);
     chain.where = vi.fn(() => chain);
     chain.limit = vi.fn(() => chain);
+    // Drizzle builders are thenables.
+    // biome-ignore lint/suspicious/noThenProperty: mock chain imitates Drizzle API shape
     chain.then = (resolve: (value: unknown) => void) => {
       claimState.selectCalls += 1;
       resolve([{ ...claimState.invite }]);

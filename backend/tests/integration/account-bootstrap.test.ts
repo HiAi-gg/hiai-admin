@@ -33,6 +33,7 @@ function createReadChain(
     where: vi.fn(() => chain),
     limit: vi.fn(() => chain),
   };
+  // biome-ignore lint/suspicious/noThenProperty: Drizzle query builders are thenables and tests must mimic that API shape
   (chain as unknown as { then: unknown }).then = (
     onFulfilled?: (value: unknown) => unknown,
     onRejected?: (error: unknown) => unknown,

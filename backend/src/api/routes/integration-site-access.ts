@@ -1,6 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Elysia } from 'elysia';
-import { z } from 'zod';
 import { env } from '../../lib/config.js';
 import {
   provisionExternalSiteAccess,

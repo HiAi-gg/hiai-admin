@@ -19,7 +19,9 @@ vi.hoisted(() => {
 });
 import { resetIntegrationRegistryForTests } from '../../src/modules/integrations/integration-registry.js';
 
-vi.mock('../../src/api/middleware/rateLimiter.js', () => ({ createRateLimiter: () => new Elysia() }));
+vi.mock('../../src/api/middleware/rateLimiter.js', () => ({
+  createRateLimiter: () => new Elysia(),
+}));
 
 const authMock = {
   api: {
@@ -47,7 +49,11 @@ const sessions = new Map<
 >();
 
 const profilesByEmail: Record<string, PlatformProfile> = {
-  'verified@hiai.local': { id: 'platform-user-1', email: 'verified@hiai.local', name: 'Verified User' },
+  'verified@hiai.local': {
+    id: 'platform-user-1',
+    email: 'verified@hiai.local',
+    name: 'Verified User',
+  },
   'unverified@hiai.local': {
     id: 'platform-user-2',
     email: 'unverified@hiai.local',
@@ -60,6 +66,7 @@ function createChain<T>(rows: T[]) {
   chain.from = vi.fn(() => chain);
   chain.innerJoin = vi.fn(() => chain);
   chain.where = vi.fn(() => chain);
+  // biome-ignore lint/suspicious/noThenProperty: Drizzle query builders are thenables and tests must mimic that API shape
   chain.then = (resolve: (rows: T[]) => void) => Promise.resolve(rows).then(resolve);
   return chain;
 }
@@ -74,7 +81,7 @@ const dbMock = {
   delete: vi.fn(),
 };
 
-let dbState: { selectRows: unknown[][] } = { selectRows: [] };
+const dbState: { selectRows: unknown[][] } = { selectRows: [] };
 
 vi.mock('../../src/lib/db.js', () => ({ db: dbMock }));
 
@@ -91,7 +98,9 @@ vi.mock('../../src/modules/user/user.service.js', () => ({
 const { integrationTokenRoutes } = await import('../../src/api/routes/integration-tokens.js');
 const { loadSession } = await import('../../src/api/middleware/auth.js');
 
-const app = new Elysia().derive(async ({ request }) => loadSession(request.headers)).use(integrationTokenRoutes);
+const app = new Elysia()
+  .derive(async ({ request }) => loadSession(request.headers))
+  .use(integrationTokenRoutes);
 
 function decodeJwtPayload(token: string) {
   const [, payload] = token.split('.');
@@ -113,6 +122,16 @@ describe('integration token endpoints', () => {
       new Request('http://localhost/api/integration-tokens/tenant-onboard', {
         method: 'POST',
         headers: { Origin: 'https://trusted.example' },
+      }),
+    );
+    expect(response.status).toBe(401);
+    expect(await response.json()).toEqual({ error: 'Unauthorized' });
+  });
+
+  it('requires auth for integration sites route', async () => {
+    const response = await app.handle(
+      new Request('http://localhost/api/integration-sites/tenant-onboard', {
+        method: 'GET',
       }),
     );
     expect(response.status).toBe(401);
@@ -252,7 +271,9 @@ describe('integration token endpoints', () => {
     expect(response.status).toBe(200);
     const result = await response.json();
     expect(result).toMatchObject({
-      adapters: [{ adapterSlug: 'site-a', publicSlug: 'site-a-public', name: 'Site A', enabled: true }],
+      adapters: [
+        { adapterSlug: 'site-a', publicSlug: 'site-a-public', name: 'Site A', enabled: true },
+      ],
     });
     expect(result.adapters).toHaveLength(1);
   });

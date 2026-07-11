@@ -91,7 +91,7 @@ function resolveSecret(secretRef: string): string {
 }
 
 function parseIntegrationConfigs(): Map<string, RegisteredIntegration> {
-  let rawValue = env.AUTH_INTEGRATIONS_JSON;
+  const rawValue = env.AUTH_INTEGRATIONS_JSON;
   try {
     const parsedJson = JSON.parse(rawValue) as unknown;
     const parsed = integrationConfigSchema.safeParse(parsedJson);
