@@ -57,6 +57,7 @@ todo.md.bak
 
 # Local agent artifacts
 .superpowers/
+task-*-report.md
 
 # CI workspace (cloned at runtime, not committed)
 packages/
