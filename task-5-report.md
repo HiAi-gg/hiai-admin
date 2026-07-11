@@ -51,3 +51,10 @@ Pre-work snapshot created before edits:
 `/mnt/ai_data/backups/prework/hiai-admin_20260711_093830.tar.gz`.
 
 The worktree already contained unrelated Task 1–4 review artifacts and a modified integration test; those files were not staged or modified by Task 5.
+
+## Task 5 finding remediation
+
+- Updated the `[Unreleased]` footer comparison to start at `v0.0.8`.
+- Added the `[0.0.8]` comparison link from `v0.0.7` to `v0.0.8`.
+- Preserved the changelog's generic open-source wording and existing release-link style.
+- Focused markdown/reference sanity check passed: both required definitions are present exactly once, and the `v0.0.8` tag still resolves to the original annotated tag object.
