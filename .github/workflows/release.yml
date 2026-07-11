@@ -20,6 +20,8 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
+      - run: cd backend && bun install --frozen-lockfile || bun install
+      - run: cd app && bun install --frozen-lockfile || bun install
       - run: bun run format:check
       - run: bun run lint
       - run: bun run typecheck
