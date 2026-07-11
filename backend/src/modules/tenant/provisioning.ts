@@ -14,7 +14,11 @@ export async function provisionTenant(
   slug: string,
   ownerEmail: string,
   plan: string = 'free',
+  authorization?: { actorRole?: string },
 ) {
+  if (authorization?.actorRole !== 'super_admin') {
+    throw new Error('LEGACY_PROVISIONING_REQUIRES_SUPER_ADMIN');
+  }
   // 1. Create tenant
   const tenant = await tenantService.create({ name, slug, email: ownerEmail, plan });
 

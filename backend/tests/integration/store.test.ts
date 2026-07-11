@@ -296,7 +296,7 @@ describe('Cross-Project Integration: hiai-admin ↔ hiai-store — Tenant provis
     } as any);
 
     const { provisionTenant } = await import('../../src/modules/tenant/provisioning.js');
-    const tenant = await provisionTenant('Beta Books', 'beta-books', '[email protected]', 'pro');
+    const tenant = await provisionTenant('Beta Books', 'beta-books', '[email protected]', 'pro', { actorRole: 'super_admin' });
 
     expect(tenant).toBeDefined();
     expect(stripeService.createCustomer).toHaveBeenCalledWith('[email protected]', 'Beta Books');
