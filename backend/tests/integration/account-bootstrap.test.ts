@@ -24,7 +24,9 @@ function createInsertChain(returnValues: unknown[]): MockChain {
   return chain;
 }
 
-function createReadChain(returnValues: unknown[]): Pick<MockChain, 'select' | 'from' | 'where' | 'limit'> {
+function createReadChain(
+  returnValues: unknown[],
+): Pick<MockChain, 'select' | 'from' | 'where' | 'limit'> {
   const chain: Pick<MockChain, 'select' | 'from' | 'where' | 'limit'> = {
     select: vi.fn(() => chain),
     from: vi.fn(() => chain),
@@ -97,9 +99,7 @@ describe('account bootstrap', () => {
     const secondInsert = createInsertChain([]);
     const selectChain = createReadChain([profileRow]);
 
-    dbMock.insert
-      .mockReturnValueOnce(firstInsert)
-      .mockReturnValueOnce(secondInsert);
+    dbMock.insert.mockReturnValueOnce(firstInsert).mockReturnValueOnce(secondInsert);
     dbMock.select.mockReturnValue(selectChain);
 
     const first = await userService.ensurePlatformProfile({

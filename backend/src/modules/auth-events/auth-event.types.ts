@@ -10,4 +10,3 @@ export interface AuthActionEvent {
   expiresAt: string;
   locale?: string;
 }
-

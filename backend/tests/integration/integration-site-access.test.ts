@@ -30,9 +30,9 @@ const request: ProvisionExternalSiteAccessRequest = {
 
 describe('generic external site access service', () => {
   it('hashes equivalent payloads deterministically without provider-specific fields', () => {
-    expect(
-      canonicalPayloadHash({ b: 2, a: { d: true, c: ['x', 1] } }),
-    ).toBe(canonicalPayloadHash({ a: { c: ['x', 1], d: true }, b: 2 }));
+    expect(canonicalPayloadHash({ b: 2, a: { d: true, c: ['x', 1] } })).toBe(
+      canonicalPayloadHash({ a: { c: ['x', 1], d: true }, b: 2 }),
+    );
   });
 
   it('exports the atomic provision and compensation service API', () => {

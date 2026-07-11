@@ -101,11 +101,20 @@ export async function provisionTenant(
     }
   } catch (err: any) {
     if (ownerUserId) {
-      await db.delete(userRoles).where(and(eq(userRoles.tenantId, tenant.id), eq(userRoles.userId, ownerUserId)));
-      await db.delete(userTenantAccess).where(and(eq(userTenantAccess.tenantId, tenant.id), eq(userTenantAccess.userId, ownerUserId)));
+      await db
+        .delete(userRoles)
+        .where(and(eq(userRoles.tenantId, tenant.id), eq(userRoles.userId, ownerUserId)));
+      await db
+        .delete(userTenantAccess)
+        .where(
+          and(eq(userTenantAccess.tenantId, tenant.id), eq(userTenantAccess.userId, ownerUserId)),
+        );
     }
     await db.delete(tenants).where(eq(tenants.id, tenant.id));
-    log.error({ err: err.message, tenantId: tenant.id }, 'Owner assignment failed; partial tenant rows compensated');
+    log.error(
+      { err: err.message, tenantId: tenant.id },
+      'Owner assignment failed; partial tenant rows compensated',
+    );
     throw err;
   }
 

@@ -43,14 +43,14 @@ export const siteInviteService = {
         .update(siteInvites)
         .set({ acceptedAt: now })
         .where(
-            and(
-              eq(siteInvites.tokenHash, tokenHash),
-              isNull(siteInvites.acceptedAt),
-              eq(siteInvites.email, input.email),
-              gte(siteInvites.expiresAt, now),
-              ne(siteInvites.role, 'super_admin'),
-              ne(siteInvites.role, 'tenant_admin'),
-            ),
+          and(
+            eq(siteInvites.tokenHash, tokenHash),
+            isNull(siteInvites.acceptedAt),
+            eq(siteInvites.email, input.email),
+            gte(siteInvites.expiresAt, now),
+            ne(siteInvites.role, 'super_admin'),
+            ne(siteInvites.role, 'tenant_admin'),
+          ),
         )
         .returning({
           id: siteInvites.id,

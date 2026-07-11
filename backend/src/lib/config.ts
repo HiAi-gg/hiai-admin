@@ -150,7 +150,10 @@ export const envSchema = z
       .string()
       .default('[]')
       .transform((value) => value.trim() || '[]'),
-    SERVICE_INTEGRATIONS_JSON: z.string().default('[]').transform((value) => value.trim() || '[]'),
+    SERVICE_INTEGRATIONS_JSON: z
+      .string()
+      .default('[]')
+      .transform((value) => value.trim() || '[]'),
 
     // Backend (cross-service) JWT TTL used by the admin -> site adapter SSO
     // flow in app/src/lib/server/backend-token.ts. Default 1h matches the

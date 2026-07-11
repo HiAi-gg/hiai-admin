@@ -12,7 +12,10 @@ import {
 } from '../modules/auth-events/auth-event.service.js';
 
 const log = createChildLogger('auth');
-type HeaderLike = Headers | { get?: (name: string) => string | null } | Record<string, string | string[] | undefined>;
+type HeaderLike =
+  | Headers
+  | { get?: (name: string) => string | null }
+  | Record<string, string | string[] | undefined>;
 
 const TRUSTED_CLIENT_HEADER = 'x-auth-trusted-client';
 const SIGNUP_ROUTE_SUFFIX = '/sign-up/email';
@@ -87,17 +90,16 @@ export function getAuthSignupPolicyError(
       code: requestKind === 'signup' ? 'AUTH_SIGNUP_DISABLED' : 'AUTH_PASSWORD_RESET_DISABLED',
       status: SIGNUP_MODE_DENIED_STATUS,
       message:
-        requestKind === 'signup'
-          ? 'Signup is disabled'
-          : 'Password reset request is disabled',
+        requestKind === 'signup' ? 'Signup is disabled' : 'Password reset request is disabled',
     };
   }
 
   if (mode === 'trusted-client' && !hasTrustedClientHeader(requestHeaders)) {
     return {
-      code: requestKind === 'signup'
-        ? 'AUTH_TRUSTED_CLIENT_REQUIRED_FOR_SIGNUP'
-        : 'AUTH_TRUSTED_CLIENT_REQUIRED_FOR_PASSWORD_RESET',
+      code:
+        requestKind === 'signup'
+          ? 'AUTH_TRUSTED_CLIENT_REQUIRED_FOR_SIGNUP'
+          : 'AUTH_TRUSTED_CLIENT_REQUIRED_FOR_PASSWORD_RESET',
       status: SIGNUP_MODE_DENIED_STATUS,
       message: `Missing or invalid ${TRUSTED_CLIENT_HEADER} header`,
     };
@@ -180,7 +182,10 @@ function buildAuth(): AuthInstance {
     },
     emailVerification: {
       sendVerificationEmail: async (data: any) => {
-        assertTrustedClientAllowed('email-verification', data?.request?.headers ?? data?.requestHeaders);
+        assertTrustedClientAllowed(
+          'email-verification',
+          data?.request?.headers ?? data?.requestHeaders,
+        );
         const event = createAuthEventPayload({
           type: 'auth.email_verification_requested',
           email: data?.user?.email ?? data?.email,
@@ -201,7 +206,10 @@ function buildAuth(): AuthInstance {
     emailAndPassword: {
       enabled: true,
       sendResetPassword: async (data: any) => {
-        assertTrustedClientAllowed('password-reset', data?.request?.headers ?? data?.requestHeaders);
+        assertTrustedClientAllowed(
+          'password-reset',
+          data?.request?.headers ?? data?.requestHeaders,
+        );
         const event = createAuthEventPayload({
           type: 'auth.password_reset_requested',
           email: data?.user?.email ?? data?.email,

@@ -43,10 +43,7 @@ export function isPlaceholderSecret(value: string): boolean {
   return placeholderPattern.test(value);
 }
 
-function signToken(
-  payload: Record<string, unknown>,
-  secret: string,
-): string {
+function signToken(payload: Record<string, unknown>, secret: string): string {
   const header = { alg: 'HS256', typ: 'JWT' };
   const encodedHeader = toBase64Url(JSON.stringify(header));
   const encodedBody = toBase64Url(JSON.stringify(payload));
@@ -211,7 +208,9 @@ export function createAuthEventService(deps: AuthEventDependencies = {}) {
     throw lastError ?? new Error('Auth event webhook failed');
   }
 
-  async function sendEmailVerificationRequested(input: AuthActionEventPayload): Promise<AuthEventDeliveryResult> {
+  async function sendEmailVerificationRequested(
+    input: AuthActionEventPayload,
+  ): Promise<AuthEventDeliveryResult> {
     const payload = createAuthEventPayload({
       ...input,
       type: 'auth.email_verification_requested',
@@ -219,7 +218,9 @@ export function createAuthEventService(deps: AuthEventDependencies = {}) {
     return postEvent(payload);
   }
 
-  async function sendPasswordResetRequested(input: AuthActionEventPayload): Promise<AuthEventDeliveryResult> {
+  async function sendPasswordResetRequested(
+    input: AuthActionEventPayload,
+  ): Promise<AuthEventDeliveryResult> {
     const payload = createAuthEventPayload({
       ...input,
       type: 'auth.password_reset_requested',

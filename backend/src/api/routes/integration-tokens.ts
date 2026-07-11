@@ -12,7 +12,10 @@ import {
 } from '../../modules/integrations/integration-registry.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { createRateLimiter } from '../middleware/rateLimiter.js';
-import { issueIntegrationTokenParamsSchema, listIntegrationSitesParamsSchema } from '../validation/integration-token.schema.js';
+import {
+  issueIntegrationTokenParamsSchema,
+  listIntegrationSitesParamsSchema,
+} from '../validation/integration-token.schema.js';
 
 type BetterAuthUser = {
   id?: string;
@@ -80,8 +83,7 @@ function requireVerifiedSession(ctx: any) {
     ctx.set.status = 401;
     return null;
   }
-  const emailVerified =
-    ctx.user.emailVerified === true || ctx.session.emailVerified === true;
+  const emailVerified = ctx.user.emailVerified === true || ctx.session.emailVerified === true;
   if (!emailVerified) {
     ctx.set.status = 403;
     return null;

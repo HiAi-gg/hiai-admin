@@ -27,7 +27,11 @@ export const userService = {
 
     if (inserted) return inserted;
 
-    const [existing] = await db.select().from(users).where(eq(users.email, normalizedEmail)).limit(1);
+    const [existing] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, normalizedEmail))
+      .limit(1);
     return existing;
   },
 
@@ -216,7 +220,7 @@ export const userService = {
     const safeRole =
       requestedRole && (requestedRole === 'super_admin' || requestedRole === 'tenant_admin')
         ? 'viewer'
-        : requestedRole ?? 'viewer';
+        : (requestedRole ?? 'viewer');
 
     await db.insert(userTenantAccess).values({
       userId,

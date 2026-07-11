@@ -1,6 +1,11 @@
 import { z } from 'zod';
 
-const slug = z.string().trim().min(1).max(100).regex(/^[a-z0-9-]+$/);
+const slug = z
+  .string()
+  .trim()
+  .min(1)
+  .max(100)
+  .regex(/^[a-z0-9-]+$/);
 const nonEmpty = z.string().trim().min(1).max(255);
 
 export const provisionExternalSiteAccessSchema = z.object({
@@ -25,7 +30,12 @@ export const provisionExternalSiteAccessSchema = z.object({
     publicSlug: slug,
     adapterSlug: slug,
     adapterManifestVersion: z.string().regex(/^\d+\.\d+\.\d+$/),
-    connectorType: z.string().trim().min(1).max(100).regex(/^[a-z0-9-]+$/),
+    connectorType: z
+      .string()
+      .trim()
+      .min(1)
+      .max(100)
+      .regex(/^[a-z0-9-]+$/),
     connectorConfig: z.record(z.string(), z.unknown()),
     capabilities: z.array(nonEmpty.max(100)).max(100),
     externalSiteReference: nonEmpty,
@@ -33,9 +43,7 @@ export const provisionExternalSiteAccessSchema = z.object({
   }),
 });
 
-export type ProvisionExternalSiteAccessRequest = z.infer<
-  typeof provisionExternalSiteAccessSchema
->;
+export type ProvisionExternalSiteAccessRequest = z.infer<typeof provisionExternalSiteAccessSchema>;
 
 export const serviceAccessOperationIdSchema = z.object({
   operationId: nonEmpty,

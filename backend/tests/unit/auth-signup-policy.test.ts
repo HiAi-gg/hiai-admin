@@ -27,18 +27,14 @@ const REQUEST_PASSWORD_RESET_PATH = '/api/auth/request-password-reset';
 
 describe('AUTH_SIGNUP_MODE policy', () => {
   it('blocks signup when disabled', () => {
-    expect(
-      getAuthSignupPolicyError(SIGNUP_PATH, 'POST', undefined, 'disabled'),
-    ).toMatchObject({
+    expect(getAuthSignupPolicyError(SIGNUP_PATH, 'POST', undefined, 'disabled')).toMatchObject({
       status: 403,
       code: 'AUTH_SIGNUP_DISABLED',
     });
   });
 
   it('blocks password-reset request when disabled', () => {
-    expect(
-      getAuthSignupPolicyError(FORGET_PATH, 'POST', undefined, 'disabled'),
-    ).toMatchObject({
+    expect(getAuthSignupPolicyError(FORGET_PATH, 'POST', undefined, 'disabled')).toMatchObject({
       status: 403,
       code: 'AUTH_PASSWORD_RESET_DISABLED',
     });
@@ -94,6 +90,8 @@ describe('AUTH_SIGNUP_MODE policy', () => {
   });
 
   it('ignores unrelated Better Auth routes', () => {
-    expect(getAuthSignupPolicyError('/api/auth/sign-in/email', 'POST', undefined, 'disabled')).toBeNull();
+    expect(
+      getAuthSignupPolicyError('/api/auth/sign-in/email', 'POST', undefined, 'disabled'),
+    ).toBeNull();
   });
 });

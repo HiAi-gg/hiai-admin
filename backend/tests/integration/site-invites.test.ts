@@ -24,9 +24,10 @@ const authMock = {
   api: {
     getSession: vi.fn(async (args: { headers: Record<string, string> }) => {
       const rawHeaders = args.headers as Record<string, string> | Headers;
-      const authHeader = rawHeaders instanceof Headers
-        ? rawHeaders.get('authorization') ?? rawHeaders.get('Authorization') ?? ''
-        : rawHeaders.authorization ?? '';
+      const authHeader =
+        rawHeaders instanceof Headers
+          ? (rawHeaders.get('authorization') ?? rawHeaders.get('Authorization') ?? '')
+          : (rawHeaders.authorization ?? '');
       const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
       const session = sessions.get(token);
       if (!session) return null;
@@ -37,7 +38,11 @@ const authMock = {
           role: session.role,
           tenantId: session.tenantId,
         },
-        session: { id: session.id, userId: session.userId, expiresAt: new Date(Date.now() + 3600_000) },
+        session: {
+          id: session.id,
+          userId: session.userId,
+          expiresAt: new Date(Date.now() + 3600_000),
+        },
       };
     }),
   },
@@ -207,17 +212,19 @@ function hashInviteToken(token: string): string {
   return createHash('sha256').update(token, 'utf8').digest('hex');
 }
 
-function makeInviteRow(overrides: Partial<{
-  id: string;
-  tenantId: string;
-  siteAdapterId: string;
-  email: string;
-  tokenHash: string;
-  role: string | null;
-  permissions: string[];
-  acceptedAt: Date | null;
-  expiresAt: Date;
-}> = {}) {
+function makeInviteRow(
+  overrides: Partial<{
+    id: string;
+    tenantId: string;
+    siteAdapterId: string;
+    email: string;
+    tokenHash: string;
+    role: string | null;
+    permissions: string[];
+    acceptedAt: Date | null;
+    expiresAt: Date;
+  }> = {},
+) {
   return {
     id: 'invite-1',
     tenantId: 'tenant-1',
@@ -235,9 +242,15 @@ function makeInviteRow(overrides: Partial<{
 beforeEach(() => {
   sessions.clear();
   authMock.api.getSession.mockClear();
-  dbMock.select.mockClear().mockImplementation(() => nextChain(dbState.selectCalls.rows.shift() ?? []));
-  dbMock.insert.mockClear().mockImplementation(() => nextChain(dbState.insertCalls.rows.shift() ?? []));
-  dbMock.update.mockClear().mockImplementation(() => nextChain(dbState.updateCalls.rows.shift() ?? []));
+  dbMock.select
+    .mockClear()
+    .mockImplementation(() => nextChain(dbState.selectCalls.rows.shift() ?? []));
+  dbMock.insert
+    .mockClear()
+    .mockImplementation(() => nextChain(dbState.insertCalls.rows.shift() ?? []));
+  dbMock.update
+    .mockClear()
+    .mockImplementation(() => nextChain(dbState.updateCalls.rows.shift() ?? []));
   dbMock.delete.mockClear();
   dbState.selectCalls.rows = [];
   dbState.insertCalls.rows = [];

@@ -27,7 +27,7 @@ vi.mock('../../src/lib/config.js', () => ({
 }));
 
 const { createAuthEventService, isPlaceholderSecret } = await import(
-  '../../src/modules/auth-events/auth-event.service.js',
+  '../../src/modules/auth-events/auth-event.service.js'
 );
 
 function decodeClaims(token: string) {
@@ -42,11 +42,12 @@ describe('authEventService', () => {
 
   it('emits a signed verification event without logging actionUrl', async () => {
     const seenHeaders: string[] = [];
-    const fetchMock = vi.fn(async () =>
-      new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
     );
 
     const service = createAuthEventService({
@@ -75,7 +76,10 @@ describe('authEventService', () => {
       eventType: 'auth.email_verification_requested',
       status: 200,
     });
-    for (const call of logger.debug.mock.calls.concat(logger.warn.mock.calls, logger.error.mock.calls)) {
+    for (const call of logger.debug.mock.calls.concat(
+      logger.warn.mock.calls,
+      logger.error.mock.calls,
+    )) {
       expect(call[0]).not.toHaveProperty('actionUrl');
       expect(call[0]).not.toHaveProperty('token');
     }

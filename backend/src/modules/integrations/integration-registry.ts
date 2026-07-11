@@ -96,7 +96,9 @@ function parseIntegrationConfigs(): Map<string, RegisteredIntegration> {
     const parsedJson = JSON.parse(rawValue) as unknown;
     const parsed = integrationConfigSchema.safeParse(parsedJson);
     if (!parsed.success) {
-      const issues = parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
+      const issues = parsed.error.issues.map(
+        (issue) => `${issue.path.join('.')}: ${issue.message}`,
+      );
       throw new Error(`Invalid AUTH_INTEGRATIONS_JSON: ${issues.join('; ')}`);
     }
 
