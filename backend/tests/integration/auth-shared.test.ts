@@ -43,10 +43,7 @@ const BACKEND_DEFINITIONS: BackendDefinition[] = [
   },
 ];
 
-function resolveConfiguredUrl(
-  env: EnvConfig,
-  backend: BackendDefinition,
-): string | undefined {
+function resolveConfiguredUrl(env: EnvConfig, backend: BackendDefinition): string | undefined {
   for (const key of backend.envKeys) {
     const raw = env[key]?.trim();
     if (raw && raw !== backend.defaultUrl) return raw;
