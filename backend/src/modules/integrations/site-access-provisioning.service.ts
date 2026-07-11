@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import { integrationOperations, siteAdapters, siteMemberships, tenants, userTenantAccess, users } from '../../db/schema/index.js';
 import { db } from '../../lib/db.js';
+import { auditService } from '../audit/audit.service.js';
 import type { ProvisionExternalSiteAccessRequest } from '../../api/validation/integration-site-access.schema.js';
 
 const stableValue = (value: unknown): unknown => {
@@ -26,19 +27,21 @@ const operationResult = (value: unknown): SiteAccessProvisioningResult => value 
 
 export async function provisionExternalSiteAccess(
   request: ProvisionExternalSiteAccessRequest,
+  tokenJti = `operation:${request.operationId}`,
 ): Promise<SiteAccessProvisioningResult> {
   const payloadHash = canonicalPayloadHash(request);
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${request.operationId}))`);
     const existing = await tx.select().from(integrationOperations).where(eq(integrationOperations.operationId, request.operationId)).limit(1);
     if (existing[0]) {
       if (existing[0].payloadHash !== payloadHash) throw new Error('OPERATION_PAYLOAD_MISMATCH');
+      if (existing[0].tokenJti !== tokenJti) throw new Error('OPERATION_TOKEN_MISMATCH');
       if (existing[0].status === 'succeeded' && existing[0].response) return operationResult(existing[0].response);
     } else {
       await tx.insert(integrationOperations).values({
         operationId: request.operationId,
         payloadHash,
-        tokenJti: `operation:${request.operationId}`,
+        tokenJti,
         status: 'processing',
       });
     }
@@ -52,17 +55,18 @@ export async function provisionExternalSiteAccess(
       email: request.owner.email.toLowerCase(),
       plan: 'free',
       status: 'pending',
+      settings: { externalId: request.tenant.externalId },
     }).onConflictDoNothing().returning();
     if (!tenant) {
       const [existingTenant] = await tx.select().from(tenants).where(eq(tenants.slug, request.tenant.slug)).limit(1);
-      if (!existingTenant || existingTenant.name !== request.tenant.name) throw new Error('TENANT_CONFLICT');
+      if (!existingTenant || existingTenant.name !== request.tenant.name || (existingTenant.settings as { externalId?: string } | null)?.externalId !== request.tenant.externalId) throw new Error('TENANT_CONFLICT');
       throw new Error('TENANT_ALREADY_EXISTS');
     }
 
     await tx.insert(userTenantAccess).values({ userId: owner.id, tenantId: tenant.id, role: 'owner', permissions: ['all'] });
     const [adapter] = await tx.insert(siteAdapters).values({
       tenantId: tenant.id,
-      slug: request.adapter.adapterSlug,
+      slug: request.adapter.slug,
       adapterSlug: request.adapter.adapterSlug,
       publicSlug: request.adapter.publicSlug,
       name: request.adapter.name,
@@ -89,15 +93,22 @@ export async function provisionExternalSiteAccess(
     }).where(eq(integrationOperations.operationId, request.operationId));
     await tx.update(siteAdapters).set({ enabled: true, updatedAt: new Date() }).where(eq(siteAdapters.id, adapter.id));
     await tx.update(tenants).set({ status: 'active', updatedAt: new Date() }).where(eq(tenants.id, tenant.id));
-    return { operationId: request.operationId, tenantId: tenant.id, siteAdapterId: adapter.id, status: 'succeeded' };
+    return { operationId: request.operationId, tenantId: tenant.id, siteAdapterId: adapter.id, status: 'succeeded' as const };
   });
+  await auditService.record({ actorId: `service:${tokenJti}`, actorEmail: 'service-integration', action: 'site_access:provision', resource: 'site_access', resourceId: result.operationId, newValue: result });
+  return result;
 }
 
 export async function compensateExternalSiteAccess(operationId: string): Promise<void> {
   await db.transaction(async (tx) => {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${operationId}))`);
     const [operation] = await tx.select().from(integrationOperations).where(eq(integrationOperations.operationId, operationId)).limit(1);
-    if (!operation?.tenantId || !operation.siteAdapterId) return;
+    if (!operation) throw new Error('OPERATION_NOT_FOUND');
+    if (operation.status === 'compensated') return;
+    if (!operation.tenantId || !operation.siteAdapterId) throw new Error('OPERATION_NOT_READY');
     await tx.update(siteAdapters).set({ enabled: false, updatedAt: new Date() }).where(eq(siteAdapters.id, operation.siteAdapterId));
     await tx.update(tenants).set({ status: 'suspended', updatedAt: new Date() }).where(eq(tenants.id, operation.tenantId));
+    await tx.update(integrationOperations).set({ status: 'compensated', updatedAt: new Date(), completedAt: new Date() }).where(eq(integrationOperations.operationId, operationId));
   });
+  await auditService.record({ actorId: 'service:compensation', actorEmail: 'service-integration', action: 'site_access:compensate', resource: 'site_access', resourceId: operationId });
 }

@@ -94,7 +94,9 @@ export async function provisionTenant(
       log.warn({ err: err.message, userId, tenantId: tenant.id }, 'Welcome notification failed');
     }
   } catch (err: any) {
-    log.warn({ err: err.message, tenantId: tenant.id }, 'Owner assignment failed');
+    await tenantService.update(tenant.id, { status: 'failed' });
+    log.error({ err: err.message, tenantId: tenant.id }, 'Owner assignment failed; tenant marked failed');
+    throw err;
   }
 
   return tenant;
