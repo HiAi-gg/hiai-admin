@@ -43,6 +43,13 @@
       "when": 1783696758286,
       "tag": "0005_stale_katie_power",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783756304442,
+      "tag": "0006_atomic_site_access",
+      "breakpoints": true
     }
   ]
 }

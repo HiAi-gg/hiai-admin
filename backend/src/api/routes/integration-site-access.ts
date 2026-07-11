@@ -1,29 +1,34 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Elysia } from 'elysia';
 import { z } from 'zod';
+import { env } from '../../lib/config.js';
 import { provisionExternalSiteAccess, compensateExternalSiteAccess } from '../../modules/integrations/site-access-provisioning.service.js';
 import { provisionExternalSiteAccessSchema, serviceAccessOperationIdSchema } from '../validation/integration-site-access.schema.js';
 
 type ServiceConfig = { id: string; issuer: string; audience: string; secret: string; scopes: string[] };
 const isPlaceholder = (value: string) => /change[-_]?me|placeholder|example|dummy|your[-_]?secret/i.test(value);
 const getServiceConfig = (): ServiceConfig[] => {
-  const raw = process.env.SERVICE_INTEGRATIONS_JSON?.trim();
+  const raw = env.SERVICE_INTEGRATIONS_JSON;
   if (!raw) return [];
   try {
     const entries = JSON.parse(raw) as Array<Record<string, unknown>>;
     if (!Array.isArray(entries)) throw new Error('SERVICE_INTEGRATIONS_JSON must be an array');
+    const ids = new Set<string>();
     return entries.map((entry) => {
       const secretRef = String(entry.secretRef ?? '');
       const secret = process.env[secretRef] ?? '';
-      if (!entry.id || !entry.issuer || !entry.audience || !secretRef || secret.length < 32 || isPlaceholder(secret)) throw new Error('Invalid SERVICE_INTEGRATIONS_JSON configuration');
-      return { id: String(entry.id), issuer: String(entry.issuer), audience: String(entry.audience), secret, scopes: Array.isArray(entry.scopes) ? entry.scopes.map(String) : [] };
+      const id = String(entry.id ?? '');
+      const scopes = Array.isArray(entry.scopes) ? entry.scopes.map(String) : [];
+      if (!id || ids.has(id) || !entry.issuer || !entry.audience || !secretRef || secret.length < 32 || isPlaceholder(secret) || !scopes.includes('site-access:provision')) throw new Error('Invalid SERVICE_INTEGRATIONS_JSON configuration');
+      ids.add(id);
+      return { id, issuer: String(entry.issuer), audience: String(entry.audience), secret, scopes };
     });
   } catch {
     throw new Error('SERVICE_INTEGRATIONS_JSON must be valid JSON');
   }
 };
 
-if (process.env.SERVICE_INTEGRATIONS_JSON?.trim()) getServiceConfig();
+if (env.SERVICE_INTEGRATIONS_JSON !== '[]') getServiceConfig();
 
 const decode = (value: string): Record<string, unknown> | null => {
   try { return JSON.parse(Buffer.from(value, 'base64url').toString('utf8')) as Record<string, unknown>; } catch { return null; }
@@ -39,7 +44,7 @@ const verifyServiceToken = (request: Request, operationId: string): ServiceClaim
   const claims = decode(body);
   if (!header || !claims || header.alg !== 'HS256') return null;
   const now = Math.floor(Date.now() / 1000);
-  if (typeof claims.iss !== 'string' || typeof claims.aud !== 'string' || typeof claims.jti !== 'string' || !claims.jti || typeof claims.exp !== 'number' || typeof claims.iat !== 'number' || !Number.isInteger(claims.exp) || !Number.isInteger(claims.iat) || claims.iat > now + 5 || claims.exp <= now || claims.exp <= claims.iat || claims.exp - claims.iat > 60 || claims.operationId !== operationId) return null;
+  if (typeof claims.iss !== 'string' || typeof claims.aud !== 'string' || typeof claims.jti !== 'string' || !claims.jti || typeof claims.exp !== 'number' || typeof claims.iat !== 'number' || !Number.isInteger(claims.exp) || !Number.isInteger(claims.iat) || claims.iat > now || claims.exp <= now || claims.exp <= claims.iat || claims.exp - claims.iat > 60 || claims.operationId !== operationId) return null;
   const config = getServiceConfig().find((entry) => entry.issuer === claims.iss && entry.audience === claims.aud && entry.secret);
   if (!config || !Array.isArray(claims.scope) || !claims.scope.includes('site-access:provision') || !config.scopes.includes('site-access:provision')) return null;
   const expected = createHmac('sha256', config.secret).update(`${head}.${body}`).digest('base64url');
@@ -61,8 +66,9 @@ export const integrationSiteAccessRoutes = new Elysia({ prefix: '/api/integratio
     }
   })
   .delete('/site-access/:operationId', async ({ request, params, set }) => {
-    if (!verifyServiceToken(request, params.operationId)) { set.status = 401; return { error: 'Unauthorized' }; }
-    try { await compensateExternalSiteAccess(params.operationId); return { operationId: params.operationId, status: 'compensated' }; } catch (error) {
+    const claims = verifyServiceToken(request, params.operationId);
+    if (!claims) { set.status = 401; return { error: 'Unauthorized' }; }
+    try { await compensateExternalSiteAccess(params.operationId, claims.jti); return { operationId: params.operationId, status: 'compensated' }; } catch (error) {
       const code = error instanceof Error ? error.message : 'COMPENSATION_FAILED';
       set.status = code === 'OPERATION_NOT_FOUND' ? 404 : 409;
       return { error: code };

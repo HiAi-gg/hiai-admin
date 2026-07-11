@@ -1,7 +1,7 @@
 import { tenantService } from './tenant.service.js';
 import { db } from '../../lib/db.js';
-import { users, userTenantAccess, userRoles, roles } from '../../db/schema/index.js';
-import { eq } from 'drizzle-orm';
+import { users, userTenantAccess, userRoles, roles, tenants } from '../../db/schema/index.js';
+import { eq, and } from 'drizzle-orm';
 import { stripeService } from '../billing/stripe.service.js';
 import { notificationService } from '../notifications/notification.service.js';
 import { logger } from '../../lib/logger.js';
@@ -19,6 +19,7 @@ export async function provisionTenant(
   const tenant = await tenantService.create({ name, slug, email: ownerEmail, plan });
 
   // 2. Create Stripe customer
+  let ownerUserId: string | undefined;
   try {
     const customer = await stripeService.createCustomer(ownerEmail, name);
     await tenantService.update(tenant.id, { stripeCustomerId: customer.id });
@@ -38,6 +39,7 @@ export async function provisionTenant(
       .where(eq(users.email, ownerEmail))
       .limit(1);
     const userId = existingUser?.id || randomUUID();
+    ownerUserId = userId;
 
     if (!existingUser) {
       await db.insert(users).values({
@@ -94,8 +96,12 @@ export async function provisionTenant(
       log.warn({ err: err.message, userId, tenantId: tenant.id }, 'Welcome notification failed');
     }
   } catch (err: any) {
-    await tenantService.update(tenant.id, { status: 'failed' });
-    log.error({ err: err.message, tenantId: tenant.id }, 'Owner assignment failed; tenant marked failed');
+    if (ownerUserId) {
+      await db.delete(userRoles).where(and(eq(userRoles.tenantId, tenant.id), eq(userRoles.userId, ownerUserId)));
+      await db.delete(userTenantAccess).where(and(eq(userTenantAccess.tenantId, tenant.id), eq(userTenantAccess.userId, ownerUserId)));
+    }
+    await db.delete(tenants).where(eq(tenants.id, tenant.id));
+    log.error({ err: err.message, tenantId: tenant.id }, 'Owner assignment failed; partial tenant rows compensated');
     throw err;
   }
 
