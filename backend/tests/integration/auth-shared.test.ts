@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest';
 
+type EnvConfig = NodeJS.ProcessEnv;
+
 type BackendSpec = {
   name: string;
   url: string;
@@ -7,32 +9,76 @@ type BackendSpec = {
   configured: boolean;
 };
 
-const BASE_URLS: BackendSpec[] = [
+type BackendDefinition = {
+  name: string;
+  defaultUrl: string;
+  optional: boolean;
+  envKeys: string[];
+};
+
+const BACKEND_DEFINITIONS: BackendDefinition[] = [
   {
     name: 'admin',
-    url: process.env.HIAI_ADMIN_API ?? 'http://localhost:50200',
+    defaultUrl: 'http://localhost:50200',
     optional: false,
-    configured: Boolean(process.env.HIAI_ADMIN_API),
+    envKeys: ['ADMIN_API_URL', 'HIAI_ADMIN_API'],
   },
   {
     name: 'store',
-    url: process.env.HIAI_STORE_API ?? process.env.HIAI_STORE_API_URL ?? 'http://localhost:50400',
+    defaultUrl: 'http://localhost:50400',
     optional: true,
-    configured: Boolean(process.env.HIAI_STORE_API || process.env.HIAI_STORE_API_URL),
+    envKeys: ['HIAI_STORE_API', 'HIAI_STORE_API_URL'],
   },
   {
     name: 'post',
-    url: process.env.HIAI_POST_API ?? process.env.HIAI_POST_API_URL ?? 'http://localhost:50300',
+    defaultUrl: 'http://localhost:50300',
     optional: true,
-    configured: Boolean(process.env.HIAI_POST_API || process.env.HIAI_POST_API_URL),
+    envKeys: ['HIAI_POST_API', 'HIAI_POST_API_URL'],
   },
   {
     name: 'docs',
-    url: process.env.HIAI_DOCS_API ?? 'http://localhost:50700',
+    defaultUrl: 'http://localhost:50700',
     optional: true,
-    configured: Boolean(process.env.HIAI_DOCS_API),
+    envKeys: ['HIAI_DOCS_API'],
   },
 ];
+
+function resolveConfiguredUrl(
+  env: EnvConfig,
+  backend: BackendDefinition,
+): string | undefined {
+  for (const key of backend.envKeys) {
+    const raw = env[key]?.trim();
+    if (raw && raw !== backend.defaultUrl) return raw;
+  }
+  return undefined;
+}
+
+function buildBackendSpecs(env: EnvConfig): BackendSpec[] {
+  return BACKEND_DEFINITIONS.map((backend) => {
+    const configuredUrl = resolveConfiguredUrl(env, backend);
+    return {
+      name: backend.name,
+      url: configuredUrl ?? backend.defaultUrl,
+      optional: backend.optional,
+      configured: Boolean(configuredUrl),
+    };
+  });
+}
+
+const BASE_URLS: BackendSpec[] = buildBackendSpecs(process.env);
+
+function unreachableConfiguredBackends(
+  results: Array<{ name: string; ok: boolean }>,
+  specs: BackendSpec[],
+): string[] {
+  return results
+    .filter(({ name, ok }) => {
+      const spec = specs.find((entry) => entry.name === name);
+      return Boolean(spec?.configured) && !ok;
+    })
+    .map(({ name }) => name);
+}
 
 const JWT_REGEX = /^[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+$/;
 
@@ -111,17 +157,13 @@ describe('shared auth across all 4 projects', () => {
     for (const r of results) {
       console.log(`${r.name}: ${r.ok ? 'OK' : 'UNREACHABLE'}`);
     }
-    const reachable = results.filter((r) => r.ok);
-    const hasOptionalReachable = results.some(({ name, ok }) =>
-      ok && BASE_URLS.find((entry) => entry.name === name)?.optional,
-    );
-    const hasOptionalConfigured = BASE_URLS.some(
-      ({ optional, configured }) => optional && configured,
-    );
+    const unreachable = unreachableConfiguredBackends(results, BASE_URLS);
+    expect(unreachable).toEqual([]);
 
-    if (!hasOptionalReachable && !hasOptionalConfigured && reachable.length === 0) {
+    const reachable = results.filter((r) => r.ok);
+    if (!BASE_URLS.some(({ configured }) => configured) && reachable.length === 0) {
       console.log(
-        'No optional backends are explicitly configured and no services are reachable in this runner. Skipping cross-backend reachability assertion.',
+        'No backend endpoints are explicitly configured and no services are reachable in this runner. Skipping cross-backend reachability assertion.',
       );
       return;
     }
@@ -178,5 +220,31 @@ describe('shared auth across all 4 projects', () => {
       const has429 = statuses.includes(429);
       if (has429) console.log(`${name}: rate limiting works (429 detected)`);
     }
+  });
+
+  describe('backend endpoint resolution', () => {
+    test('localhost defaults are not treated as explicit configuration', () => {
+      const specs = buildBackendSpecs({
+        ADMIN_API_URL: 'http://localhost:50200',
+        HIAI_STORE_API_URL: 'http://localhost:50400',
+        HIAI_POST_API_URL: 'http://localhost:50300',
+        HIAI_DOCS_API: 'http://localhost:50700',
+      });
+      expect(specs.some((spec) => spec.configured)).toBe(false);
+    });
+
+    test('explicitly configured endpoints must pass reachability check', () => {
+      const specs = buildBackendSpecs({
+        ADMIN_API_URL: 'http://localhost:59990',
+        HIAI_POST_API: 'http://localhost:59991',
+      });
+      const checks = [
+        { name: 'admin', ok: true },
+        { name: 'store', ok: false },
+        { name: 'post', ok: false },
+        { name: 'docs', ok: true },
+      ];
+      expect(unreachableConfiguredBackends(checks, specs)).toEqual(['post']);
+    });
   });
 });
