@@ -25,7 +25,12 @@ jobs:
       - run: bun run format:check
       - run: bun run lint
       - run: bun run typecheck
-      - run: bun run test
+      - name: Run backend and frontend tests (CI defaults)
+        env:
+          REDIS_URL: "redis://127.0.0.1:6379/0"
+          BETTER_AUTH_SECRET: "ci-local-test-secret-do-not-use-in-production-abcdefghijklmnopqrstuvwxyz"
+          BETTER_AUTH_URL: "http://127.0.0.1:3000"
+        run: bun run test
       - run: bun run build
       - name: Verify generic headless package contents
         run: |
