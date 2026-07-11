@@ -307,6 +307,7 @@ describe('Cross-Project Integration: hiai-admin ↔ hiai-store — Tenant provis
     await expect(provisionTenant('Denied', 'denied-legacy', '[email protected]')).rejects.toThrow(
       'LEGACY_PROVISIONING_REQUIRES_SUPER_ADMIN',
     );
+    expect(dbCalls).toHaveLength(0);
   });
 
   it('records an audit log entry with super_admin actor when a tenant is provisioned', async () => {
