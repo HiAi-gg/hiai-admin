@@ -16,3 +16,5 @@ Verification:
 - `bun run typecheck` -> TypeScript passed; existing Svelte warnings only.
 
 Environment note: the focused tests cover contract/hash/service surface without a live PostgreSQL integration fixture in this workspace; live transaction behavior must be covered in the deployment canary against the actual shared PostgreSQL container.
+
+Legacy boundary verification: added a regression test proving `provisionTenant` rejects calls without explicit `super_admin` authorization before database writes. The existing store integration fixture still has one unrelated mock-chain failure (`onConflictDoNothing` missing from its mocked DB chain).

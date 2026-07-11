@@ -302,6 +302,13 @@ describe('Cross-Project Integration: hiai-admin ↔ hiai-store — Tenant provis
     expect(stripeService.createCustomer).toHaveBeenCalledWith('[email protected]', 'Beta Books');
   });
 
+  it('rejects legacy provisioning without explicit super_admin authorization', async () => {
+    const { provisionTenant } = await import('../../src/modules/tenant/provisioning.js');
+    await expect(provisionTenant('Denied', 'denied-legacy', '[email protected]')).rejects.toThrow(
+      'LEGACY_PROVISIONING_REQUIRES_SUPER_ADMIN',
+    );
+  });
+
   it('records an audit log entry with super_admin actor when a tenant is provisioned', async () => {
     await auditService.record({
       actorId: 'super_admin',
