@@ -72,6 +72,10 @@ function makeChain(initialTable?: unknown) {
   chain.limit = vi.fn(() => chain);
   chain.offset = vi.fn(() => chain);
   chain.orderBy = vi.fn(() => chain);
+  // Drizzle's conflict handler is chainable and may be followed by returning()
+  // or awaited directly. The mock writes the fixture row in values(), so the
+  // conflict clause only needs to preserve that chain shape here.
+  chain.onConflictDoNothing = vi.fn((_config?: unknown) => chain);
 
   chain.values = vi.fn((v: unknown) => {
     dbCalls.push({ kind: 'insert', values: v });

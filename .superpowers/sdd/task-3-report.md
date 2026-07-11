@@ -17,4 +17,8 @@ Verification:
 
 Environment note: the focused tests cover contract/hash/service surface without a live PostgreSQL integration fixture in this workspace; live transaction behavior must be covered in the deployment canary against the actual shared PostgreSQL container.
 
-Legacy boundary verification: added a regression test proving `provisionTenant` rejects calls without explicit `super_admin` authorization before database writes. The existing store integration fixture still has one unrelated mock-chain failure (`onConflictDoNothing` missing from its mocked DB chain).
+Legacy boundary verification: added a regression test proving `provisionTenant` rejects calls without explicit `super_admin` authorization before database writes. The store integration fixture now models Drizzle's chainable `onConflictDoNothing` method, covering the legacy authorized provisioning path without changing product code.
+
+Follow-up verification:
+- `cd backend && bun run vitest run tests/integration/store.test.ts` -> 12 passed.
+- `cd backend && bun run typecheck` -> TypeScript passed.
