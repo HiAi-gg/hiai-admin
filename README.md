@@ -6,6 +6,8 @@
 
 Central admin panel for the HiAi SaaS platform — tenant management, user administration, billing, analytics, and platform settings.
 
+Release `0.0.8` also provides generic headless service APIs for authentication events, integration tokens, site-access provisioning, and site invites.
+
 **This is the main control center of the entire HiAi ecosystem.**
 
 ## Quick Start

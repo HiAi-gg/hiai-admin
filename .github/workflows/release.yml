@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: read
+
+env:
+  BUN_VERSION: 1.3.14
+
+jobs:
+  release-gates:
+    name: Headless release gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bun run format:check
+      - run: bun run lint
+      - run: bun run typecheck
+      - run: bun run test
+      - run: bun run build
+      - name: Verify generic headless package contents
+        run: |
+          ! rg -n -i 'webs|webs\.cool|MAIL_API_URL|MAIL_API_KEY' \
+            backend/src/modules/auth-events \
+            backend/src/modules/integrations \
+            backend/src/api/routes/integration-tokens.ts \
+            backend/src/api/routes/integration-site-access.ts
+          test -f backend/drizzle/0006_atomic_site_access.sql
+          test -f backend/drizzle/0007_site_invites.sql

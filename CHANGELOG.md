@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.8] - 2026-07-11
+
+### Added
+
+- Headless service APIs for authenticated event webhooks, integration token issuance, and atomic external site-access provisioning.
+- Generic site-invite acceptance API with packaged Drizzle migrations for site invites and integration-operation idempotency.
+
 ## [0.0.7] - 2026-07-10
 
 ### Added
