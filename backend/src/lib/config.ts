@@ -146,6 +146,10 @@ export const envSchema = z
       ),
     AUTH_EVENT_WEBHOOK_AUDIENCE: z.string().default('hiai-admin'),
     AUTH_EVENT_WEBHOOK_ISSUER: z.string().default('hiai-admin'),
+    AUTH_INTEGRATIONS_JSON: z
+      .string()
+      .default('[]')
+      .transform((value) => value.trim() || '[]'),
 
     // Backend (cross-service) JWT TTL used by the admin -> site adapter SSO
     // flow in app/src/lib/server/backend-token.ts. Default 1h matches the
